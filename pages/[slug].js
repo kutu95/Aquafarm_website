@@ -4,7 +4,6 @@ import Link from 'next/link';
 import NavBar from '@/components/NavBar';
 import Footer from '@/components/Footer';
 import { AuthContext } from './_app';
-import { supabase } from '@/lib/supabaseClient';
 import { createServerClient } from '@supabase/ssr';
 
 export default function Page({ page }) {
