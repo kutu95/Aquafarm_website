@@ -33,9 +33,9 @@ export default async function handler(req, res) {
 
     const user = userData.user;
 
-    // Generate new invitation link
+    // Generate new invitation link using signup type
     const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
-      type: 'magiclink',
+      type: 'signup',
       email: user.email,
       options: {
         redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/complete-account`
@@ -44,7 +44,7 @@ export default async function handler(req, res) {
 
     if (linkError) {
       console.error('Link generation error:', linkError);
-      return res.status(400).json({ error: 'Failed to generate invitation link' });
+      return res.status(400).json({ error: `Failed to generate invitation link: ${linkError.message}` });
     }
 
     // Get admin name for the email
@@ -66,7 +66,7 @@ export default async function handler(req, res) {
         to: [user.email],
         subject: 'Aquafarm - Complete Your Account Setup',
         react: InvitationEmail({
-          invitationLink: linkData.properties.action_link,
+          invitationLink: linkData.data.url,
           adminName: adminName
         })
       });
@@ -85,7 +85,7 @@ export default async function handler(req, res) {
     return res.status(200).json({ 
       success: true, 
       message: 'Invitation email re-sent successfully',
-      invitationLink: linkData.properties.action_link
+      invitationLink: linkData.data.url
     });
 
   } catch (error) {
