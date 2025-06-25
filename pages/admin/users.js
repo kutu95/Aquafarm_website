@@ -12,6 +12,7 @@ export default function AdminUsers() {
   const [loading, setLoading] = useState(true);
   const [newUserEmail, setNewUserEmail] = useState('');
   const [creatingUser, setCreatingUser] = useState(false);
+  const [resendingInvitation, setResendingInvitation] = useState(null);
   const [message, setMessage] = useState('');
 
   // Check if user is admin
@@ -117,6 +118,34 @@ export default function AdminUsers() {
     } catch (error) {
       console.error('Error deleting user:', error);
       setMessage(`Error deleting user: ${error.message}`);
+    }
+  };
+
+  const resendInvitation = async (userId) => {
+    setResendingInvitation(userId);
+    setMessage('');
+
+    try {
+      const response = await fetch('/api/admin/resend-invitation', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to resend invitation');
+      }
+
+      setMessage('Invitation email re-sent successfully!');
+    } catch (error) {
+      console.error('Error resending invitation:', error);
+      setMessage(`Error resending invitation: ${error.message}`);
+    } finally {
+      setResendingInvitation(null);
     }
   };
 
@@ -232,14 +261,25 @@ export default function AdminUsers() {
                             {new Date(tableUser.created_at).toLocaleDateString()}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            {tableUser.id !== user?.id && (
-                              <button
-                                onClick={() => deleteUser(tableUser.id)}
-                                className="text-red-600 hover:text-red-900"
-                              >
-                                Delete
-                              </button>
-                            )}
+                            <div className="flex space-x-2">
+                              {tableUser.id !== user?.id && (
+                                <button
+                                  onClick={() => deleteUser(tableUser.id)}
+                                  className="text-red-600 hover:text-red-900"
+                                >
+                                  Delete
+                                </button>
+                              )}
+                              {!tableUser.is_complete && (
+                                <button
+                                  onClick={() => resendInvitation(tableUser.id)}
+                                  disabled={resendingInvitation === tableUser.id}
+                                  className="text-blue-600 hover:text-blue-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  {resendingInvitation === tableUser.id ? 'Sending...' : 'Resend Invitation'}
+                                </button>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       ))}
