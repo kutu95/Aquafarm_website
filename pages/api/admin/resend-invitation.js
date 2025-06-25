@@ -35,7 +35,7 @@ export default async function handler(req, res) {
 
     // Generate new invitation link
     const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
-      type: 'signup',
+      type: 'magiclink',
       email: user.email,
       options: {
         redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/complete-account`
@@ -64,7 +64,7 @@ export default async function handler(req, res) {
       const { data: emailData, error: emailError } = await resend.emails.send({
         from: process.env.RESEND_FROM_EMAIL || 'noreply@yourdomain.com',
         to: [user.email],
-        subject: 'Aquafarm - Complete Your Account Setup (Re-sent)',
+        subject: 'Aquafarm - Complete Your Account Setup',
         react: InvitationEmail({
           invitationLink: linkData.properties.action_link,
           adminName: adminName
