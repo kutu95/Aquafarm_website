@@ -68,39 +68,20 @@ export default function AdminUsers() {
     setMessage('');
 
     try {
-      // First, create the user in Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-        email: newUserEmail,
-        email_confirm: true,
-        user_metadata: { role: 'user' }
+      // Call the API route to create user
+      const response = await fetch('/api/admin/create-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: newUserEmail }),
       });
 
-      if (authError) throw authError;
+      const result = await response.json();
 
-      // Then create the profile record
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          id: authData.user.id,
-          email: newUserEmail,
-          role: 'user',
-          first_name: null,
-          last_name: null,
-          is_complete: false
-        });
-
-      if (profileError) throw profileError;
-
-      // Send invitation email
-      const { error: emailError } = await supabase.auth.admin.generateLink({
-        type: 'signup',
-        email: newUserEmail,
-        options: {
-          redirectTo: `${window.location.origin}/complete-account`
-        }
-      });
-
-      if (emailError) throw emailError;
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to create user');
+      }
 
       setNewUserEmail('');
       setMessage('User created successfully! Invitation email sent.');
@@ -117,17 +98,19 @@ export default function AdminUsers() {
     if (!confirm('Are you sure you want to delete this user?')) return;
 
     try {
-      // Delete from profiles table
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', userId);
+      const response = await fetch('/api/admin/delete-user', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId }),
+      });
 
-      if (profileError) throw profileError;
+      const result = await response.json();
 
-      // Delete from auth (requires admin privileges)
-      const { error: authError } = await supabase.auth.admin.deleteUser(userId);
-      if (authError) throw authError;
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to delete user');
+      }
 
       setMessage('User deleted successfully');
       fetchUsers();
@@ -212,46 +195,46 @@ export default function AdminUsers() {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {users.map((user) => (
-                        <tr key={user.id}>
+                      {users.map((tableUser) => (
+                        <tr key={tableUser.id}>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
                               <div>
                                 <div className="text-sm font-medium text-gray-900">
-                                  {user.first_name && user.last_name 
-                                    ? `${user.first_name} ${user.last_name}`
+                                  {tableUser.first_name && tableUser.last_name 
+                                    ? `${tableUser.first_name} ${tableUser.last_name}`
                                     : 'Pending Setup'
                                   }
                                 </div>
-                                <div className="text-sm text-gray-500">{user.email}</div>
+                                <div className="text-sm text-gray-500">{tableUser.email}</div>
                               </div>
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                              user.role === 'admin' 
+                              tableUser.role === 'admin' 
                                 ? 'bg-purple-100 text-purple-800' 
                                 : 'bg-green-100 text-green-800'
                             }`}>
-                              {user.role}
+                              {tableUser.role}
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                              user.is_complete 
+                              tableUser.is_complete 
                                 ? 'bg-green-100 text-green-800' 
                                 : 'bg-yellow-100 text-yellow-800'
                             }`}>
-                              {user.is_complete ? 'Complete' : 'Pending'}
+                              {tableUser.is_complete ? 'Complete' : 'Pending'}
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {new Date(user.created_at).toLocaleDateString()}
+                            {new Date(tableUser.created_at).toLocaleDateString()}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            {user.id !== user?.id && (
+                            {tableUser.id !== user?.id && (
                               <button
-                                onClick={() => deleteUser(user.id)}
+                                onClick={() => deleteUser(tableUser.id)}
                                 className="text-red-600 hover:text-red-900"
                               >
                                 Delete
