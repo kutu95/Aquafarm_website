@@ -29,16 +29,29 @@ export default function AdminUsers() {
 
   const fetchUsers = async () => {
     try {
+      console.log('Fetching users from profiles table...');
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        if (error.code === '42P01') {
+          setMessage('Error: Profiles table does not exist. Please run the database migrations first.');
+        } else {
+          setMessage(`Error loading users: ${error.message}`);
+        }
+        throw error;
+      }
+      
+      console.log('Users fetched successfully:', data);
       setUsers(data || []);
     } catch (error) {
       console.error('Error fetching users:', error);
-      setMessage('Error loading users');
+      if (!error.code) {
+        setMessage('Error loading users. Please check your database connection.');
+      }
     } finally {
       setLoading(false);
     }
