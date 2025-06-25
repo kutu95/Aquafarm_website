@@ -121,8 +121,8 @@ export default function AdminUsers() {
     }
   };
 
-  const resendInvitation = async (userId) => {
-    setResendingInvitation(userId);
+  const resendInvitation = async (userEmail) => {
+    setResendingInvitation(userEmail);
     setMessage('');
 
     try {
@@ -131,7 +131,7 @@ export default function AdminUsers() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ userId }),
+        body: JSON.stringify({ email: userEmail }),
       });
 
       const result = await response.json();
@@ -272,11 +272,11 @@ export default function AdminUsers() {
                               )}
                               {!tableUser.is_complete && (
                                 <button
-                                  onClick={() => resendInvitation(tableUser.id)}
-                                  disabled={resendingInvitation === tableUser.id}
+                                  onClick={() => resendInvitation(tableUser.email)}
+                                  disabled={resendingInvitation === tableUser.email}
                                   className="text-blue-600 hover:text-blue-900 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                  {resendingInvitation === tableUser.id ? 'Sending...' : 'Resend Invitation'}
+                                  {resendingInvitation === tableUser.email ? 'Sending...' : 'Resend Invitation'}
                                 </button>
                               )}
                             </div>

@@ -22,7 +22,7 @@ export default function InvitationEmail({ invitationLink, adminName }) {
             marginBottom: '20px',
             textAlign: 'center'
           }}>
-            Welcome to Aquafarm
+            Welcome to Margaret River Aquafarm!
           </h1>
           
           <p style={{ fontSize: '16px', marginBottom: '20px' }}>
@@ -30,7 +30,7 @@ export default function InvitationEmail({ invitationLink, adminName }) {
           </p>
           
           <p style={{ fontSize: '16px', marginBottom: '20px' }}>
-            {adminName} has invited you to join Aquafarm. You've been granted access to our platform and can now complete your account setup.
+            {adminName} has invited you to join Margaret River Aquafarm. You've been granted access to our platform and can now complete your account setup.
           </p>
           
           <div style={{ 
@@ -64,8 +64,8 @@ export default function InvitationEmail({ invitationLink, adminName }) {
           
           <hr style={{ border: 'none', borderTop: '1px solid #e9ecef', margin: '30px 0' }} />
           
-          <p style={{ fontSize: '12px', color: '#6c757d', textAlign: 'center' }}>
-            This is an automated message from Aquafarm. Please do not reply to this email.
+          <p style={{ fontSize: '14px', color: '#6c757d', textAlign: 'center', fontWeight: 'bold' }}>
+            Margaret River Aquafarm
           </p>
         </div>
       </body>

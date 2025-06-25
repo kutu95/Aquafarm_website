@@ -113,6 +113,18 @@ export default function VolunteerApplication() {
 
   const loadExistingApplication = async () => {
     try {
+      // First, get the user's profile data
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('first_name, last_name')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError) {
+        console.error('Error fetching profile:', profileError);
+      }
+
+      // Then check for existing volunteer application
       const { data, error } = await supabase
         .from('volunteer_applications')
         .select('*')
@@ -120,6 +132,7 @@ export default function VolunteerApplication() {
         .single();
 
       if (data && !error) {
+        // User has an existing application - load it
         setExistingApplication(data);
         setForm({
           nationality: data.nationality || '',
@@ -142,9 +155,102 @@ export default function VolunteerApplication() {
           otherInformation: data.other_information || '',
           privacyPolicyAgreed: data.privacy_policy_agreed || false
         });
+      } else {
+        // No existing application - pre-populate with user profile data
+        console.log('Profile data:', profileData);
+        
+        // Use profile data for names, fallback to email if no profile
+        let firstName = '';
+        let lastName = '';
+        
+        if (profileData) {
+          firstName = profileData.first_name || '';
+          lastName = profileData.last_name || '';
+        }
+        
+        // If still no name from profile, try to extract from email
+        if (!firstName && user.email) {
+          const emailName = user.email.split('@')[0];
+          const nameParts = emailName.split(/[._-]/);
+          if (nameParts.length >= 2) {
+            firstName = nameParts[0].charAt(0).toUpperCase() + nameParts[0].slice(1);
+            lastName = nameParts[1].charAt(0).toUpperCase() + nameParts[1].slice(1);
+          }
+        }
+        
+        setExistingApplication(null);
+        setForm({
+          nationality: '',
+          dateOfBirth: '',
+          firstName: firstName,
+          lastName: lastName,
+          phoneNumber: '',
+          phoneCountryCode: '+1',
+          whatsapp: false,
+          email: user.email || '',
+          healthInsuranceCompany: '',
+          healthInsurancePolicyName: '',
+          healthInsurancePolicyNumber: '',
+          healthInsuranceExpiryDate: '',
+          nextOfKinName: '',
+          nextOfKinRelation: '',
+          nextOfKinPhone: '',
+          nextOfKinCountryCode: '+1',
+          nextOfKinEmail: '',
+          otherInformation: '',
+          privacyPolicyAgreed: false
+        });
       }
     } catch (error) {
       console.error('Error loading application:', error);
+      // If there's an error, still pre-populate with user data
+      setExistingApplication(null);
+      
+      // Try to extract name from various possible sources
+      let firstName = '';
+      let lastName = '';
+      
+      if (user.user_metadata) {
+        firstName = user.user_metadata.first_name || 
+                   user.user_metadata.name?.split(' ')[0] || 
+                   user.user_metadata.full_name?.split(' ')[0] || '';
+        
+        lastName = user.user_metadata.last_name || 
+                  user.user_metadata.name?.split(' ').slice(1).join(' ') || 
+                  user.user_metadata.full_name?.split(' ').slice(1).join(' ') || '';
+      }
+      
+      // If still no name, try to extract from email
+      if (!firstName && user.email) {
+        const emailName = user.email.split('@')[0];
+        const nameParts = emailName.split(/[._-]/);
+        if (nameParts.length >= 2) {
+          firstName = nameParts[0].charAt(0).toUpperCase() + nameParts[0].slice(1);
+          lastName = nameParts[1].charAt(0).toUpperCase() + nameParts[1].slice(1);
+        }
+      }
+      
+      setForm({
+        nationality: '',
+        dateOfBirth: '',
+        firstName: firstName,
+        lastName: lastName,
+        phoneNumber: '',
+        phoneCountryCode: '+1',
+        whatsapp: false,
+        email: user.email || '',
+        healthInsuranceCompany: '',
+        healthInsurancePolicyName: '',
+        healthInsurancePolicyNumber: '',
+        healthInsuranceExpiryDate: '',
+        nextOfKinName: '',
+        nextOfKinRelation: '',
+        nextOfKinPhone: '',
+        nextOfKinCountryCode: '+1',
+        nextOfKinEmail: '',
+        otherInformation: '',
+        privacyPolicyAgreed: false
+      });
     }
   };
 
