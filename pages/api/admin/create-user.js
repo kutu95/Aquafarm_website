@@ -19,6 +19,7 @@ export default async function handler(req, res) {
     }
 
     // Create user in Supabase Auth
+    // The trigger will automatically create the profile
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email: email,
       email_confirm: true,
@@ -28,25 +29,6 @@ export default async function handler(req, res) {
     if (authError) {
       console.error('Auth error:', authError);
       return res.status(400).json({ error: authError.message });
-    }
-
-    // Create profile record
-    const { error: profileError } = await supabaseAdmin
-      .from('profiles')
-      .insert({
-        id: authData.user.id,
-        email: email,
-        role: 'user',
-        first_name: null,
-        last_name: null,
-        is_complete: false
-      });
-
-    if (profileError) {
-      console.error('Profile error:', profileError);
-      // If profile creation fails, we should clean up the auth user
-      await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
-      return res.status(400).json({ error: profileError.message });
     }
 
     // Generate invitation link
