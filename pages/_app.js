@@ -47,9 +47,9 @@ export default function App({ Component, pageProps }) {
       const isPasswordResetInProgress = typeof window !== 'undefined' && 
         localStorage.getItem('password_reset_in_progress') === 'true';
       
-      if (isPasswordResetInProgress && event === 'PASSWORD_RECOVERY') {
-        console.log('Password reset in progress, not updating user state yet');
-        // Don't update user state during password recovery
+      if (isPasswordResetInProgress && (event === 'PASSWORD_RECOVERY' || event === 'INITIAL_SESSION')) {
+        console.log('Password reset in progress, not updating user state for event:', event);
+        // Don't update user state during password recovery or initial session
         return;
       }
       
