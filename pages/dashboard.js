@@ -43,16 +43,6 @@ export default function Dashboard() {
       console.log('No user, redirecting to login');
       router.push('/login');
     } else {
-      // Check if user is on reset-password page
-      const isOnResetPasswordPage = typeof window !== 'undefined' && 
-        (window.location.pathname === '/reset-password' || 
-         window.location.pathname.includes('reset-password'));
-      
-      if (isOnResetPasswordPage) {
-        console.log('User on reset-password page, not redirecting');
-        return; // Don't redirect if on reset-password page
-      }
-      
       console.log('User not admin, redirecting to home');
       router.push('/');
     }

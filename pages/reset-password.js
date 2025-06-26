@@ -27,7 +27,7 @@ export default function ResetPassword() {
           return;
         }
 
-        // Check if we have a session (which means the reset token is valid)
+        // Check if we have a session (which means the user is authenticated)
         if (!session) {
           console.log('No session found');
           setError('Invalid or expired reset link. Please request a new password reset.');
@@ -35,7 +35,8 @@ export default function ResetPassword() {
           return;
         }
 
-        // If we get here, we have a valid password reset session
+        // If we get here, we have a valid session - user can reset their password
+        console.log('User is authenticated, allowing password reset');
         setLoading(false);
         
       } catch (error) {
