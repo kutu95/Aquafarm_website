@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { supabase } from '@/lib/supabaseClient';
-import { trackEvent } from '@/components/GoogleAnalytics';
 
 export default function ResetPassword() {
   const router = useRouter();
@@ -15,6 +14,9 @@ export default function ResetPassword() {
   });
 
   useEffect(() => {
+    console.log('=== RESET PASSWORD PAGE LOADED ===');
+    console.log('Current URL:', typeof window !== 'undefined' ? window.location.href : 'N/A');
+    
     const checkUser = async () => {
       try {
         console.log('Checking user session for password reset...');
@@ -43,20 +45,6 @@ export default function ResetPassword() {
           return;
         }
 
-        // Check if the user has a profile and role
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', session.user.id)
-          .single();
-
-        console.log('Profile check result:', { profile, profileError });
-
-        if (profileError) {
-          console.error('Profile error:', profileError);
-          // Don't fail here - user might not have a profile yet
-        }
-
         // If we get here, we have a valid session - user can reset their password
         console.log('User is authenticated, allowing password reset');
         setLoading(false);
@@ -69,6 +57,26 @@ export default function ResetPassword() {
     };
 
     checkUser();
+    
+    // Add a listener to detect navigation away from this page
+    const handleBeforeUnload = () => {
+      console.log('=== PAGE IS BEING UNLOADED ===');
+    };
+    
+    if (typeof window !== 'undefined') {
+      window.addEventListener('beforeunload', handleBeforeUnload);
+      
+      // Log every 2 seconds to see if we're still on this page
+      const interval = setInterval(() => {
+        console.log('=== STILL ON RESET PASSWORD PAGE ===', new Date().toISOString());
+      }, 2000);
+      
+      return () => {
+        window.removeEventListener('beforeunload', handleBeforeUnload);
+        clearInterval(interval);
+        console.log('=== RESET PASSWORD PAGE UNMOUNTING ===');
+      };
+    }
   }, []);
 
   const handleSubmit = async (e) => {
@@ -101,7 +109,6 @@ export default function ResetPassword() {
 
       console.log('Password updated successfully');
       setSuccess('Password updated successfully! Redirecting to login...');
-      trackEvent('password_reset_success', 'authentication', 'password_reset', 1);
       
       // Sign out to clear the session
       await supabase.auth.signOut();
@@ -113,7 +120,6 @@ export default function ResetPassword() {
     } catch (error) {
       console.error('Error updating password:', error);
       setError(`Error updating password: ${error.message}`);
-      trackEvent('password_reset_failed', 'authentication', 'password_reset', 0);
     } finally {
       setIsUpdating(false);
     }
@@ -133,6 +139,7 @@ export default function ResetPassword() {
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
             <p className="mt-4 text-gray-600">Verifying reset link...</p>
+            <p className="text-xs text-gray-400 mt-2">Debug: Page is loading</p>
           </div>
         </div>
       </div>
@@ -149,6 +156,7 @@ export default function ResetPassword() {
           <p className="mt-2 text-center text-sm text-gray-600">
             Enter your new password below
           </p>
+          <p className="text-xs text-gray-400 mt-1 text-center">Debug: Page rendered successfully</p>
         </div>
 
         {error && (
