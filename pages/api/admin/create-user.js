@@ -73,6 +73,8 @@ export default async function handler(req, res) {
     
     // Always use production URL for email invitations, regardless of environment
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.aquafarm.au';
+    console.log('Using site URL for redirect:', siteUrl);
+    console.log('Full redirect URL:', `${siteUrl}/complete-account`);
     
     const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
       type: 'magiclink',
@@ -88,6 +90,7 @@ export default async function handler(req, res) {
     }
 
     console.log('Link generated successfully');
+    console.log('Generated link:', linkData.properties.action_link);
 
     // Use a default admin name for the email
     const adminName = 'Margaret River Aquafarm';
