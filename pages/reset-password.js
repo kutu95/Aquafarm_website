@@ -19,9 +19,19 @@ export default function ResetPassword() {
       try {
         console.log('Reset password page - checking user...');
         console.log('Router query:', router.query);
+        console.log('Router asPath:', router.asPath);
+        console.log('Window location:', typeof window !== 'undefined' ? window.location.href : 'N/A');
         
         // Check if we have the necessary URL parameters for password reset
         const { access_token, refresh_token, type, error, error_code, error_description } = router.query;
+        
+        // Also check for hash fragments (Supabase sometimes puts tokens in the hash)
+        let hashParams = {};
+        if (typeof window !== 'undefined' && window.location.hash) {
+          const hash = window.location.hash.substring(1); // Remove the #
+          hashParams = Object.fromEntries(new URLSearchParams(hash));
+          console.log('Hash parameters:', hashParams);
+        }
         
         console.log('URL params:', { 
           access_token: !!access_token, 
@@ -32,13 +42,23 @@ export default function ResetPassword() {
           error_description
         });
         
-        // Check for error parameters first
-        if (error || error_code || error_description) {
-          console.log('Error detected in URL parameters:', { error, error_code, error_description });
+        // Check for error parameters first (from query or hash)
+        const hasError = error || error_code || error_description || hashParams.error || hashParams.error_code || hashParams.error_description;
+        
+        if (hasError) {
+          const actualError = error || hashParams.error;
+          const actualErrorCode = error_code || hashParams.error_code;
+          const actualErrorDescription = error_description || hashParams.error_description;
           
-          if (error_code === 'otp_expired' || error_description?.includes('expired')) {
+          console.log('Error detected in URL parameters:', { 
+            error: actualError, 
+            error_code: actualErrorCode, 
+            error_description: actualErrorDescription 
+          });
+          
+          if (actualErrorCode === 'otp_expired' || actualErrorDescription?.includes('expired')) {
             setError('This password reset link has expired. Please request a new password reset link.');
-          } else if (error === 'access_denied') {
+          } else if (actualError === 'access_denied') {
             setError('This password reset link is invalid or has expired. Please request a new password reset link.');
           } else {
             setError('Invalid or expired reset link. Please request a new password reset.');
@@ -47,9 +67,15 @@ export default function ResetPassword() {
           return;
         }
         
+        // Check for tokens in both query params and hash
+        const hasAccessToken = access_token || hashParams.access_token;
+        const hasRefreshToken = refresh_token || hashParams.refresh_token;
+        const hasType = type || hashParams.type;
+        
         // If we don't have the tokens in the URL, this might not be a valid reset link
-        if (!access_token || !refresh_token || type !== 'recovery') {
+        if (!hasAccessToken || !hasRefreshToken || hasType !== 'recovery') {
           console.log('Missing required URL parameters for password reset');
+          console.log('Required params:', { hasAccessToken, hasRefreshToken, hasType });
           setError('Invalid or expired reset link. Please request a new password reset.');
           setLoading(false);
           return;
@@ -104,7 +130,7 @@ export default function ResetPassword() {
         console.log('Cleared password reset flag from localStorage');
       }
     };
-  }, [router.isReady, router.query]);
+  }, [router.isReady, router.query, router.asPath]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
