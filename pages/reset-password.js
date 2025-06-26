@@ -21,9 +21,31 @@ export default function ResetPassword() {
         console.log('Router query:', router.query);
         
         // Check if we have the necessary URL parameters for password reset
-        const { access_token, refresh_token, type } = router.query;
+        const { access_token, refresh_token, type, error, error_code, error_description } = router.query;
         
-        console.log('URL params:', { access_token: !!access_token, refresh_token: !!refresh_token, type });
+        console.log('URL params:', { 
+          access_token: !!access_token, 
+          refresh_token: !!refresh_token, 
+          type,
+          error,
+          error_code,
+          error_description
+        });
+        
+        // Check for error parameters first
+        if (error || error_code || error_description) {
+          console.log('Error detected in URL parameters:', { error, error_code, error_description });
+          
+          if (error_code === 'otp_expired' || error_description?.includes('expired')) {
+            setError('This password reset link has expired. Please request a new password reset link.');
+          } else if (error === 'access_denied') {
+            setError('This password reset link is invalid or has expired. Please request a new password reset link.');
+          } else {
+            setError('Invalid or expired reset link. Please request a new password reset.');
+          }
+          setLoading(false);
+          return;
+        }
         
         // If we don't have the tokens in the URL, this might not be a valid reset link
         if (!access_token || !refresh_token || type !== 'recovery') {
@@ -40,12 +62,12 @@ export default function ResetPassword() {
         }
 
         // Get the current session
-        const { data: { session }, error } = await supabase.auth.getSession();
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
-        console.log('Session check result:', { hasSession: !!session, error });
+        console.log('Session check result:', { hasSession: !!session, error: sessionError });
         
-        if (error) {
-          console.error('Session error:', error);
+        if (sessionError) {
+          console.error('Session error:', sessionError);
           setError('Invalid or expired reset link. Please request a new password reset.');
           setLoading(false);
           return;
@@ -168,6 +190,15 @@ export default function ResetPassword() {
         {error && (
           <div className="text-red-500 text-sm text-center bg-red-50 p-3 rounded-md">
             {error}
+            <div className="mt-3">
+              <button
+                type="button"
+                onClick={() => router.push('/login')}
+                className="text-sm text-blue-600 hover:text-blue-500 focus:outline-none focus:underline"
+              >
+                Request new reset link
+              </button>
+            </div>
           </div>
         )}
 
