@@ -17,8 +17,32 @@ export default function ResetPassword() {
   useEffect(() => {
     const checkUser = async () => {
       try {
+        console.log('Reset password page - checking user...');
+        console.log('Router query:', router.query);
+        
+        // Check if we have the necessary URL parameters for password reset
+        const { access_token, refresh_token, type } = router.query;
+        
+        console.log('URL params:', { access_token: !!access_token, refresh_token: !!refresh_token, type });
+        
+        // If we don't have the tokens in the URL, this might not be a valid reset link
+        if (!access_token || !refresh_token || type !== 'recovery') {
+          console.log('Missing required URL parameters for password reset');
+          setError('Invalid or expired reset link. Please request a new password reset.');
+          setLoading(false);
+          return;
+        }
+
+        // Set a flag in localStorage to indicate this is a password reset session
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('password_reset_in_progress', 'true');
+          console.log('Set password reset flag in localStorage');
+        }
+
         // Get the current session
         const { data: { session }, error } = await supabase.auth.getSession();
+        
+        console.log('Session check result:', { hasSession: !!session, error });
         
         if (error) {
           console.error('Session error:', error);
@@ -29,13 +53,14 @@ export default function ResetPassword() {
 
         // Check if we have a session (which means the reset token is valid)
         if (!session) {
+          console.log('No session found');
           setError('Invalid or expired reset link. Please request a new password reset.');
           setLoading(false);
           return;
         }
 
-        // If we have a session, the reset token is valid, so allow password reset
-        // The session could be from a previous login or from the reset token itself
+        console.log('Valid password reset session found, allowing password reset');
+        // If we get here, we have a valid password reset session
         setLoading(false);
         
       } catch (error) {
@@ -45,8 +70,19 @@ export default function ResetPassword() {
       }
     };
 
-    checkUser();
-  }, []);
+    // Only run the check if we have router.query
+    if (router.isReady) {
+      checkUser();
+    }
+
+    // Cleanup function to remove the flag when component unmounts
+    return () => {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('password_reset_in_progress');
+        console.log('Cleared password reset flag from localStorage');
+      }
+    };
+  }, [router.isReady, router.query]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -75,6 +111,14 @@ export default function ResetPassword() {
 
       setSuccess('Password updated successfully! Redirecting to login...');
       trackEvent('password_reset_success', 'authentication', 'password_reset', 1);
+      
+      // Clear the password reset flag
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('password_reset_in_progress');
+      }
+      
+      // Sign out to clear the session
+      await supabase.auth.signOut();
       
       setTimeout(() => {
         router.push('/login');
