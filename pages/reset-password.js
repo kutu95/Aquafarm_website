@@ -16,13 +16,33 @@ export default function ResetPassword() {
 
   useEffect(() => {
     const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
+      try {
+        // Get the current session
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Session error:', error);
+          setError('Invalid or expired reset link. Please request a new password reset.');
+          setLoading(false);
+          return;
+        }
+
+        // Check if we have a session (which means the reset token is valid)
+        if (!session) {
+          setError('Invalid or expired reset link. Please request a new password reset.');
+          setLoading(false);
+          return;
+        }
+
+        // If we have a session, the reset token is valid, so allow password reset
+        // The session could be from a previous login or from the reset token itself
+        setLoading(false);
+        
+      } catch (error) {
+        console.error('Error checking user:', error);
         setError('Invalid or expired reset link. Please request a new password reset.');
         setLoading(false);
-        return;
       }
-      setLoading(false);
     };
 
     checkUser();
@@ -113,7 +133,7 @@ export default function ResetPassword() {
           </div>
           )}
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit} autoComplete="off">
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700">
               New Password
@@ -124,6 +144,7 @@ export default function ResetPassword() {
                 name="password"
                 type="password"
                 required
+                autoComplete="new-password"
                 value={formData.password}
                 onChange={handleInputChange}
                 className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
@@ -142,6 +163,7 @@ export default function ResetPassword() {
                 name="confirmPassword"
                 type="password"
                 required
+                autoComplete="new-password"
                 value={formData.confirmPassword}
                 onChange={handleInputChange}
                 className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
