@@ -15,10 +15,24 @@ export default function ResetPassword() {
   });
 
   useEffect(() => {
+    console.log('=== RESET PASSWORD PAGE LOADED ===');
+    console.log('Current URL:', typeof window !== 'undefined' ? window.location.href : 'N/A');
+    console.log('Router pathname:', router.pathname);
+    console.log('Router asPath:', router.asPath);
+    console.log('Router query:', router.query);
+    
     const checkUser = async () => {
       try {
+        console.log('Checking user session...');
+        
         // Get the current session
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        console.log('Session check result:', { 
+          hasSession: !!session, 
+          sessionError: sessionError?.message,
+          userEmail: session?.user?.email 
+        });
         
         if (sessionError) {
           console.error('Session error:', sessionError);
@@ -47,7 +61,33 @@ export default function ResetPassword() {
     };
 
     checkUser();
-  }, []);
+    
+    // Add a listener to detect navigation away from this page
+    const handleBeforeUnload = () => {
+      console.log('=== PAGE IS BEING UNLOADED ===');
+    };
+    
+    const handleVisibilityChange = () => {
+      console.log('=== VISIBILITY CHANGED ===', document.visibilityState);
+    };
+    
+    if (typeof window !== 'undefined') {
+      window.addEventListener('beforeunload', handleBeforeUnload);
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+      
+      // Log every 2 seconds to see if we're still on this page
+      const interval = setInterval(() => {
+        console.log('=== STILL ON RESET PASSWORD PAGE ===', new Date().toISOString());
+      }, 2000);
+      
+      return () => {
+        window.removeEventListener('beforeunload', handleBeforeUnload);
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+        clearInterval(interval);
+        console.log('=== RESET PASSWORD PAGE UNMOUNTING ===');
+      };
+    }
+  }, [router.pathname, router.asPath, router.query]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -107,6 +147,7 @@ export default function ResetPassword() {
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
             <p className="mt-4 text-gray-600">Verifying reset link...</p>
+            <p className="text-xs text-gray-400 mt-2">Debug: Page is loading</p>
           </div>
         </div>
       </div>
@@ -123,6 +164,7 @@ export default function ResetPassword() {
           <p className="mt-2 text-center text-sm text-gray-600">
             Enter your new password below
           </p>
+          <p className="text-xs text-gray-400 mt-1 text-center">Debug: Page rendered successfully</p>
         </div>
 
         {error && (
