@@ -47,12 +47,19 @@ export default function App({ Component, pageProps }) {
       const isPasswordResetInProgress = typeof window !== 'undefined' && 
         localStorage.getItem('password_reset_in_progress') === 'true';
       
+      console.log('Password reset check:', {
+        isPasswordResetInProgress,
+        event,
+        localStorageValue: typeof window !== 'undefined' ? localStorage.getItem('password_reset_in_progress') : 'N/A'
+      });
+      
       if (isPasswordResetInProgress && (event === 'PASSWORD_RECOVERY' || event === 'INITIAL_SESSION')) {
         console.log('Password reset in progress, not updating user state for event:', event);
         // Don't update user state during password recovery or initial session
         return;
       }
       
+      console.log('Updating user state for event:', event);
       setUser(session?.user ?? null);
       
       if (session?.user) {

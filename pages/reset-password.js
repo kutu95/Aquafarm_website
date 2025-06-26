@@ -22,6 +22,13 @@ export default function ResetPassword() {
         console.log('Router asPath:', router.asPath);
         console.log('Window location:', typeof window !== 'undefined' ? window.location.href : 'N/A');
         
+        // Set the password reset flag immediately when this page loads
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('password_reset_in_progress', 'true');
+          console.log('Set password reset flag in localStorage immediately');
+          console.log('localStorage value after setting:', localStorage.getItem('password_reset_in_progress'));
+        }
+        
         // Check if we have the necessary URL parameters for password reset
         const { access_token, refresh_token, type, error, error_code, error_description } = router.query;
         
@@ -79,12 +86,6 @@ export default function ResetPassword() {
           setError('Invalid or expired reset link. Please request a new password reset.');
           setLoading(false);
           return;
-        }
-
-        // Set a flag in localStorage to indicate this is a password reset session
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('password_reset_in_progress', 'true');
-          console.log('Set password reset flag in localStorage');
         }
 
         // Get the current session
