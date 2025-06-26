@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import { supabase } from '@/lib/supabaseClient';
+import { trackEvent } from '@/components/GoogleAnalytics';
 
 export default function Login() {
   const router = useRouter();
@@ -21,7 +22,11 @@ export default function Login() {
 
     if (error) {
       setError(error.message);
+      // Track failed login attempt
+      trackEvent('login_failed', 'authentication', 'login_attempt', 0);
     } else {
+      // Track successful login
+      trackEvent('login_success', 'authentication', 'login_attempt', 1);
       router.push('/');
     }
   };

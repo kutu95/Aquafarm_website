@@ -1,6 +1,7 @@
 import '@/styles/globals.css';
 import { createContext, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
+import GoogleAnalytics from '@/components/GoogleAnalytics';
 
 export const AuthContext = createContext();
 
@@ -64,6 +65,7 @@ export default function App({ Component, pageProps }) {
 
   return (
     <AuthContext.Provider value={{ user, role, setUser, loading }}>
+      <GoogleAnalytics />
       <Component {...pageProps} />
     </AuthContext.Provider>
   );

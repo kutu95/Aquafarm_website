@@ -7,6 +7,7 @@ import { useRouter } from 'next/router';
 import TinyMCE from '@/components/TinyMCE';
 import { Dialog } from '@headlessui/react';
 import Link from 'next/link';
+import AnalyticsDashboard from '@/components/AnalyticsDashboard';
 
 export default function Dashboard() {
   const { user, role, loading } = useContext(AuthContext);
@@ -195,6 +196,11 @@ export default function Dashboard() {
               View Volunteer Applications
             </Link>
           </div>
+        </div>
+
+        {/* Analytics Dashboard */}
+        <div className="mb-8">
+          <AnalyticsDashboard />
         </div>
 
         <form onSubmit={handleSubmit} className="mb-6" onKeyDown={(e) => {

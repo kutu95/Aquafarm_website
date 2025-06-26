@@ -4,6 +4,7 @@ import NavBar from '@/components/NavBar';
 import Footer from '@/components/Footer';
 import { AuthContext } from '../_app';
 import { supabase } from '@/lib/supabaseClient';
+import { trackEvent } from '@/components/GoogleAnalytics';
 
 export default function AdminUsers() {
   const router = useRouter();
@@ -84,12 +85,18 @@ export default function AdminUsers() {
         throw new Error(result.error || 'Failed to create user');
       }
 
+      // Track successful user creation
+      trackEvent('user_created', 'admin', 'new_user', 1);
+
       setNewUserEmail('');
       setMessage('User created successfully! Invitation email sent.');
       fetchUsers(); // Refresh the user list
     } catch (error) {
       console.error('Error creating user:', error);
       setMessage(`Error creating user: ${error.message}`);
+      
+      // Track failed user creation
+      trackEvent('user_creation_failed', 'admin', 'new_user', 0);
     } finally {
       setCreatingUser(false);
     }
@@ -113,11 +120,17 @@ export default function AdminUsers() {
         throw new Error(result.error || 'Failed to delete user');
       }
 
+      // Track successful user deletion
+      trackEvent('user_deleted', 'admin', 'delete_user', 1);
+
       setMessage('User deleted successfully');
       fetchUsers();
     } catch (error) {
       console.error('Error deleting user:', error);
       setMessage(`Error deleting user: ${error.message}`);
+      
+      // Track failed user deletion
+      trackEvent('user_deletion_failed', 'admin', 'delete_user', 0);
     }
   };
 
@@ -143,10 +156,16 @@ export default function AdminUsers() {
         throw new Error(result.error || 'Failed to resend invitation');
       }
 
+      // Track successful invitation resend
+      trackEvent('invitation_resent', 'admin', 'resend_invitation', 1);
+
       setMessage('Invitation email re-sent successfully!');
     } catch (error) {
       console.error('Error resending invitation:', error);
       setMessage(`Error resending invitation: ${error.message}`);
+      
+      // Track failed invitation resend
+      trackEvent('invitation_resend_failed', 'admin', 'resend_invitation', 0);
     } finally {
       setResendingInvitation(null);
     }

@@ -4,6 +4,7 @@ import { AuthContext } from './_app';
 import { useRouter } from 'next/router';
 import NavBar from '@/components/NavBar';
 import Footer from '@/components/Footer';
+import { trackEvent } from '@/components/GoogleAnalytics';
 
 export default function VolunteerApplication() {
   const { user, role } = useContext(AuthContext);
@@ -286,6 +287,9 @@ export default function VolunteerApplication() {
         }
 
         passportPath = fileName;
+        
+        // Track successful file upload
+        trackEvent('file_uploaded', 'volunteer_application', 'passport_upload', 1);
       }
 
       const applicationData = {
@@ -319,11 +323,17 @@ export default function VolunteerApplication() {
           .from('volunteer_applications')
           .update(applicationData)
           .eq('id', existingApplication.id));
+          
+        // Track application update
+        trackEvent('application_updated', 'volunteer_application', 'form_submission', 1);
       } else {
         applicationData.created_at = new Date().toISOString();
         ({ error } = await supabase
           .from('volunteer_applications')
           .insert([applicationData]));
+          
+        // Track new application submission
+        trackEvent('application_submitted', 'volunteer_application', 'form_submission', 1);
       }
 
       if (error) {
@@ -335,6 +345,9 @@ export default function VolunteerApplication() {
       loadExistingApplication();
     } catch (error) {
       setMessage(`Error: ${error.message}`);
+      
+      // Track failed submission
+      trackEvent('application_failed', 'volunteer_application', 'form_submission', 0);
     } finally {
       setIsLoading(false);
     }
