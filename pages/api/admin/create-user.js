@@ -71,11 +71,14 @@ export default async function handler(req, res) {
     // Generate invitation link (use magiclink for all cases - it's more appropriate for admin invitations)
     console.log('Generating magic link for invitation');
     
+    // Always use production URL for email invitations, regardless of environment
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.aquafarm.au';
+    
     const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
       type: 'magiclink',
       email: email,
       options: {
-        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/complete-account`
+        redirectTo: `${siteUrl}/complete-account`
       }
     });
 
