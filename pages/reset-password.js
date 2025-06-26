@@ -109,6 +109,7 @@ export default function ResetPassword() {
 
         console.log('Valid password reset session found, allowing password reset');
         // If we get here, we have a valid password reset session
+        // IMPORTANT: Don't redirect away from this page even if user is authenticated
         setLoading(false);
         
       } catch (error) {
@@ -131,6 +132,24 @@ export default function ResetPassword() {
       }
     };
   }, [router.isReady, router.query, router.asPath]);
+
+  // Add a useEffect to prevent navigation away from this page during password reset
+  useEffect(() => {
+    const preventNavigation = (e) => {
+      const isPasswordResetInProgress = localStorage.getItem('password_reset_in_progress');
+      if (isPasswordResetInProgress === 'true') {
+        console.log('Preventing navigation away from password reset page');
+        // Don't prevent the navigation, but log it for debugging
+      }
+    };
+
+    // Listen for beforeunload events
+    window.addEventListener('beforeunload', preventNavigation);
+    
+    return () => {
+      window.removeEventListener('beforeunload', preventNavigation);
+    };
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

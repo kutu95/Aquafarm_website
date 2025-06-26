@@ -42,6 +42,17 @@ export default function App({ Component, pageProps }) {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth state change:', event, session?.user?.email);
+      
+      // Check if we're in a password reset flow
+      const isPasswordResetInProgress = typeof window !== 'undefined' && 
+        localStorage.getItem('password_reset_in_progress') === 'true';
+      
+      if (isPasswordResetInProgress && event === 'PASSWORD_RECOVERY') {
+        console.log('Password reset in progress, not updating user state yet');
+        // Don't update user state during password recovery
+        return;
+      }
+      
       setUser(session?.user ?? null);
       
       if (session?.user) {
