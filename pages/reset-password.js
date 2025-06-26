@@ -17,81 +17,8 @@ export default function ResetPassword() {
   useEffect(() => {
     const checkUser = async () => {
       try {
-        console.log('Reset password page - checking user...');
-        console.log('Router query:', router.query);
-        console.log('Router asPath:', router.asPath);
-        console.log('Window location:', typeof window !== 'undefined' ? window.location.href : 'N/A');
-        
-        // Set the password reset flag immediately when this page loads
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('password_reset_in_progress', 'true');
-          console.log('Set password reset flag in localStorage immediately');
-          console.log('localStorage value after setting:', localStorage.getItem('password_reset_in_progress'));
-        }
-        
-        // Check if we have the necessary URL parameters for password reset
-        const { access_token, refresh_token, type, error, error_code, error_description } = router.query;
-        
-        // Also check for hash fragments (Supabase sometimes puts tokens in the hash)
-        let hashParams = {};
-        if (typeof window !== 'undefined' && window.location.hash) {
-          const hash = window.location.hash.substring(1); // Remove the #
-          hashParams = Object.fromEntries(new URLSearchParams(hash));
-          console.log('Hash parameters:', hashParams);
-        }
-        
-        console.log('URL params:', { 
-          access_token: !!access_token, 
-          refresh_token: !!refresh_token, 
-          type,
-          error,
-          error_code,
-          error_description
-        });
-        
-        // Check for error parameters first (from query or hash)
-        const hasError = error || error_code || error_description || hashParams.error || hashParams.error_code || hashParams.error_description;
-        
-        if (hasError) {
-          const actualError = error || hashParams.error;
-          const actualErrorCode = error_code || hashParams.error_code;
-          const actualErrorDescription = error_description || hashParams.error_description;
-          
-          console.log('Error detected in URL parameters:', { 
-            error: actualError, 
-            error_code: actualErrorCode, 
-            error_description: actualErrorDescription 
-          });
-          
-          if (actualErrorCode === 'otp_expired' || actualErrorDescription?.includes('expired')) {
-            setError('This password reset link has expired. Please request a new password reset link.');
-          } else if (actualError === 'access_denied') {
-            setError('This password reset link is invalid or has expired. Please request a new password reset link.');
-          } else {
-            setError('Invalid or expired reset link. Please request a new password reset.');
-          }
-          setLoading(false);
-          return;
-        }
-        
-        // Check for tokens in both query params and hash
-        const hasAccessToken = access_token || hashParams.access_token;
-        const hasRefreshToken = refresh_token || hashParams.refresh_token;
-        const hasType = type || hashParams.type;
-        
-        // If we don't have the tokens in the URL, this might not be a valid reset link
-        if (!hasAccessToken || !hasRefreshToken || hasType !== 'recovery') {
-          console.log('Missing required URL parameters for password reset');
-          console.log('Required params:', { hasAccessToken, hasRefreshToken, hasType });
-          setError('Invalid or expired reset link. Please request a new password reset.');
-          setLoading(false);
-          return;
-        }
-
         // Get the current session
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        
-        console.log('Session check result:', { hasSession: !!session, error: sessionError });
         
         if (sessionError) {
           console.error('Session error:', sessionError);
@@ -108,9 +35,7 @@ export default function ResetPassword() {
           return;
         }
 
-        console.log('Valid password reset session found, allowing password reset');
         // If we get here, we have a valid password reset session
-        // IMPORTANT: Don't redirect away from this page even if user is authenticated
         setLoading(false);
         
       } catch (error) {
@@ -120,36 +45,7 @@ export default function ResetPassword() {
       }
     };
 
-    // Only run the check if we have router.query
-    if (router.isReady) {
-      checkUser();
-    }
-
-    // Cleanup function to remove the flag when component unmounts
-    return () => {
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('password_reset_in_progress');
-        console.log('Cleared password reset flag from localStorage');
-      }
-    };
-  }, [router.isReady, router.query, router.asPath]);
-
-  // Add a useEffect to prevent navigation away from this page during password reset
-  useEffect(() => {
-    const preventNavigation = (e) => {
-      const isPasswordResetInProgress = localStorage.getItem('password_reset_in_progress');
-      if (isPasswordResetInProgress === 'true') {
-        console.log('Preventing navigation away from password reset page');
-        // Don't prevent the navigation, but log it for debugging
-      }
-    };
-
-    // Listen for beforeunload events
-    window.addEventListener('beforeunload', preventNavigation);
-    
-    return () => {
-      window.removeEventListener('beforeunload', preventNavigation);
-    };
+    checkUser();
   }, []);
 
   const handleSubmit = async (e) => {
@@ -179,11 +75,6 @@ export default function ResetPassword() {
 
       setSuccess('Password updated successfully! Redirecting to login...');
       trackEvent('password_reset_success', 'authentication', 'password_reset', 1);
-      
-      // Clear the password reset flag
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('password_reset_in_progress');
-      }
       
       // Sign out to clear the session
       await supabase.auth.signOut();
@@ -252,7 +143,7 @@ export default function ResetPassword() {
           <div className="text-green-600 text-sm text-center bg-green-50 p-3 rounded-md">
             {success}
           </div>
-          )}
+        )}
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit} autoComplete="off">
           <div>

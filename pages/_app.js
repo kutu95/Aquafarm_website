@@ -43,24 +43,6 @@ export default function App({ Component, pageProps }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth state change:', event, session?.user?.email);
       
-      // Check if we're on the reset-password page
-      const isOnResetPasswordPage = typeof window !== 'undefined' && 
-        (window.location.pathname === '/reset-password' || 
-         window.location.pathname.includes('reset-password'));
-      
-      console.log('Reset password page check:', {
-        isOnResetPasswordPage,
-        pathname: typeof window !== 'undefined' ? window.location.pathname : 'N/A',
-        event
-      });
-      
-      if (isOnResetPasswordPage && (event === 'PASSWORD_RECOVERY' || event === 'INITIAL_SESSION')) {
-        console.log('On reset password page, not updating user state for event:', event);
-        // Don't update user state during password recovery or initial session on reset page
-        return;
-      }
-      
-      console.log('Updating user state for event:', event);
       setUser(session?.user ?? null);
       
       if (session?.user) {
