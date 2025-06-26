@@ -30,7 +30,7 @@ export default function InvitationEmail({ invitationLink, adminName }) {
           </p>
           
           <p style={{ fontSize: '16px', marginBottom: '20px' }}>
-            {adminName} has invited you to join Margaret River Aquafarm. You've been granted access to our platform and can now complete your account setup.
+            {adminName} has invited you to join Margaret River Aquafarm. Click the button below to access your account.
           </p>
           
           <div style={{ 
@@ -54,12 +54,12 @@ export default function InvitationEmail({ invitationLink, adminName }) {
                 display: 'inline-block'
               }}
             >
-              Complete Account Setup
+              Access Your Account
             </a>
           </div>
           
           <p style={{ fontSize: '14px', color: '#6c757d', marginBottom: '20px' }}>
-            This invitation link will expire in 24 hours. If you have any issues, please contact your administrator.
+            This login link will expire in 24 hours. If you have any issues, please contact your administrator.
           </p>
           
           <hr style={{ border: 'none', borderTop: '1px solid #e9ecef', margin: '30px 0' }} />

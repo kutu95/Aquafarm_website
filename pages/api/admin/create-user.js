@@ -1,5 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
+import ReactDOMServer from 'react-dom/server';
+import React from 'react';
 import InvitationEmail from '@/components/EmailTemplate';
 
 // Create admin client with service role key
@@ -23,22 +25,54 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Email is required' });
     }
 
-    // Create user in Supabase Auth
-    // The trigger will automatically create the profile
-    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-      email: email,
-      email_confirm: true,
-      user_metadata: { role: 'user' }
-    });
+    console.log('Creating user for email:', email);
 
-    if (authError) {
-      console.error('Auth error:', authError);
-      return res.status(400).json({ error: authError.message });
+    let user;
+    let isNewUser = false;
+
+    // Try to create the user first - if it fails with "email exists", we know the user exists
+    try {
+      console.log('Attempting to create user...');
+      const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+        email: email,
+        email_confirm: true,
+        user_metadata: { role: 'user' }
+      });
+
+      if (authError) {
+        console.log('Auth error occurred:', authError.message);
+        // Check if the error is because user already exists
+        if (authError.message.includes('already been registered') || authError.message.includes('email_exists')) {
+          // User exists, we'll handle this below
+          console.log('User already exists, will generate recovery link');
+          // Don't return error, continue to generate recovery link
+        } else {
+          console.error('Auth error:', authError);
+          return res.status(400).json({ error: authError.message });
+        }
+      } else {
+        // User was created successfully
+        console.log('User created successfully:', authData.user.id);
+        user = authData.user;
+        isNewUser = true;
+      }
+    } catch (createError) {
+      console.error('Error creating user:', createError);
+      return res.status(400).json({ error: createError.message });
     }
 
-    // Generate invitation link
+    // If user wasn't created (already exists), we need to get their info
+    if (!user) {
+      // For existing users, we'll just use the email and generate a recovery link
+      // We don't need to fetch the user object since we're just sending an invitation
+      console.log('Using existing user for invitation');
+    }
+
+    // Generate invitation link (use magiclink for all cases - it's more appropriate for admin invitations)
+    console.log('Generating magic link for invitation');
+    
     const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
-      type: 'signup',
+      type: 'magiclink',
       email: email,
       options: {
         redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/complete-account`
@@ -47,31 +81,29 @@ export default async function handler(req, res) {
 
     if (linkError) {
       console.error('Link generation error:', linkError);
-      return res.status(400).json({ error: 'Failed to generate invitation link' });
+      return res.status(400).json({ error: `Failed to generate invitation link: ${linkError.message}` });
     }
 
-    // Get admin name for the email
-    const { data: { user: adminUser } } = await supabaseAdmin.auth.getUser();
-    const { data: adminProfile } = await supabaseAdmin
-      .from('profiles')
-      .select('first_name, last_name')
-      .eq('id', adminUser.id)
-      .single();
+    console.log('Link generated successfully');
 
-    const adminName = adminProfile?.first_name && adminProfile?.last_name 
-      ? `${adminProfile.first_name} ${adminProfile.last_name}`
-      : 'An administrator';
+    // Use a default admin name for the email
+    const adminName = 'Margaret River Aquafarm';
+
+    // Convert React component to HTML string
+    const emailHtml = ReactDOMServer.renderToString(
+      React.createElement(InvitationEmail, {
+        invitationLink: linkData.properties.action_link,
+        adminName: adminName
+      })
+    );
 
     // Send invitation email
     try {
       const { data: emailData, error: emailError } = await resend.emails.send({
         from: process.env.RESEND_FROM_EMAIL || 'noreply@yourdomain.com',
-        to: [email],
-        subject: 'Welcome to Aquafarm - Complete Your Account Setup',
-        react: InvitationEmail({
-          invitationLink: linkData.properties.action_link,
-          adminName: adminName
-        })
+        to: email,
+        subject: 'Margaret River Aquafarm - Your Login Link',
+        html: emailHtml
       });
 
       if (emailError) {
@@ -89,13 +121,14 @@ export default async function handler(req, res) {
 
     return res.status(200).json({ 
       success: true, 
-      user: authData.user,
+      user: user || { email: email },
+      isNewUser: isNewUser,
       invitationLink: linkData.properties.action_link,
       emailSent: true
     });
 
   } catch (error) {
     console.error('Server error:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: `Internal server error: ${error.message}` });
   }
 } 

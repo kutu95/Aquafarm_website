@@ -1,5 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
+import ReactDOMServer from 'react-dom/server';
+import React from 'react';
+import InvitationEmail from '@/components/EmailTemplate';
 
 // Check environment variables
 if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
@@ -30,7 +33,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { email } = req.body;
+    const { email, adminName } = req.body;
 
     if (!email) {
       return res.status(400).json({ error: 'Email is required' });
@@ -38,7 +41,7 @@ export default async function handler(req, res) {
 
     console.log('Attempting to generate recovery link for:', email);
 
-    // Generate a password reset link for the user (this works for existing users)
+    // Generate a recovery link for the user (this works for existing users)
     const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
       type: 'recovery',
       email: email,
@@ -48,26 +51,26 @@ export default async function handler(req, res) {
     });
 
     if (linkError) {
-      console.error('Error generating recovery link:', linkError);
-      return res.status(500).json({ error: `Failed to generate invitation link: ${linkError.message}` });
+      console.error('Link generation error:', linkError);
+      return res.status(400).json({ error: `Failed to generate invitation link: ${linkError.message}` });
     }
 
     console.log('Recovery link generated successfully');
 
-    // Send the recovery link via Resend
+    // Convert React component to HTML string
+    const emailHtml = ReactDOMServer.renderToString(
+      React.createElement(InvitationEmail, {
+        invitationLink: linkData.properties.action_link,
+        adminName: adminName || 'Administrator'
+      })
+    );
+
+    // Send email using Resend
     const { data: emailData, error: emailError } = await resend.emails.send({
       from: process.env.RESEND_FROM_EMAIL,
-      to: [email],
-      subject: 'Complete Your Account Setup',
-      html: `
-        <h2>Welcome to Aquafarm!</h2>
-        <p>You have been invited to join our platform. Please click the link below to complete your account setup:</p>
-        <p><a href="${linkData.properties.action_link}">Complete Account Setup</a></p>
-        <p>If the link doesn't work, copy and paste this URL into your browser:</p>
-        <p>${linkData.properties.action_link}</p>
-        <p>This link will expire in 24 hours.</p>
-        <p>Best regards,<br>The Aquafarm Team</p>
-      `
+      to: email,
+      subject: 'Welcome to Margaret River Aquafarm - Complete Your Account Setup',
+      html: emailHtml
     });
 
     if (emailError) {
@@ -76,10 +79,10 @@ export default async function handler(req, res) {
     }
 
     console.log('Email sent successfully');
-    res.status(200).json({ message: 'Invitation sent successfully' });
+    return res.status(200).json({ success: true, message: 'Invitation email sent successfully' });
 
   } catch (error) {
-    console.error('Error resending invitation:', error);
-    res.status(500).json({ error: `Internal server error: ${error.message}` });
+    console.error('Unexpected error:', error);
+    return res.status(500).json({ error: `Internal server error: ${error.message}` });
   }
 } 

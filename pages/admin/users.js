@@ -131,7 +131,10 @@ export default function AdminUsers() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email: userEmail }),
+        body: JSON.stringify({ 
+          email: userEmail,
+          adminName: user?.user_metadata?.full_name || user?.email || 'Administrator'
+        }),
       });
 
       const result = await response.json();
