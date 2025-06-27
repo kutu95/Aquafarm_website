@@ -19,6 +19,12 @@ export default function Publishing() {
     slug: '',
     content: '',
     meta_description: '',
+    meta_title: '',
+    og_title: '',
+    og_description: '',
+    og_image: '',
+    canonical_url: '',
+    robots_meta: 'index, follow',
     is_published: false,
     priority: 0,
     security: 'open'
@@ -96,6 +102,12 @@ export default function Publishing() {
           slug: selectedPage.slug,
           content: selectedPage.content,
           meta_description: selectedPage.meta_description,
+          meta_title: selectedPage.meta_title,
+          og_title: selectedPage.og_title,
+          og_description: selectedPage.og_description,
+          og_image: selectedPage.og_image,
+          canonical_url: selectedPage.canonical_url,
+          robots_meta: selectedPage.robots_meta,
           is_published: selectedPage.is_published,
           priority: selectedPage.priority,
           security: selectedPage.security,
@@ -142,6 +154,12 @@ export default function Publishing() {
           slug: newPage.slug,
           content: newPage.content,
           meta_description: newPage.meta_description,
+          meta_title: newPage.meta_title,
+          og_title: newPage.og_title,
+          og_description: newPage.og_description,
+          og_image: newPage.og_image,
+          canonical_url: newPage.canonical_url,
+          robots_meta: newPage.robots_meta,
           is_published: newPage.is_published,
           priority: newPage.priority,
           security: newPage.security
@@ -158,6 +176,12 @@ export default function Publishing() {
         slug: '',
         content: '',
         meta_description: '',
+        meta_title: '',
+        og_title: '',
+        og_description: '',
+        og_image: '',
+        canonical_url: '',
+        robots_meta: 'index, follow',
         is_published: false,
         priority: 0,
         security: 'open'
@@ -342,6 +366,108 @@ export default function Publishing() {
                       placeholder="SEO meta description"
                     />
                   </div>
+                  
+                  {/* SEO Fields Section */}
+                  <div className="border-t pt-4">
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">SEO Settings</h3>
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Meta Title
+                        </label>
+                        <input
+                          type="text"
+                          value={newPage.meta_title}
+                          onChange={(e) => setNewPage({ ...newPage, meta_title: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Custom title for search results (50-60 characters)"
+                          maxLength="60"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          {newPage.meta_title?.length || 0}/60 characters
+                        </p>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Canonical URL
+                        </label>
+                        <input
+                          type="url"
+                          value={newPage.canonical_url}
+                          onChange={(e) => setNewPage({ ...newPage, canonical_url: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="https://example.com/page-url"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Leave empty to use default URL</p>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Robots Meta Tag
+                        </label>
+                        <select
+                          value={newPage.robots_meta}
+                          onChange={(e) => setNewPage({ ...newPage, robots_meta: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="index, follow">Index, Follow</option>
+                          <option value="noindex, follow">No Index, Follow</option>
+                          <option value="index, nofollow">Index, No Follow</option>
+                          <option value="noindex, nofollow">No Index, No Follow</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Open Graph Section */}
+                    <div className="mt-6">
+                      <h4 className="text-md font-medium text-gray-900 mb-3">Open Graph (Social Media)</h4>
+                      
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            OG Title
+                          </label>
+                          <input
+                            type="text"
+                            value={newPage.og_title}
+                            onChange={(e) => setNewPage({ ...newPage, og_title: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Title for social media shares"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            OG Description
+                          </label>
+                          <textarea
+                            value={newPage.og_description}
+                            onChange={(e) => setNewPage({ ...newPage, og_description: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            rows="2"
+                            placeholder="Description for social media shares"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            OG Image URL
+                          </label>
+                          <input
+                            type="url"
+                            value={newPage.og_image}
+                            onChange={(e) => setNewPage({ ...newPage, og_image: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="https://example.com/image.jpg"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">Recommended: 1200x630 pixels</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
                   <div>
                     <label className="flex items-center">
                       <input
@@ -446,6 +572,108 @@ export default function Publishing() {
                       rows="3"
                     />
                   </div>
+                  
+                  {/* SEO Fields Section */}
+                  <div className="border-t pt-4">
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">SEO Settings</h3>
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Meta Title
+                        </label>
+                        <input
+                          type="text"
+                          value={selectedPage.meta_title || ''}
+                          onChange={(e) => setSelectedPage({ ...selectedPage, meta_title: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Custom title for search results (50-60 characters)"
+                          maxLength="60"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          {(selectedPage.meta_title?.length || 0)}/60 characters
+                        </p>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Canonical URL
+                        </label>
+                        <input
+                          type="url"
+                          value={selectedPage.canonical_url || ''}
+                          onChange={(e) => setSelectedPage({ ...selectedPage, canonical_url: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="https://example.com/page-url"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Leave empty to use default URL</p>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Robots Meta Tag
+                        </label>
+                        <select
+                          value={selectedPage.robots_meta || 'index, follow'}
+                          onChange={(e) => setSelectedPage({ ...selectedPage, robots_meta: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="index, follow">Index, Follow</option>
+                          <option value="noindex, follow">No Index, Follow</option>
+                          <option value="index, nofollow">Index, No Follow</option>
+                          <option value="noindex, nofollow">No Index, No Follow</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Open Graph Section */}
+                    <div className="mt-6">
+                      <h4 className="text-md font-medium text-gray-900 mb-3">Open Graph (Social Media)</h4>
+                      
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            OG Title
+                          </label>
+                          <input
+                            type="text"
+                            value={selectedPage.og_title || ''}
+                            onChange={(e) => setSelectedPage({ ...selectedPage, og_title: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Title for social media shares"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            OG Description
+                          </label>
+                          <textarea
+                            value={selectedPage.og_description || ''}
+                            onChange={(e) => setSelectedPage({ ...selectedPage, og_description: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            rows="2"
+                            placeholder="Description for social media shares"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            OG Image URL
+                          </label>
+                          <input
+                            type="url"
+                            value={selectedPage.og_image || ''}
+                            onChange={(e) => setSelectedPage({ ...selectedPage, og_image: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="https://example.com/image.jpg"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">Recommended: 1200x630 pixels</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
                   <div>
                     <label className="flex items-center">
                       <input

@@ -1,6 +1,7 @@
 import { useEffect, useContext } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
+import Head from 'next/head';
 import NavBar from '@/components/NavBar';
 import Footer from '@/components/Footer';
 import { AuthContext } from './_app';
@@ -21,6 +22,10 @@ export default function Page({ page }) {
     return (
       <>
         <NavBar />
+        <Head>
+          <title>Page Not Found</title>
+          <meta name="description" content="The page you are looking for could not be found." />
+        </Head>
         <div className="p-6 max-w-4xl mx-auto">
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-4">Page Not Found</h1>
@@ -39,6 +44,33 @@ export default function Page({ page }) {
   return (
     <>
       <NavBar />
+      <Head>
+        <title>{page.meta_title || page.title}</title>
+        <meta name="description" content={page.meta_description || page.title} />
+        <meta name="robots" content={page.robots_meta || 'index, follow'} />
+        
+        {/* Canonical URL */}
+        {page.canonical_url && (
+          <link rel="canonical" href={page.canonical_url} />
+        )}
+        
+        {/* Open Graph Tags */}
+        <meta property="og:title" content={page.og_title || page.meta_title || page.title} />
+        <meta property="og:description" content={page.og_description || page.meta_description || page.title} />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={page.canonical_url || `${process.env.NEXT_PUBLIC_SITE_URL || 'https://aquafarm.com'}/${page.slug}`} />
+        {page.og_image && (
+          <meta property="og:image" content={page.og_image} />
+        )}
+        
+        {/* Twitter Card Tags */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={page.og_title || page.meta_title || page.title} />
+        <meta name="twitter:description" content={page.og_description || page.meta_description || page.title} />
+        {page.og_image && (
+          <meta name="twitter:image" content={page.og_image} />
+        )}
+      </Head>
       <div className="p-6 max-w-4xl mx-auto">
         <article className="prose max-w-none">
           <div dangerouslySetInnerHTML={{ __html: page.content }} />
