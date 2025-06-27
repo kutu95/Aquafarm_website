@@ -76,6 +76,7 @@ export default function Publishing() {
       return;
     }
 
+    console.log('Fetched pages from database:', data.map(p => ({ id: p.id, title: p.title, slug: p.slug })));
     setPages(data || []);
   };
 
@@ -89,7 +90,18 @@ export default function Publishing() {
 
     setIsSaving(true);
     try {
-      const { error } = await supabase
+      console.log('Saving page with data:', {
+        id: selectedPage.id,
+        title: selectedPage.title,
+        slug: selectedPage.slug,
+        content: selectedPage.content,
+        meta_description: selectedPage.meta_description,
+        is_published: selectedPage.is_published,
+        priority: selectedPage.priority,
+        security: selectedPage.security
+      });
+
+      const { data, error } = await supabase
         .from('pages')
         .update({
           title: selectedPage.title,
@@ -101,19 +113,31 @@ export default function Publishing() {
           security: selectedPage.security,
           updated_at: new Date().toISOString()
         })
-        .eq('id', selectedPage.id);
+        .eq('id', selectedPage.id)
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Database error:', error);
+        throw error;
+      }
+
+      console.log('Update successful, returned data:', data);
 
       // Update the pages list
-      setPages(pages.map(p => p.id === selectedPage.id ? selectedPage : p));
+      const updatedPages = pages.map(p => p.id === selectedPage.id ? selectedPage : p);
+      console.log('Updated pages list:', updatedPages.map(p => ({ id: p.id, title: p.title, slug: p.slug })));
+      setPages(updatedPages);
+      
+      // Also refresh the pages to make sure we have the latest data
+      console.log('Refreshing pages from database...');
+      await fetchPages();
       
       trackEvent('page_updated', 'publishing', 'page_edit', 1);
       alert('Page updated successfully!');
     } catch (error) {
       console.error('Error updating page:', error);
       trackEvent('page_update_failed', 'publishing', 'page_edit', 0);
-      alert('Error updating page. Please try again.');
+      alert(`Error updating page: ${error.message}`);
     } finally {
       setIsSaving(false);
     }
