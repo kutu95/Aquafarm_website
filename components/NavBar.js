@@ -3,6 +3,7 @@ import { AuthContext } from '@/pages/_app';
 import { supabase } from '@/lib/supabaseClient';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import DarkModeToggle from './DarkModeToggle';
 
 export default function NavBar() {
   const { user, role } = useContext(AuthContext);
@@ -111,6 +112,7 @@ export default function NavBar() {
                 {page.title}
               </Link>
             ))}
+            <DarkModeToggle />
             {user ? (
               <>
                 <Link

@@ -37,6 +37,8 @@ export default function Publishing() {
   const [editOgExpanded, setEditOgExpanded] = useState(false);
   const [titleExpanded, setTitleExpanded] = useState(true);
   const [editTitleExpanded, setEditTitleExpanded] = useState(true);
+  const [autoSaveStatus, setAutoSaveStatus] = useState('idle'); // 'idle', 'saving', 'saved', 'error'
+  const [lastSaved, setLastSaved] = useState(null);
 
   useEffect(() => {
     checkUser();
@@ -232,6 +234,64 @@ export default function Publishing() {
     }
   };
 
+  // Auto-save functionality
+  const autoSave = async (pageData) => {
+    if (!pageData || !pageData.id) return;
+    
+    setAutoSaveStatus('saving');
+    try {
+      const { error } = await supabase
+        .from('pages')
+        .update({
+          title: pageData.title,
+          slug: pageData.slug,
+          content: pageData.content,
+          meta_description: pageData.meta_description,
+          meta_title: pageData.meta_title,
+          og_title: pageData.og_title,
+          og_description: pageData.og_description,
+          og_image: pageData.og_image,
+          canonical_url: pageData.canonical_url,
+          robots_meta: pageData.robots_meta,
+          is_published: pageData.is_published,
+          priority: pageData.priority,
+          security: pageData.security,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', pageData.id);
+
+      if (error) throw error;
+
+      setAutoSaveStatus('saved');
+      setLastSaved(new Date());
+      
+      // Clear saved status after 3 seconds
+      setTimeout(() => {
+        setAutoSaveStatus('idle');
+      }, 3000);
+      
+    } catch (error) {
+      console.error('Auto-save error:', error);
+      setAutoSaveStatus('error');
+      
+      // Clear error status after 5 seconds
+      setTimeout(() => {
+        setAutoSaveStatus('idle');
+      }, 5000);
+    }
+  };
+
+  // Debounced auto-save effect
+  useEffect(() => {
+    if (!selectedPage || !selectedPage.id) return;
+
+    const timeoutId = setTimeout(() => {
+      autoSave(selectedPage);
+    }, 2000); // Auto-save after 2 seconds of inactivity
+
+    return () => clearTimeout(timeoutId);
+  }, [selectedPage]);
+
   if (isLoading) {
     return (
       <Layout>
@@ -244,13 +304,13 @@ export default function Publishing() {
 
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 bg-gray-50 dark:bg-gray-900 min-h-screen">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Publishing</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Publishing</h1>
           <div className="flex gap-2">
             <button
               onClick={() => setShowPageList(!showPageList)}
-              className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors"
+              className="bg-gray-600 dark:bg-gray-700 text-white px-4 py-2 rounded-md hover:bg-gray-700 dark:hover:bg-gray-600 transition-colors"
             >
               {showPageList ? 'Hide Page List' : 'Show Page List'}
             </button>
@@ -267,23 +327,23 @@ export default function Publishing() {
           {/* Pages List */}
           {showPageList && (
             <div className="lg:col-span-1">
-              <div className="bg-white rounded-lg shadow p-6">
-                <h2 className="text-xl font-semibold mb-4">Pages</h2>
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Pages</h2>
                 <div className="space-y-2">
                   {pages.map((page) => (
                     <div
                       key={page.id}
                       className={`p-3 rounded-md cursor-pointer transition-colors ${
                         selectedPage?.id === page.id
-                          ? 'bg-blue-100 border-blue-300'
-                          : 'bg-gray-50 hover:bg-gray-100'
+                          ? 'bg-blue-100 dark:bg-blue-900 border-blue-300 dark:border-blue-600'
+                          : 'bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600'
                       }`}
                       onClick={() => handlePageSelect(page)}
                     >
                       <div className="flex justify-between items-start">
                         <div>
-                          <h3 className="font-medium text-gray-900">{page.title}</h3>
-                          <p className="text-sm text-gray-500">/{page.slug}</p>
+                          <h3 className="font-medium text-gray-900 dark:text-white">{page.title}</h3>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">/{page.slug}</p>
                           <div className="flex gap-2 mt-1">
                             <span className={`inline-block px-2 py-1 text-xs rounded-full ${
                               page.is_published
@@ -335,20 +395,20 @@ export default function Publishing() {
           {/* Page Editor */}
           <div className={showPageList ? 'lg:col-span-2' : 'col-span-1'}>
             {showCreateForm ? (
-              <div className="bg-white rounded-lg shadow p-6">
-                <h2 className="text-xl font-semibold mb-4">Create New Page</h2>
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Create New Page</h2>
                 <div className="space-y-4">
                   {/* Title Settings Panel */}
-                  <div className="border border-gray-200 rounded-lg">
+                  <div className="border border-gray-200 dark:border-gray-600 rounded-lg">
                     <button
                       type="button"
                       onClick={() => setTitleExpanded(!titleExpanded)}
-                      className="w-full px-4 py-3 text-left bg-gray-50 hover:bg-gray-100 rounded-t-lg border-b border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-3 text-left bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-t-lg border-b border-gray-200 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-medium text-gray-900">Title Settings</h3>
+                        <h3 className="text-lg font-medium text-gray-900 dark:text-white">Title Settings</h3>
                         <svg
-                          className={`w-5 h-5 text-gray-500 transform transition-transform ${titleExpanded ? 'rotate-180' : ''}`}
+                          className={`w-5 h-5 text-gray-500 dark:text-gray-400 transform transition-transform ${titleExpanded ? 'rotate-180' : ''}`}
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -361,40 +421,52 @@ export default function Publishing() {
                     {titleExpanded && (
                       <div className="p-4 space-y-4">
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                             Title *
                           </label>
                           <input
                             type="text"
                             value={newPage.title}
                             onChange={(e) => setNewPage({ ...newPage, title: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                             placeholder="Page title"
+                            maxLength="100"
                           />
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            {newPage.title?.length || 0}/100 characters
+                          </p>
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                             Slug *
                           </label>
                           <input
                             type="text"
                             value={newPage.slug}
                             onChange={(e) => setNewPage({ ...newPage, slug: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                             placeholder="page-slug"
+                            maxLength="50"
                           />
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            {newPage.slug?.length || 0}/50 characters
+                          </p>
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                             Meta Description
                           </label>
                           <textarea
                             value={newPage.meta_description}
                             onChange={(e) => setNewPage({ ...newPage, meta_description: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                             rows="3"
                             placeholder="SEO meta description"
+                            maxLength="160"
                           />
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            {newPage.meta_description?.length || 0}/160 characters
+                          </p>
                         </div>
                       </div>
                     )}
@@ -611,7 +683,41 @@ export default function Publishing() {
               </div>
             ) : selectedPage ? (
               <div className="bg-white rounded-lg shadow p-6">
-                <h2 className="text-xl font-semibold mb-4">Edit Page: {selectedPage.title}</h2>
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-semibold">Edit Page: {selectedPage.title}</h2>
+                  <div className="flex items-center space-x-2">
+                    {autoSaveStatus === 'saving' && (
+                      <div className="flex items-center text-blue-600">
+                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span className="text-sm">Saving...</span>
+                      </div>
+                    )}
+                    {autoSaveStatus === 'saved' && (
+                      <div className="flex items-center text-green-600">
+                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span className="text-sm">Saved</span>
+                      </div>
+                    )}
+                    {autoSaveStatus === 'error' && (
+                      <div className="flex items-center text-red-600">
+                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span className="text-sm">Save failed</span>
+                      </div>
+                    )}
+                    {lastSaved && (
+                      <span className="text-xs text-gray-500">
+                        Last saved: {lastSaved.toLocaleTimeString()}
+                      </span>
+                    )}
+                  </div>
+                </div>
                 <div className="space-y-4">
                   {/* Title Settings Panel */}
                   <div className="border border-gray-200 rounded-lg">
@@ -644,7 +750,11 @@ export default function Publishing() {
                             value={selectedPage.title}
                             onChange={(e) => setSelectedPage({ ...selectedPage, title: e.target.value })}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            maxLength="100"
                           />
+                          <p className="text-xs text-gray-500 mt-1">
+                            {(selectedPage.title?.length || 0)}/100 characters
+                          </p>
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -655,7 +765,11 @@ export default function Publishing() {
                             value={selectedPage.slug}
                             onChange={(e) => setSelectedPage({ ...selectedPage, slug: e.target.value })}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            maxLength="50"
                           />
+                          <p className="text-xs text-gray-500 mt-1">
+                            {(selectedPage.slug?.length || 0)}/50 characters
+                          </p>
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -666,7 +780,11 @@ export default function Publishing() {
                             onChange={(e) => setSelectedPage({ ...selectedPage, meta_description: e.target.value })}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             rows="3"
+                            maxLength="160"
                           />
+                          <p className="text-xs text-gray-500 mt-1">
+                            {(selectedPage.meta_description?.length || 0)}/160 characters
+                          </p>
                         </div>
                       </div>
                     )}
