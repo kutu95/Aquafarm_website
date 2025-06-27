@@ -76,7 +76,6 @@ export default function Publishing() {
       return;
     }
 
-    console.log('Fetched pages from database:', data.map(p => ({ id: p.id, title: p.title, slug: p.slug })));
     setPages(data || []);
   };
 
@@ -90,17 +89,6 @@ export default function Publishing() {
 
     setIsSaving(true);
     try {
-      console.log('Saving page with data:', {
-        id: selectedPage.id,
-        title: selectedPage.title,
-        slug: selectedPage.slug,
-        content: selectedPage.content,
-        meta_description: selectedPage.meta_description,
-        is_published: selectedPage.is_published,
-        priority: selectedPage.priority,
-        security: selectedPage.security
-      });
-
       const { data, error } = await supabase
         .from('pages')
         .update({
@@ -121,15 +109,11 @@ export default function Publishing() {
         throw error;
       }
 
-      console.log('Update successful, returned data:', data);
-
       // Update the pages list
       const updatedPages = pages.map(p => p.id === selectedPage.id ? selectedPage : p);
-      console.log('Updated pages list:', updatedPages.map(p => ({ id: p.id, title: p.title, slug: p.slug })));
       setPages(updatedPages);
       
       // Also refresh the pages to make sure we have the latest data
-      console.log('Refreshing pages from database...');
       await fetchPages();
       
       trackEvent('page_updated', 'publishing', 'page_edit', 1);
