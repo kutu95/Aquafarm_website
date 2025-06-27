@@ -162,6 +162,12 @@ export default function NavBar() {
                       >
                         Manage Users
                       </Link>
+                      <Link
+                        href="/template-management"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        Template Management
+                      </Link>
                     </div>
                   </div>
                 )}
@@ -275,6 +281,13 @@ export default function NavBar() {
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     Manage Users
+                  </Link>
+                  <Link
+                    href="/template-management"
+                    className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    Template Management
                   </Link>
           </>
         )}

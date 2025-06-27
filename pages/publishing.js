@@ -42,49 +42,12 @@ export default function Publishing() {
   const [showTemplates, setShowTemplates] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [previewData, setPreviewData] = useState(null);
-
-  // Page templates
-  const pageTemplates = {
-    'about': {
-      title: 'About Us',
-      slug: 'about',
-      content: '<h2>About Margaret River Aquafarm</h2><p>Welcome to Margaret River Aquafarm, where we combine sustainable aquaculture practices with environmental stewardship...</p><h3>Our Mission</h3><p>We are committed to...</p><h3>Our Values</h3><ul><li>Sustainability</li><li>Environmental Protection</li><li>Community Engagement</li><li>Innovation</li></ul>',
-      meta_description: 'Learn about Margaret River Aquafarm, our mission, values, and commitment to sustainable aquaculture and environmental protection.',
-      priority: 5
-    },
-    'services': {
-      title: 'Our Services',
-      slug: 'services',
-      content: '<h2>Our Services</h2><p>At Margaret River Aquafarm, we offer a range of sustainable aquaculture services...</p><h3>Aquaculture Solutions</h3><p>We provide...</p><h3>Environmental Consulting</h3><p>Our team offers...</p><h3>Educational Programs</h3><p>We conduct...</p>',
-      meta_description: 'Discover our comprehensive aquaculture services, environmental consulting, and educational programs at Margaret River Aquafarm.',
-      priority: 4
-    },
-    'contact': {
-      title: 'Contact Us',
-      slug: 'contact',
-      content: '<h2>Contact Margaret River Aquafarm</h2><p>Get in touch with us to learn more about our services or to discuss your aquaculture needs.</p><h3>Get In Touch</h3><p><strong>Email:</strong> info@margaretriveraquafarm.com</p><p><strong>Phone:</strong> +61 (0)8 9757 XXXX</p><p><strong>Address:</strong> Margaret River, Western Australia</p><h3>Business Hours</h3><p>Monday - Friday: 9:00 AM - 5:00 PM</p><p>Saturday: 9:00 AM - 1:00 PM</p><p>Sunday: Closed</p>',
-      meta_description: 'Contact Margaret River Aquafarm for aquaculture services, environmental consulting, and educational programs. Get in touch today.',
-      priority: 3
-    },
-    'volunteer': {
-      title: 'Volunteer Opportunities',
-      slug: 'volunteer',
-      content: '<h2>Volunteer with Us</h2><p>Join our team of dedicated volunteers and contribute to sustainable aquaculture and marine conservation.</p><h3>Why Volunteer?</h3><ul><li>Gain hands-on experience in aquaculture</li><li>Contribute to environmental conservation</li><li>Learn from industry experts</li><li>Make a positive impact</li></ul><h3>Available Positions</h3><p>We offer various volunteer opportunities including...</p><p><a href="/volunteer-application" class="btn btn-primary">Apply Now</a></p>',
-      meta_description: 'Join Margaret River Aquafarm as a volunteer. Gain experience in sustainable aquaculture and contribute to marine conservation efforts.',
-      priority: 2
-    },
-    'custom': {
-      title: 'Custom Page',
-      slug: 'custom-page',
-      content: '<h2>Page Title</h2><p>Start writing your content here...</p>',
-      meta_description: 'Page description for SEO',
-      priority: 1
-    }
-  };
+  const [pageTemplates, setPageTemplates] = useState({});
 
   useEffect(() => {
     checkUser();
     fetchPages();
+    fetchTemplates();
   }, []);
 
   // Handle edit parameter from URL
@@ -135,6 +98,32 @@ export default function Publishing() {
     }
 
     setPages(data || []);
+  };
+
+  const fetchTemplates = async () => {
+    const { data, error } = await supabase
+      .from('page_templates')
+      .select('*')
+      .eq('is_active', true)
+      .order('priority', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching templates:', error);
+      return;
+    }
+
+    const templatesObject = data.reduce((acc, template) => ({
+      ...acc,
+      [template.name]: {
+        title: template.title,
+        slug: template.slug,
+        content: template.content,
+        meta_description: template.meta_description,
+        priority: template.priority
+      }
+    }), {});
+
+    setPageTemplates(templatesObject);
   };
 
   const handlePageSelect = (page) => {
