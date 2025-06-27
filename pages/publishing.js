@@ -185,7 +185,15 @@ export default function Publishing() {
     } catch (error) {
       console.error('Error updating page:', error);
       trackEvent('page_update_failed', 'publishing', 'page_edit', 0);
-      alert(`Error updating page: ${error.message}`);
+      
+      // Check for specific error types
+      if (error.code === '23505' && error.message.includes('slug')) {
+        alert('Slug must be unique. Please choose a different slug.');
+      } else if (error.message.includes('duplicate key')) {
+        alert('Slug must be unique. Please choose a different slug.');
+      } else {
+        alert(`Error updating page: ${error.message}`);
+      }
     } finally {
       setIsSaving(false);
     }
@@ -243,7 +251,15 @@ export default function Publishing() {
     } catch (error) {
       console.error('Error creating page:', error);
       trackEvent('page_creation_failed', 'publishing', 'page_creation', 0);
-      alert('Error creating page. Please try again.');
+      
+      // Check for specific error types
+      if (error.code === '23505' && error.message.includes('slug')) {
+        alert('Slug must be unique. Please choose a different slug.');
+      } else if (error.message.includes('duplicate key')) {
+        alert('Slug must be unique. Please choose a different slug.');
+      } else {
+        alert('Error creating page. Please try again.');
+      }
     } finally {
       setIsSaving(false);
     }
@@ -339,7 +355,15 @@ export default function Publishing() {
       
     } catch (error) {
       console.error('Auto-save error:', error);
-      setAutoSaveStatus('error');
+      
+      // Check for specific error types
+      if (error.code === '23505' && error.message.includes('slug')) {
+        setAutoSaveStatus('error');
+        // Don't show alert for auto-save, just log it
+        console.warn('Auto-save failed: Slug must be unique');
+      } else {
+        setAutoSaveStatus('error');
+      }
       
       // Clear error status after 5 seconds
       setTimeout(() => {
