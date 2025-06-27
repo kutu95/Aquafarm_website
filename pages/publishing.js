@@ -19,7 +19,9 @@ export default function Publishing() {
     slug: '',
     content: '',
     meta_description: '',
-    is_published: false
+    is_published: false,
+    priority: 0,
+    security: 'open'
   });
 
   useEffect(() => {
@@ -54,6 +56,7 @@ export default function Publishing() {
     const { data, error } = await supabase
       .from('pages')
       .select('*')
+      .order('priority', { ascending: false })
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -81,6 +84,8 @@ export default function Publishing() {
           content: selectedPage.content,
           meta_description: selectedPage.meta_description,
           is_published: selectedPage.is_published,
+          priority: selectedPage.priority,
+          security: selectedPage.security,
           updated_at: new Date().toISOString()
         })
         .eq('id', selectedPage.id);
@@ -116,7 +121,9 @@ export default function Publishing() {
           slug: newPage.slug,
           content: newPage.content,
           meta_description: newPage.meta_description,
-          is_published: newPage.is_published
+          is_published: newPage.is_published,
+          priority: newPage.priority,
+          security: newPage.security
         }]);
 
       if (error) throw error;
@@ -130,7 +137,9 @@ export default function Publishing() {
         slug: '',
         content: '',
         meta_description: '',
-        is_published: false
+        is_published: false,
+        priority: 0,
+        security: 'open'
       });
       setShowCreateForm(false);
       fetchPages();
@@ -222,13 +231,25 @@ export default function Publishing() {
                         <div>
                           <h3 className="font-medium text-gray-900">{page.title}</h3>
                           <p className="text-sm text-gray-500">/{page.slug}</p>
-                          <span className={`inline-block px-2 py-1 text-xs rounded-full ${
-                            page.is_published
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-yellow-100 text-yellow-800'
-                          }`}>
-                            {page.is_published ? 'Published' : 'Draft'}
-                          </span>
+                          <div className="flex gap-2 mt-1">
+                            <span className={`inline-block px-2 py-1 text-xs rounded-full ${
+                              page.is_published
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-yellow-100 text-yellow-800'
+                            }`}>
+                              {page.is_published ? 'Published' : 'Draft'}
+                            </span>
+                            <span className="inline-block px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
+                              Priority: {page.priority || 0}
+                            </span>
+                            <span className={`inline-block px-2 py-1 text-xs rounded-full ${
+                              page.security === 'admin' ? 'bg-red-100 text-red-800' :
+                              page.security === 'user' ? 'bg-orange-100 text-orange-800' :
+                              'bg-gray-100 text-gray-800'
+                            }`}>
+                              {page.security || 'open'}
+                            </span>
+                          </div>
                         </div>
                         <button
                           onClick={(e) => {
@@ -299,6 +320,36 @@ export default function Publishing() {
                       />
                       <span className="text-sm font-medium text-gray-700">Publish immediately</span>
                     </label>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Priority
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={newPage.priority}
+                        onChange={(e) => setNewPage({ ...newPage, priority: parseInt(e.target.value) || 0 })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="0"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Higher numbers = higher priority</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Security Level
+                      </label>
+                      <select
+                        value={newPage.security}
+                        onChange={(e) => setNewPage({ ...newPage, security: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="open">Open - Anyone can view</option>
+                        <option value="user">User - Logged in users only</option>
+                        <option value="admin">Admin - Administrators only</option>
+                      </select>
+                    </div>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -373,6 +424,36 @@ export default function Publishing() {
                       />
                       <span className="text-sm font-medium text-gray-700">Published</span>
                     </label>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Priority
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={selectedPage.priority || 0}
+                        onChange={(e) => setSelectedPage({ ...selectedPage, priority: parseInt(e.target.value) || 0 })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="0"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Higher numbers = higher priority</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Security Level
+                      </label>
+                      <select
+                        value={selectedPage.security || 'open'}
+                        onChange={(e) => setSelectedPage({ ...selectedPage, security: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="open">Open - Anyone can view</option>
+                        <option value="user">User - Logged in users only</option>
+                        <option value="admin">Admin - Administrators only</option>
+                      </select>
+                    </div>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
