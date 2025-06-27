@@ -35,6 +35,8 @@ export default function Publishing() {
   const [ogExpanded, setOgExpanded] = useState(false);
   const [editSeoExpanded, setEditSeoExpanded] = useState(false);
   const [editOgExpanded, setEditOgExpanded] = useState(false);
+  const [titleExpanded, setTitleExpanded] = useState(true);
+  const [editTitleExpanded, setEditTitleExpanded] = useState(true);
 
   useEffect(() => {
     checkUser();
@@ -336,41 +338,66 @@ export default function Publishing() {
               <div className="bg-white rounded-lg shadow p-6">
                 <h2 className="text-xl font-semibold mb-4">Create New Page</h2>
                 <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Title *
-                    </label>
-                    <input
-                      type="text"
-                      value={newPage.title}
-                      onChange={(e) => setNewPage({ ...newPage, title: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Page title"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Slug *
-                    </label>
-                    <input
-                      type="text"
-                      value={newPage.slug}
-                      onChange={(e) => setNewPage({ ...newPage, slug: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="page-slug"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Meta Description
-                    </label>
-                    <textarea
-                      value={newPage.meta_description}
-                      onChange={(e) => setNewPage({ ...newPage, meta_description: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      rows="3"
-                      placeholder="SEO meta description"
-                    />
+                  {/* Title Settings Panel */}
+                  <div className="border border-gray-200 rounded-lg">
+                    <button
+                      type="button"
+                      onClick={() => setTitleExpanded(!titleExpanded)}
+                      className="w-full px-4 py-3 text-left bg-gray-50 hover:bg-gray-100 rounded-t-lg border-b border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-medium text-gray-900">Title Settings</h3>
+                        <svg
+                          className={`w-5 h-5 text-gray-500 transform transition-transform ${titleExpanded ? 'rotate-180' : ''}`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
+                    </button>
+                    
+                    {titleExpanded && (
+                      <div className="p-4 space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Title *
+                          </label>
+                          <input
+                            type="text"
+                            value={newPage.title}
+                            onChange={(e) => setNewPage({ ...newPage, title: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Page title"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Slug *
+                          </label>
+                          <input
+                            type="text"
+                            value={newPage.slug}
+                            onChange={(e) => setNewPage({ ...newPage, slug: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="page-slug"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Meta Description
+                          </label>
+                          <textarea
+                            value={newPage.meta_description}
+                            onChange={(e) => setNewPage({ ...newPage, meta_description: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            rows="3"
+                            placeholder="SEO meta description"
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                   
                   {/* SEO Fields Section */}
@@ -586,38 +613,63 @@ export default function Publishing() {
               <div className="bg-white rounded-lg shadow p-6">
                 <h2 className="text-xl font-semibold mb-4">Edit Page: {selectedPage.title}</h2>
                 <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Title
-                    </label>
-                    <input
-                      type="text"
-                      value={selectedPage.title}
-                      onChange={(e) => setSelectedPage({ ...selectedPage, title: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Slug
-                    </label>
-                    <input
-                      type="text"
-                      value={selectedPage.slug}
-                      onChange={(e) => setSelectedPage({ ...selectedPage, slug: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Meta Description
-                    </label>
-                    <textarea
-                      value={selectedPage.meta_description}
-                      onChange={(e) => setSelectedPage({ ...selectedPage, meta_description: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      rows="3"
-                    />
+                  {/* Title Settings Panel */}
+                  <div className="border border-gray-200 rounded-lg">
+                    <button
+                      type="button"
+                      onClick={() => setEditTitleExpanded(!editTitleExpanded)}
+                      className="w-full px-4 py-3 text-left bg-gray-50 hover:bg-gray-100 rounded-t-lg border-b border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-medium text-gray-900">Title Settings</h3>
+                        <svg
+                          className={`w-5 h-5 text-gray-500 transform transition-transform ${editTitleExpanded ? 'rotate-180' : ''}`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
+                    </button>
+                    
+                    {editTitleExpanded && (
+                      <div className="p-4 space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Title
+                          </label>
+                          <input
+                            type="text"
+                            value={selectedPage.title}
+                            onChange={(e) => setSelectedPage({ ...selectedPage, title: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Slug
+                          </label>
+                          <input
+                            type="text"
+                            value={selectedPage.slug}
+                            onChange={(e) => setSelectedPage({ ...selectedPage, slug: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Meta Description
+                          </label>
+                          <textarea
+                            value={selectedPage.meta_description}
+                            onChange={(e) => setSelectedPage({ ...selectedPage, meta_description: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            rows="3"
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                   
                   {/* SEO Fields Section */}
