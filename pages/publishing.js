@@ -13,6 +13,7 @@ export default function Publishing() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showPageList, setShowPageList] = useState(true);
   const [newPage, setNewPage] = useState({
     title: '',
     slug: '',
@@ -184,60 +185,70 @@ export default function Publishing() {
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Publishing</h1>
-          <button
-            onClick={() => setShowCreateForm(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
-          >
-            Create New Page
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowPageList(!showPageList)}
+              className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors"
+            >
+              {showPageList ? 'Hide Page List' : 'Show Page List'}
+            </button>
+            <button
+              onClick={() => setShowCreateForm(true)}
+              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+            >
+              Create New Page
+            </button>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className={`grid gap-8 ${showPageList ? 'grid-cols-1 lg:grid-cols-3' : 'grid-cols-1'}`}>
           {/* Pages List */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold mb-4">Pages</h2>
-              <div className="space-y-2">
-                {pages.map((page) => (
-                  <div
-                    key={page.id}
-                    className={`p-3 rounded-md cursor-pointer transition-colors ${
-                      selectedPage?.id === page.id
-                        ? 'bg-blue-100 border-blue-300'
-                        : 'bg-gray-50 hover:bg-gray-100'
-                    }`}
-                    onClick={() => handlePageSelect(page)}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-medium text-gray-900">{page.title}</h3>
-                        <p className="text-sm text-gray-500">/{page.slug}</p>
-                        <span className={`inline-block px-2 py-1 text-xs rounded-full ${
-                          page.is_published
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {page.is_published ? 'Published' : 'Draft'}
-                        </span>
+          {showPageList && (
+            <div className="lg:col-span-1">
+              <div className="bg-white rounded-lg shadow p-6">
+                <h2 className="text-xl font-semibold mb-4">Pages</h2>
+                <div className="space-y-2">
+                  {pages.map((page) => (
+                    <div
+                      key={page.id}
+                      className={`p-3 rounded-md cursor-pointer transition-colors ${
+                        selectedPage?.id === page.id
+                          ? 'bg-blue-100 border-blue-300'
+                          : 'bg-gray-50 hover:bg-gray-100'
+                      }`}
+                      onClick={() => handlePageSelect(page)}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-medium text-gray-900">{page.title}</h3>
+                          <p className="text-sm text-gray-500">/{page.slug}</p>
+                          <span className={`inline-block px-2 py-1 text-xs rounded-full ${
+                            page.is_published
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {page.is_published ? 'Published' : 'Draft'}
+                          </span>
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeletePage(page.id);
+                          }}
+                          className="text-red-600 hover:text-red-800 text-sm"
+                        >
+                          Delete
+                        </button>
                       </div>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeletePage(page.id);
-                        }}
-                        className="text-red-600 hover:text-red-800 text-sm"
-                      >
-                        Delete
-                      </button>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Page Editor */}
-          <div className="lg:col-span-2">
+          <div className={showPageList ? 'lg:col-span-2' : 'col-span-1'}>
             {showCreateForm ? (
               <div className="bg-white rounded-lg shadow p-6">
                 <h2 className="text-xl font-semibold mb-4">Create New Page</h2>

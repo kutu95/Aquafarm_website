@@ -137,6 +137,12 @@ export default function NavBar() {
                         Dashboard
                       </Link>
                       <Link
+                        href="/publishing"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        Publishing
+                      </Link>
+                      <Link
                         href="/media-library"
                         className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                       >
@@ -239,6 +245,13 @@ export default function NavBar() {
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     Dashboard
+                  </Link>
+                  <Link
+                    href="/publishing"
+                    className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    Publishing
                   </Link>
                   <Link
                     href="/media-library"
