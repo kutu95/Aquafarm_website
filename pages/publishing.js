@@ -93,6 +93,7 @@ export default function Publishing() {
         .from('pages')
         .update({
           title: selectedPage.title,
+          slug: selectedPage.slug,
           content: selectedPage.content,
           meta_description: selectedPage.meta_description,
           is_published: selectedPage.is_published,
