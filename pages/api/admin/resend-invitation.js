@@ -42,7 +42,7 @@ export default async function handler(req, res) {
     console.log('Attempting to generate recovery link for:', email);
 
     // Always use production URL for email invitations, regardless of environment
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.aquafarm.au';
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://aquafarm.au';
 
     // Generate a recovery link for the user (this works for existing users)
     const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({

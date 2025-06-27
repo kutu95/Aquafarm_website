@@ -50,8 +50,9 @@ export default function Login() {
     }
 
     try {
+      
       const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://www.aquafarm.au'}/reset-password`
+        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://aquafarm.au'}/reset-password`
       });
 
       if (error) {

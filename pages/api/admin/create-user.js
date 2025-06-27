@@ -72,7 +72,7 @@ export default async function handler(req, res) {
     console.log('Generating magic link for invitation');
     
     // Always use production URL for email invitations, regardless of environment
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.aquafarm.au';
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://aquafarm.au';
     
     const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
       type: 'magiclink',
