@@ -29,6 +29,18 @@ export default function Publishing() {
     fetchPages();
   }, []);
 
+  // Handle edit parameter from URL
+  useEffect(() => {
+    if (router.query.edit && pages.length > 0) {
+      const pageToEdit = pages.find(page => page.id.toString() === router.query.edit);
+      if (pageToEdit) {
+        setSelectedPage(pageToEdit);
+        setShowCreateForm(false);
+        setShowPageList(true);
+      }
+    }
+  }, [router.query.edit, pages]);
+
   const checkUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
@@ -249,6 +261,17 @@ export default function Publishing() {
                             }`}>
                               {page.security || 'open'}
                             </span>
+                          </div>
+                          <div className="mt-2">
+                            <a
+                              href={`/${page.slug}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:text-blue-800 text-sm underline"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              Preview Page
+                            </a>
                           </div>
                         </div>
                         <button

@@ -150,4 +150,17 @@ $$ language 'plpgsql';
 CREATE TRIGGER update_volunteer_applications_updated_at 
     BEFORE UPDATE ON volunteer_applications 
     FOR EACH ROW 
-    EXECUTE FUNCTION update_updated_at_column(); 
+    EXECUTE FUNCTION update_updated_at_column();
+
+-- Add code_of_conduct_agreed column to volunteer_applications table if it doesn't exist
+DO $$ 
+BEGIN 
+  IF NOT EXISTS (SELECT 1 
+    FROM information_schema.columns 
+    WHERE table_name = 'volunteer_applications' 
+    AND column_name = 'code_of_conduct_agreed') 
+  THEN
+    ALTER TABLE volunteer_applications 
+    ADD COLUMN code_of_conduct_agreed BOOLEAN DEFAULT FALSE;
+  END IF;
+END $$; 

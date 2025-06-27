@@ -45,7 +45,7 @@ export default function Page({ page }) {
         </article>
         {user && isAdmin && (
           <div className="mt-8 text-center text-gray-500">
-            <Link href={`/dashboard?edit=${page.id}`} className="hover:text-gray-700">
+            <Link href={`/publishing?edit=${page.id}`} className="hover:text-gray-700">
               Edit this page
             </Link>
           </div>

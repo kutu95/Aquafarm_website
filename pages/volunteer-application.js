@@ -34,7 +34,8 @@ export default function VolunteerApplication() {
     nextOfKinCountryCode: '+1',
     nextOfKinEmail: '',
     otherInformation: '',
-    privacyPolicyAgreed: false
+    privacyPolicyAgreed: false,
+    codeOfConductAgreed: false
   });
 
   // Shortlist of common nationalities in alphabetical order
@@ -154,7 +155,8 @@ export default function VolunteerApplication() {
           nextOfKinCountryCode: data.next_of_kin_country_code || '+1',
           nextOfKinEmail: data.next_of_kin_email || '',
           otherInformation: data.other_information || '',
-          privacyPolicyAgreed: data.privacy_policy_agreed || false
+          privacyPolicyAgreed: data.privacy_policy_agreed || false,
+          codeOfConductAgreed: data.code_of_conduct_agreed || false
         });
       } else {
         // No existing application - pre-populate with user profile data
@@ -199,7 +201,8 @@ export default function VolunteerApplication() {
           nextOfKinCountryCode: '+1',
           nextOfKinEmail: '',
           otherInformation: '',
-          privacyPolicyAgreed: false
+          privacyPolicyAgreed: false,
+          codeOfConductAgreed: false
         });
       }
     } catch (error) {
@@ -250,7 +253,8 @@ export default function VolunteerApplication() {
         nextOfKinCountryCode: '+1',
         nextOfKinEmail: '',
         otherInformation: '',
-        privacyPolicyAgreed: false
+        privacyPolicyAgreed: false,
+        codeOfConductAgreed: false
       });
     }
   };
@@ -261,8 +265,12 @@ export default function VolunteerApplication() {
     setMessage('');
 
     if (!form.privacyPolicyAgreed) {
-      setMessage('You must agree to the privacy policy before submitting your application.');
-      setIsLoading(false);
+      setMessage('Please agree to the Privacy Policy before submitting.');
+      return;
+    }
+
+    if (!form.codeOfConductAgreed) {
+      setMessage('Please agree to the Code of Conduct before submitting.');
       return;
     }
 
@@ -314,6 +322,7 @@ export default function VolunteerApplication() {
         other_information: form.otherInformation,
         passport_image_path: passportPath,
         privacy_policy_agreed: form.privacyPolicyAgreed,
+        code_of_conduct_agreed: form.codeOfConductAgreed,
         updated_at: new Date().toISOString()
       };
 
@@ -850,6 +859,47 @@ export default function VolunteerApplication() {
                 )}
               </div>
 
+              {/* Code of Conduct Agreement */}
+              <div className="border-t border-gray-200 pt-6">
+                {isViewOnly ? (
+                  <div className="p-3 border border-gray-300 rounded-md bg-gray-50">
+                    <p className="text-gray-700">
+                      {form.codeOfConductAgreed ? '✓ Code of Conduct agreed to' : '✗ Code of Conduct not agreed to'}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex items-start">
+                    <div className="flex items-center h-5">
+                      <input
+                        id="code-of-conduct"
+                        type="checkbox"
+                        checked={form.codeOfConductAgreed}
+                        onChange={(e) => setForm({ ...form, codeOfConductAgreed: e.target.checked })}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        required
+                      />
+                    </div>
+                    <div className="ml-3 text-sm">
+                      <label htmlFor="code-of-conduct" className="font-medium text-gray-700">
+                        I agree to the{' '}
+                        <a
+                          href="/code-of-conduct"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-500 underline"
+                        >
+                          Code of Conduct
+                        </a>
+                        {' '}and will abide by the organization's standards of behavior and ethics.
+                      </label>
+                      <p className="text-gray-500 mt-1">
+                        You must agree to the code of conduct before submitting your application.
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* Submit Button */}
               <div className="flex justify-center pt-6">
                 {isViewOnly ? (
@@ -860,7 +910,7 @@ export default function VolunteerApplication() {
                 ) : (
                   <button
                     type="submit"
-                    disabled={isLoading || !form.privacyPolicyAgreed}
+                    disabled={isLoading || !form.privacyPolicyAgreed || !form.codeOfConductAgreed}
                     className="bg-blue-600 text-white px-8 py-3 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isLoading ? 'Saving...' : (existingApplication ? 'Update Application' : 'Submit Application')}
