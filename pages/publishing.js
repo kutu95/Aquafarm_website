@@ -39,6 +39,48 @@ export default function Publishing() {
   const [editTitleExpanded, setEditTitleExpanded] = useState(true);
   const [autoSaveStatus, setAutoSaveStatus] = useState('idle'); // 'idle', 'saving', 'saved', 'error'
   const [lastSaved, setLastSaved] = useState(null);
+  const [showTemplates, setShowTemplates] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewData, setPreviewData] = useState(null);
+
+  // Page templates
+  const pageTemplates = {
+    'about': {
+      title: 'About Us',
+      slug: 'about',
+      content: '<h2>About Margaret River Aquafarm</h2><p>Welcome to Margaret River Aquafarm, where we combine sustainable aquaculture practices with environmental stewardship...</p><h3>Our Mission</h3><p>We are committed to...</p><h3>Our Values</h3><ul><li>Sustainability</li><li>Environmental Protection</li><li>Community Engagement</li><li>Innovation</li></ul>',
+      meta_description: 'Learn about Margaret River Aquafarm, our mission, values, and commitment to sustainable aquaculture and environmental protection.',
+      priority: 5
+    },
+    'services': {
+      title: 'Our Services',
+      slug: 'services',
+      content: '<h2>Our Services</h2><p>At Margaret River Aquafarm, we offer a range of sustainable aquaculture services...</p><h3>Aquaculture Solutions</h3><p>We provide...</p><h3>Environmental Consulting</h3><p>Our team offers...</p><h3>Educational Programs</h3><p>We conduct...</p>',
+      meta_description: 'Discover our comprehensive aquaculture services, environmental consulting, and educational programs at Margaret River Aquafarm.',
+      priority: 4
+    },
+    'contact': {
+      title: 'Contact Us',
+      slug: 'contact',
+      content: '<h2>Contact Margaret River Aquafarm</h2><p>Get in touch with us to learn more about our services or to discuss your aquaculture needs.</p><h3>Get In Touch</h3><p><strong>Email:</strong> info@margaretriveraquafarm.com</p><p><strong>Phone:</strong> +61 (0)8 9757 XXXX</p><p><strong>Address:</strong> Margaret River, Western Australia</p><h3>Business Hours</h3><p>Monday - Friday: 9:00 AM - 5:00 PM</p><p>Saturday: 9:00 AM - 1:00 PM</p><p>Sunday: Closed</p>',
+      meta_description: 'Contact Margaret River Aquafarm for aquaculture services, environmental consulting, and educational programs. Get in touch today.',
+      priority: 3
+    },
+    'volunteer': {
+      title: 'Volunteer Opportunities',
+      slug: 'volunteer',
+      content: '<h2>Volunteer with Us</h2><p>Join our team of dedicated volunteers and contribute to sustainable aquaculture and marine conservation.</p><h3>Why Volunteer?</h3><ul><li>Gain hands-on experience in aquaculture</li><li>Contribute to environmental conservation</li><li>Learn from industry experts</li><li>Make a positive impact</li></ul><h3>Available Positions</h3><p>We offer various volunteer opportunities including...</p><p><a href="/volunteer-application" class="btn btn-primary">Apply Now</a></p>',
+      meta_description: 'Join Margaret River Aquafarm as a volunteer. Gain experience in sustainable aquaculture and contribute to marine conservation efforts.',
+      priority: 2
+    },
+    'custom': {
+      title: 'Custom Page',
+      slug: 'custom-page',
+      content: '<h2>Page Title</h2><p>Start writing your content here...</p>',
+      meta_description: 'Page description for SEO',
+      priority: 1
+    }
+  };
 
   useEffect(() => {
     checkUser();
@@ -234,6 +276,31 @@ export default function Publishing() {
     }
   };
 
+  const selectTemplate = (templateKey) => {
+    const template = pageTemplates[templateKey];
+    if (template) {
+      setNewPage({
+        ...newPage,
+        title: template.title,
+        slug: template.slug,
+        content: template.content,
+        meta_description: template.meta_description,
+        priority: template.priority
+      });
+      setShowTemplates(false);
+    }
+  };
+
+  const handlePreview = (pageData) => {
+    setPreviewData(pageData);
+    setShowPreview(true);
+  };
+
+  const closePreview = () => {
+    setShowPreview(false);
+    setPreviewData(null);
+  };
+
   // Auto-save functionality
   const autoSave = async (pageData) => {
     if (!pageData || !pageData.id) return;
@@ -396,7 +463,38 @@ export default function Publishing() {
           <div className={showPageList ? 'lg:col-span-2' : 'col-span-1'}>
             {showCreateForm ? (
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Create New Page</h2>
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Create New Page</h2>
+                  <button
+                    onClick={() => setShowTemplates(!showTemplates)}
+                    className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors"
+                  >
+                    {showTemplates ? 'Hide Templates' : 'Use Template'}
+                  </button>
+                </div>
+                
+                {/* Template Selection */}
+                {showTemplates && (
+                  <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">Choose a Template</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {Object.entries(pageTemplates).map(([key, template]) => (
+                        <button
+                          key={key}
+                          onClick={() => selectTemplate(key)}
+                          className="p-3 text-left border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                        >
+                          <h4 className="font-medium text-gray-900 dark:text-white">{template.title}</h4>
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{template.meta_description}</p>
+                          <span className="inline-block mt-2 px-2 py-1 text-xs bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded">
+                            Priority: {template.priority}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
                 <div className="space-y-4">
                   {/* Title Settings Panel */}
                   <div className="border border-gray-200 dark:border-gray-600 rounded-lg">
@@ -472,209 +570,81 @@ export default function Publishing() {
                     )}
                   </div>
                   
-                  {/* SEO Fields Section */}
-                  <div className="border-t pt-4">
-                    <div className="space-y-4">
-                      {/* Basic SEO Panel */}
-                      <div className="border border-gray-200 rounded-lg">
-                        <button
-                          type="button"
-                          onClick={() => setSeoExpanded(!seoExpanded)}
-                          className="w-full px-4 py-3 text-left bg-gray-50 hover:bg-gray-100 rounded-t-lg border-b border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                          <div className="flex items-center justify-between">
-                            <h3 className="text-lg font-medium text-gray-900">SEO Settings</h3>
-                            <svg
-                              className={`w-5 h-5 text-gray-500 transform transition-transform ${seoExpanded ? 'rotate-180' : ''}`}
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                            </svg>
-                          </div>
-                        </button>
-                        
-                        {seoExpanded && (
-                          <div className="p-4 space-y-4">
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Meta Title
-                              </label>
-                              <input
-                                type="text"
-                                value={newPage.meta_title}
-                                onChange={(e) => setNewPage({ ...newPage, meta_title: e.target.value })}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="Custom title for search results (50-60 characters)"
-                                maxLength="60"
-                              />
-                              <p className="text-xs text-gray-500 mt-1">
-                                {newPage.meta_title?.length || 0}/60 characters
-                              </p>
-                            </div>
-
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Canonical URL
-                              </label>
-                              <input
-                                type="url"
-                                value={newPage.canonical_url}
-                                onChange={(e) => setNewPage({ ...newPage, canonical_url: e.target.value })}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="https://example.com/page-url"
-                              />
-                              <p className="text-xs text-gray-500 mt-1">Leave empty to use default URL</p>
-                            </div>
-
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Robots Meta Tag
-                              </label>
-                              <select
-                                value={newPage.robots_meta}
-                                onChange={(e) => setNewPage({ ...newPage, robots_meta: e.target.value })}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                              >
-                                <option value="index, follow">Index, Follow</option>
-                                <option value="noindex, follow">No Index, Follow</option>
-                                <option value="index, nofollow">Index, No Follow</option>
-                                <option value="noindex, nofollow">No Index, No Follow</option>
-                              </select>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Open Graph Panel */}
-                      <div className="border border-gray-200 rounded-lg">
-                        <button
-                          type="button"
-                          onClick={() => setOgExpanded(!ogExpanded)}
-                          className="w-full px-4 py-3 text-left bg-gray-50 hover:bg-gray-100 rounded-t-lg border-b border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                          <div className="flex items-center justify-between">
-                            <h3 className="text-lg font-medium text-gray-900">Open Graph (Social Media)</h3>
-                            <svg
-                              className={`w-5 h-5 text-gray-500 transform transition-transform ${ogExpanded ? 'rotate-180' : ''}`}
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                            </svg>
-                          </div>
-                        </button>
-                        
-                        {ogExpanded && (
-                          <div className="p-4 space-y-4">
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">
-                                OG Title
-                              </label>
-                              <input
-                                type="text"
-                                value={newPage.og_title}
-                                onChange={(e) => setNewPage({ ...newPage, og_title: e.target.value })}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="Title for social media shares"
-                              />
-                            </div>
-
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">
-                                OG Description
-                              </label>
-                              <textarea
-                                value={newPage.og_description}
-                                onChange={(e) => setNewPage({ ...newPage, og_description: e.target.value })}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                rows="2"
-                                placeholder="Description for social media shares"
-                              />
-                            </div>
-
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">
-                                OG Image URL
-                              </label>
-                              <input
-                                type="url"
-                                value={newPage.og_image}
-                                onChange={(e) => setNewPage({ ...newPage, og_image: e.target.value })}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="https://example.com/image.jpg"
-                              />
-                              <p className="text-xs text-gray-500 mt-1">Recommended: 1200x630 pixels</p>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  
+                  {/* Content */}
                   <div>
-                    <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={newPage.is_published}
-                        onChange={(e) => setNewPage({ ...newPage, is_published: e.target.checked })}
-                        className="mr-2"
-                      />
-                      <span className="text-sm font-medium text-gray-700">Publish immediately</span>
-                    </label>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Priority
-                      </label>
-                      <input
-                        type="number"
-                        min="0"
-                        value={newPage.priority}
-                        onChange={(e) => setNewPage({ ...newPage, priority: parseInt(e.target.value) || 0 })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="0"
-                      />
-                      <p className="text-xs text-gray-500 mt-1">Higher numbers = higher priority</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Security Level
-                      </label>
-                      <select
-                        value={newPage.security}
-                        onChange={(e) => setNewPage({ ...newPage, security: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option value="open">Open - Anyone can view</option>
-                        <option value="user">User - Logged in users only</option>
-                        <option value="admin">Admin - Administrators only</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Content
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Content *
                     </label>
                     <TinyMCE
                       value={newPage.content}
                       onChange={(content) => setNewPage({ ...newPage, content })}
                     />
                   </div>
-                  <div className="flex space-x-3">
+
+                  {/* Settings */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Priority
+                      </label>
+                      <input
+                        type="number"
+                        value={newPage.priority || 0}
+                        onChange={(e) => setNewPage({ ...newPage, priority: parseInt(e.target.value) || 0 })}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        min="0"
+                        max="10"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Security Level
+                      </label>
+                      <select
+                        value={newPage.security || 'open'}
+                        onChange={(e) => setNewPage({ ...newPage, security: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      >
+                        <option value="open">Open</option>
+                        <option value="user">User Only</option>
+                        <option value="admin">Admin Only</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Published
+                      </label>
+                      <select
+                        value={newPage.is_published ? 'true' : 'false'}
+                        onChange={(e) => setNewPage({ ...newPage, is_published: e.target.value === 'true' })}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      >
+                        <option value="false">Draft</option>
+                        <option value="true">Published</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 mt-6">
                     <button
+                      type="button"
                       onClick={handleCreatePage}
                       disabled={isSaving}
-                      className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
+                      className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
                     >
                       {isSaving ? 'Creating...' : 'Create Page'}
                     </button>
                     <button
+                      type="button"
+                      onClick={() => handlePreview(newPage)}
+                      className="bg-gray-600 dark:bg-gray-700 text-white px-6 py-2 rounded-md hover:bg-gray-700 dark:hover:bg-gray-600 transition-colors"
+                    >
+                      Preview
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => setShowCreateForm(false)}
-                      className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition-colors"
+                      className="bg-gray-400 text-white px-6 py-2 rounded-md hover:bg-gray-500 transition-colors"
                     >
                       Cancel
                     </button>
@@ -982,13 +952,22 @@ export default function Publishing() {
                       onChange={(content) => setSelectedPage({ ...selectedPage, content })}
                     />
                   </div>
-                  <button
-                    onClick={handleSave}
-                    disabled={isSaving}
-                    className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
-                  >
-                    {isSaving ? 'Saving...' : 'Save Changes'}
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleSave}
+                      disabled={isSaving}
+                      className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
+                    >
+                      {isSaving ? 'Saving...' : 'Save Changes'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handlePreview(selectedPage)}
+                      className="bg-gray-600 dark:bg-gray-700 text-white px-4 py-2 rounded-md hover:bg-gray-700 dark:hover:bg-gray-600 transition-colors"
+                    >
+                      Preview
+                    </button>
+                  </div>
                 </div>
               </div>
             ) : (
@@ -1001,6 +980,45 @@ export default function Publishing() {
           </div>
         </div>
       </div>
+
+      {/* Preview Modal */}
+      {showPreview && previewData && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-600">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Preview: {previewData.title}
+              </h3>
+              <button
+                onClick={closePreview}
+                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+              <div className="prose dark:prose-invert max-w-none">
+                <h1 className="text-3xl font-bold mb-4">{previewData.title}</h1>
+                {previewData.meta_description && (
+                  <p className="text-gray-600 dark:text-gray-400 mb-6 italic">
+                    {previewData.meta_description}
+                  </p>
+                )}
+                <div dangerouslySetInnerHTML={{ __html: previewData.content }} />
+              </div>
+            </div>
+            <div className="p-4 border-t border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700">
+              <div className="flex justify-between items-center text-sm text-gray-600 dark:text-gray-400">
+                <span>Slug: /{previewData.slug}</span>
+                <span>Priority: {previewData.priority || 0}</span>
+                <span>Status: {previewData.is_published ? 'Published' : 'Draft'}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 } 

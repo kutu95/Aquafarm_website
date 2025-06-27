@@ -4,6 +4,7 @@ import React, { useState, useRef } from 'react';
 import { Editor } from '@tinymce/tinymce-react';
 import { supabase } from '@/lib/supabaseClient';
 import { Dialog } from '@headlessui/react';
+import MediaPicker from './MediaPicker';
 
 const TinyMCE = ({ value, onChange, placeholder = 'Start writing your content here...' }) => {
   const [showMediaSelector, setShowMediaSelector] = useState(false);
