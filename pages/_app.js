@@ -13,14 +13,14 @@ export default function App({ Component, pageProps }) {
   useEffect(() => {
     async function loadUser() {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        if (error) {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error) {
           console.error('Session error:', error);
-          setUser(null);
+        setUser(null);
           setRole(null);
-        } else {
-          setUser(session?.user ?? null);
-          if (session?.user) {
+      } else {
+        setUser(session?.user ?? null);
+        if (session?.user) {
             // Get role from user metadata
             const userRole = session.user.user_metadata?.role;
             console.log('User role from metadata:', userRole);
@@ -50,8 +50,8 @@ export default function App({ Component, pageProps }) {
         const userRole = session.user.user_metadata?.role;
         console.log('User role from auth change:', userRole);
         setRole(userRole || null);
-      } else {
-        setRole(null);
+          } else {
+            setRole(null);
       }
     });
 

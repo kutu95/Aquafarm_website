@@ -238,7 +238,7 @@ export default function NavBar() {
                 Volunteer Application
               </Link>
               {role === 'admin' && (
-                <>
+          <>
                   <Link
                     href="/dashboard"
                     className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
@@ -274,8 +274,8 @@ export default function NavBar() {
                   >
                     Manage Users
                   </Link>
-                </>
-              )}
+          </>
+        )}
               <button
                 onClick={() => {
                   handleLogout();
@@ -292,9 +292,9 @@ export default function NavBar() {
               className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              Login
-            </Link>
-          )}
+            Login
+          </Link>
+        )}
         </div>
       </div>
     </nav>

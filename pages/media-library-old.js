@@ -23,7 +23,6 @@ export default function MediaLibrary() {
   const [resizeHeight, setResizeHeight] = useState('');
   const [originalDimensions, setOriginalDimensions] = useState({ width: 0, height: 0 });
   const [resizeLoading, setResizeLoading] = useState(false);
-  const [renameLoading, setRenameLoading] = useState(false);
 
   useEffect(() => {
     if (user === null || role === null) return;
@@ -37,13 +36,24 @@ export default function MediaLibrary() {
 
   const checkBucketsAndFetchFiles = async () => {
     try {
+      // Get and log the current session state
       const { data: { session }, error: authError } = await supabase.auth.getSession();
       if (authError) {
         console.error('Auth error:', authError);
         setListError('Authentication error');
         return;
       }
+      
+      // Log authentication details
+      console.log('Auth state:', {
+        hasSession: !!session,
+        accessToken: session?.access_token ? 'Present' : 'Missing',
+        user: session?.user?.email,
+        role: session?.user?.role,
+        id: session?.user?.id
+      });
 
+      // Only use the basic list approach since it works
       const { data: files, error: filesError } = await supabase
         .storage
         .from('page-images')
@@ -55,6 +65,14 @@ export default function MediaLibrary() {
         setFiles([]);
         return;
       }
+
+      // Log detailed file information
+      console.log('Files from bucket:', files?.map(f => ({
+        name: f.name,
+        id: f.id,
+        metadata: f.metadata,
+        created_at: f.created_at
+      })));
 
       setFiles(files || []);
       setListError('');
@@ -78,6 +96,7 @@ export default function MediaLibrary() {
       setLoading(true);
       const fileExt = uploadFile.name.split('.').pop().toLowerCase();
       
+      // Validate file type
       if (!uploadFile.type.startsWith('image/')) {
         setUploadError('Only image files are allowed.');
         return;
@@ -135,15 +154,20 @@ export default function MediaLibrary() {
 
   const getPublicURL = async (fileName) => {
     try {
+      // Try getting a download URL instead of public URL
       const { data, error } = await supabase
         .storage
         .from('page-images')
-        .createSignedUrl(fileName, 60 * 60);
+        .createSignedUrl(fileName, 60 * 60); // 1 hour expiry
 
       if (error) {
         console.error('Error creating signed URL:', error);
         return '';
       }
+
+      console.log('Signed URL generated for', fileName, {
+        signedUrl: data.signedUrl
+      });
 
       return data.signedUrl;
     } catch (err) {
@@ -177,6 +201,10 @@ export default function MediaLibrary() {
     const handleError = () => {
       setIsLoading(false);
       setHasError(true);
+      console.error('Image load error:', {
+        fileName: file.name,
+        url
+      });
     };
 
     return (
@@ -219,11 +247,13 @@ export default function MediaLibrary() {
     if (!fileToRename || !newFileName.trim()) return;
 
     try {
-      setRenameLoading(true);
+      setLoading(true);
       
+      // Get the file extension from the original file
       const fileExt = fileToRename.split('.').pop();
       const newFileNameWithExt = newFileName.trim() + '.' + fileExt;
       
+      // Download the original file
       const { data: downloadData, error: downloadError } = await supabase
         .storage
         .from('page-images')
@@ -234,6 +264,7 @@ export default function MediaLibrary() {
         return;
       }
 
+      // Upload with new name
       const { error: uploadError } = await supabase
         .storage
         .from('page-images')
@@ -247,6 +278,7 @@ export default function MediaLibrary() {
         return;
       }
 
+      // Delete the original file
       const { error: deleteError } = await supabase
         .storage
         .from('page-images')
@@ -254,6 +286,7 @@ export default function MediaLibrary() {
 
       if (deleteError) {
         console.error('Failed to delete original file:', deleteError);
+        // Continue anyway since the new file was uploaded successfully
       }
 
       await checkBucketsAndFetchFiles();
@@ -262,7 +295,7 @@ export default function MediaLibrary() {
     } catch (err) {
       setListError('Failed to rename file: ' + err.message);
     } finally {
-      setRenameLoading(false);
+      setLoading(false);
     }
   };
 
@@ -272,6 +305,7 @@ export default function MediaLibrary() {
     try {
       setResizeLoading(true);
       
+      // Download the original file
       const { data: downloadData, error: downloadError } = await supabase
         .storage
         .from('page-images')
@@ -282,36 +316,47 @@ export default function MediaLibrary() {
         return;
       }
 
+      // Create a canvas to resize the image
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       const img = new Image();
       
       img.onload = async () => {
+        // Calculate new dimensions maintaining aspect ratio
         let newWidth = parseInt(resizeWidth) || 0;
         let newHeight = parseInt(resizeHeight) || 0;
         
         if (newWidth && newHeight) {
+          // Both dimensions specified, use the smaller one to maintain aspect ratio
           const ratio = Math.min(newWidth / img.width, newHeight / img.height);
           newWidth = Math.round(img.width * ratio);
           newHeight = Math.round(img.height * ratio);
         } else if (newWidth) {
+          // Only width specified
           const ratio = newWidth / img.width;
           newHeight = Math.round(img.height * ratio);
         } else if (newHeight) {
+          // Only height specified
           const ratio = newHeight / img.height;
           newWidth = Math.round(img.width * ratio);
         }
 
+        // Set canvas dimensions
         canvas.width = newWidth;
         canvas.height = newHeight;
+
+        // Draw resized image
         ctx.drawImage(img, 0, 0, newWidth, newHeight);
 
+        // Convert canvas to blob
         canvas.toBlob(async (blob) => {
           try {
+            // Create new filename with dimensions
             const fileExt = fileToResize.split('.').pop();
             const fileNameWithoutExt = fileToResize.replace('.' + fileExt, '');
             const newFileName = `${fileNameWithoutExt}_${newWidth}x${newHeight}.${fileExt}`;
 
+            // Upload resized image
             const { error: uploadError } = await supabase
               .storage
               .from('page-images')
@@ -343,6 +388,7 @@ export default function MediaLibrary() {
         setResizeLoading(false);
       };
 
+      // Create object URL for the image
       const objectUrl = URL.createObjectURL(downloadData);
       img.src = objectUrl;
 
@@ -384,34 +430,12 @@ export default function MediaLibrary() {
     }
   };
 
-  const openRenameDialog = (fileName) => {
-    const fileNameWithoutExt = fileName.replace(/\.[^/.]+$/, '');
-    setFileToRename(fileName);
-    setNewFileName(fileNameWithoutExt);
-  };
-
-  const handleWidthChange = (value) => {
-    setResizeWidth(value);
-    if (value && originalDimensions.width && originalDimensions.height) {
-      const ratio = parseInt(value) / originalDimensions.width;
-      setResizeHeight(Math.round(originalDimensions.height * ratio).toString());
-    }
-  };
-
-  const handleHeightChange = (value) => {
-    setResizeHeight(value);
-    if (value && originalDimensions.width && originalDimensions.height) {
-      const ratio = parseInt(value) / originalDimensions.height;
-      setResizeWidth(Math.round(originalDimensions.width * ratio).toString());
-    }
-  };
-
   if (user === null || role === null) {
     return <div className="p-6">Checking auth...</div>;
   }
 
   if (!user || role !== 'admin') {
-    return null;
+    return null; // Will redirect in useEffect
   }
 
   return (
@@ -448,26 +472,12 @@ export default function MediaLibrary() {
           {files.map((file) => (
             <div key={file.name} className="border p-2 rounded">
               <ImageWithUrl file={file} />
-              <div className="flex flex-col gap-1">
-                <button
-                  onClick={() => openRenameDialog(file.name)}
-                  className="bg-blue-500 text-white p-1 rounded text-xs"
-                >
-                  Rename
-                </button>
-                <button
-                  onClick={() => openResizeDialog(file.name)}
-                  className="bg-purple-500 text-white p-1 rounded text-xs"
-                >
-                  Resize
-                </button>
-                <button
-                  onClick={() => handleDelete(file.name)}
-                  className="bg-red-500 text-white p-1 rounded text-xs"
-                >
-                  Delete
-                </button>
-              </div>
+              <button
+                onClick={() => handleDelete(file.name)}
+                className="bg-red-500 text-white p-1 rounded text-xs w-full"
+              >
+                Delete
+              </button>
             </div>
           ))}
         </div>
@@ -482,142 +492,26 @@ export default function MediaLibrary() {
             <Dialog.Overlay className="fixed inset-0 bg-black opacity-30" />
             
             <div className="relative bg-white rounded-lg p-6 max-w-md w-full mx-4">
-              <Dialog.Title className="text-lg font-medium mb-4">
+              <Dialog.Title className="text-xl font-bold mb-4">
                 Confirm Delete
               </Dialog.Title>
-              <p className="mb-4">Are you sure you want to delete "{fileToDelete}"?</p>
+              
+              <p className="mb-4">
+                Are you sure you want to delete the file "{fileToDelete}"? This action cannot be undone.
+              </p>
+
               <div className="flex justify-end gap-2">
                 <button
                   onClick={() => setFileToDelete(null)}
-                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded"
+                  className="bg-gray-200 text-gray-800 p-2 rounded"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={confirmDelete}
-                  className="bg-red-500 text-white px-4 py-2 rounded"
+                  className="bg-red-500 text-white p-2 rounded"
                 >
                   Delete
-                </button>
-              </div>
-            </div>
-          </div>
-        </Dialog>
-
-        {/* Rename Dialog */}
-        <Dialog
-          open={!!fileToRename}
-          onClose={() => setFileToRename(null)}
-          className="fixed inset-0 z-50 overflow-y-auto"
-        >
-          <div className="flex items-center justify-center min-h-screen">
-            <Dialog.Overlay className="fixed inset-0 bg-black opacity-30" />
-            
-            <div className="relative bg-white rounded-lg p-6 max-w-md w-full mx-4">
-              <Dialog.Title className="text-lg font-medium mb-4">
-                Rename Image
-              </Dialog.Title>
-              <p className="mb-2 text-sm text-gray-600">Rename: {fileToRename}</p>
-              <input
-                type="text"
-                value={newFileName}
-                onChange={(e) => setNewFileName(e.target.value)}
-                className="border p-2 w-full mb-4"
-                placeholder="Enter new filename (without extension)"
-              />
-              <div className="flex justify-end gap-2">
-                <button
-                  onClick={() => {
-                    setFileToRename(null);
-                    setNewFileName('');
-                  }}
-                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleRename}
-                  disabled={renameLoading || !newFileName.trim()}
-                  className={`bg-blue-500 text-white px-4 py-2 rounded ${renameLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                >
-                  {renameLoading ? 'Renaming...' : 'Rename'}
-                </button>
-              </div>
-            </div>
-          </div>
-        </Dialog>
-
-        {/* Resize Dialog */}
-        <Dialog
-          open={!!fileToResize}
-          onClose={() => {
-            setFileToResize(null);
-            setResizeWidth('');
-            setResizeHeight('');
-            setOriginalDimensions({ width: 0, height: 0 });
-          }}
-          className="fixed inset-0 z-50 overflow-y-auto"
-        >
-          <div className="flex items-center justify-center min-h-screen">
-            <Dialog.Overlay className="fixed inset-0 bg-black opacity-30" />
-            
-            <div className="relative bg-white rounded-lg p-6 max-w-md w-full mx-4">
-              <Dialog.Title className="text-lg font-medium mb-4">
-                Resize Image
-              </Dialog.Title>
-              <p className="mb-2 text-sm text-gray-600">Resize: {fileToResize}</p>
-              {originalDimensions.width > 0 && (
-                <p className="mb-4 text-sm text-gray-600">
-                  Original: {originalDimensions.width} × {originalDimensions.height}px
-                </p>
-              )}
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Width (px)</label>
-                  <input
-                    type="number"
-                    value={resizeWidth}
-                    onChange={(e) => handleWidthChange(e.target.value)}
-                    className="border p-2 w-full"
-                    placeholder="Enter width"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Height (px)</label>
-                  <input
-                    type="number"
-                    value={resizeHeight}
-                    onChange={(e) => handleHeightChange(e.target.value)}
-                    className="border p-2 w-full"
-                    placeholder="Enter height"
-                  />
-                </div>
-              </div>
-              
-              {resizeWidth && resizeHeight && (
-                <p className="text-sm text-gray-600 mb-4">
-                  New file: {fileToResize.replace(/\.[^/.]+$/, '')}_{resizeWidth}x{resizeHeight}.{fileToResize.split('.').pop()}
-                </p>
-              )}
-              
-              <div className="flex justify-end gap-2">
-                <button
-                  onClick={() => {
-                    setFileToResize(null);
-                    setResizeWidth('');
-                    setResizeHeight('');
-                    setOriginalDimensions({ width: 0, height: 0 });
-                  }}
-                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleResize}
-                  disabled={resizeLoading || (!resizeWidth && !resizeHeight)}
-                  className={`bg-purple-500 text-white px-4 py-2 rounded ${resizeLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                >
-                  {resizeLoading ? 'Resizing...' : 'Resize'}
                 </button>
               </div>
             </div>
@@ -627,4 +521,4 @@ export default function MediaLibrary() {
       <Footer />
     </>
   );
-} 
+}
