@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 import { AuthContext } from '@/pages/_app';
 import { supabase } from '@/lib/supabaseClient';
 import Layout from '@/components/Layout';
-import TinyMCE from '@/components/TinyMCE';
+import TinyMCE from '@/components/TinyMCE-WithScripts';
 
 export default function TemplateManagement() {
   const { user, role } = useContext(AuthContext);

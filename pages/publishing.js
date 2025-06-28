@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { supabase } from '../lib/supabaseClient';
 import Layout from '../components/Layout';
-import TinyMCE from '../components/TinyMCE';
+import TinyMCE from '@/components/TinyMCE-WithScripts';
 import { trackEvent } from '../components/GoogleAnalytics';
 
 export default function Publishing() {
