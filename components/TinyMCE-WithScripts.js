@@ -68,33 +68,56 @@ const TinyMCEWithScripts = ({ value, onChange, placeholder = 'Start writing your
   const handleEditorInit = (evt, editor) => {
     editorRef.current = editor;
     
-    // Add custom menu for image editing
-    editor.ui.registry.addMenuItem('editimage', {
-      text: 'Edit Image',
-      onAction: () => {
-        editExistingImage();
-      }
-    });
-
-    // Add context menu for images
-    editor.on('contextmenu', (e) => {
+    // Add custom context menu for images
+    editor.on('contextmenu', function(e) {
       const target = e.target;
-      if (target.tagName === 'IMG') {
+      if (target.tagName === 'IMG' || target.classList.contains('bg-image-container') || target.closest('.bg-image-container')) {
         e.preventDefault();
-        editor.selection.select(target);
         
-        // Show custom context menu
-        const menu = editor.ui.registry.getAll().contextMenus.editimage;
-        if (menu) {
-          const removeMenu = () => {
-            if (menu.menu) {
-              menu.menu.remove();
-            }
-          };
-          
-          menu.show();
-          editor.on('click', removeMenu, true);
-        }
+        // Create custom context menu
+        const menu = document.createElement('div');
+        menu.className = 'custom-context-menu';
+        menu.style.cssText = `
+          position: fixed;
+          background: white;
+          border: 1px solid #ccc;
+          border-radius: 4px;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+          z-index: 10000;
+          padding: 4px 0;
+        `;
+        
+        const editOption = document.createElement('div');
+        editOption.textContent = 'Edit Image';
+        editOption.style.cssText = `
+          padding: 8px 16px;
+          cursor: pointer;
+          font-size: 14px;
+        `;
+        editOption.onmouseover = () => editOption.style.backgroundColor = '#f0f0f0';
+        editOption.onmouseout = () => editOption.style.backgroundColor = 'transparent';
+        editOption.onclick = () => {
+          document.body.removeChild(menu);
+          editExistingImage();
+        };
+        
+        menu.appendChild(editOption);
+        menu.style.left = e.pageX + 'px';
+        menu.style.top = e.pageY + 'px';
+        
+        document.body.appendChild(menu);
+        
+        // Remove menu when clicking elsewhere
+        const removeMenu = () => {
+          if (document.body.contains(menu)) {
+            document.body.removeChild(menu);
+          }
+          document.removeEventListener('click', removeMenu);
+        };
+        
+        setTimeout(() => {
+          document.addEventListener('click', removeMenu);
+        }, 100);
       }
     });
   };
@@ -114,23 +137,241 @@ const TinyMCEWithScripts = ({ value, onChange, placeholder = 'Start writing your
     setShowHtmlEditor(false);
   };
 
+  const handleFileUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+
+      const { error: uploadError } = await supabase
+        .storage
+        .from('page-images')
+        .upload(fileName, file, {
+          contentType: file.type,
+          upsert: true
+        });
+
+      if (uploadError) {
+        throw new Error(`Upload failed: ${uploadError.message}`);
+      }
+
+      // Get the signed URL
+      const { data: urlData } = await supabase
+        .storage
+        .from('page-images')
+        .createSignedUrl(fileName, 3600 * 24 * 365);
+
+      if (editorRef.current) {
+        editorRef.current.insertContent(`<img src="${urlData?.signedUrl}" alt="${fileName}" />`);
+      }
+
+      setShowMediaSelector(false);
+      event.target.value = ''; // Clear the input
+    } catch (error) {
+      console.error('Upload error:', error);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleImageSelect = (file) => {
+    setSelectedImage(file);
+    setImageAlt(file.name);
+    setImageCaption('');
+    setImageWidth('');
+    setImageHeight('');
+    setImageSize('medium');
+    setImageSpacing('normal');
+    setImageType('inline');
+    setBackgroundOverlay('none');
+  };
+
+  const parseImageProperties = (element) => {
+    // Parse existing image properties from the element
+    const img = element.querySelector('img') || element;
+    const src = img.src || img.getAttribute('src');
+    const alt = img.alt || img.getAttribute('alt') || '';
+    const width = img.width || img.getAttribute('width') || '';
+    const height = img.height || img.getAttribute('height') || '';
+    
+    // Parse classes for size and spacing
+    const classes = img.className || '';
+    let size = 'medium';
+    let spacing = 'normal';
+    
+    if (classes.includes('img-small')) size = 'small';
+    else if (classes.includes('img-large')) size = 'large';
+    else if (classes.includes('img-fluid')) size = 'fluid';
+    
+    if (classes.includes('img-spacing-tight')) spacing = 'tight';
+    else if (classes.includes('img-spacing-wide')) spacing = 'wide';
+    else if (classes.includes('img-spacing-left')) spacing = 'left';
+    else if (classes.includes('img-spacing-right')) spacing = 'right';
+    else if (classes.includes('img-spacing-center')) spacing = 'center';
+
+    // Check if it's a background image
+    const isBackground = element.classList.contains('bg-image-container');
+    let overlay = 'none';
+    if (isBackground) {
+      if (element.classList.contains('bg-image-dark')) overlay = 'dark';
+      else if (element.classList.contains('bg-image-light')) overlay = 'light';
+    }
+
+    // Find the image in our media files
+    const mediaFile = mediaFiles.find(file => file.url === src);
+    
+    return {
+      file: mediaFile,
+      alt,
+      width,
+      height,
+      size,
+      spacing,
+      type: isBackground ? 'background' : 'inline',
+      overlay: isBackground ? overlay : 'none',
+      caption: element.querySelector('figcaption')?.textContent || ''
+    };
+  };
+
+  const editExistingImage = () => {
+    const editor = editorRef.current;
+    if (!editor) return;
+
+    const selectedNode = editor.selection.getNode();
+    let elementToEdit = selectedNode;
+
+    // Improved element detection for background images
+    if (selectedNode.tagName === 'IMG') {
+      elementToEdit = selectedNode;
+    } else if (selectedNode.classList.contains('bg-image-container')) {
+      elementToEdit = selectedNode;
+    } else if (selectedNode.closest('.bg-image-container')) {
+      elementToEdit = selectedNode.closest('.bg-image-container');
+    } else if (selectedNode.closest('figure')) {
+      elementToEdit = selectedNode.closest('figure');
+    } else if (selectedNode.closest('div[style*="background-image"]')) {
+      elementToEdit = selectedNode.closest('div[style*="background-image"]');
+    }
+
+    // Try to find background image containers in the selection
+    if (!elementToEdit || elementToEdit === selectedNode) {
+      const selection = editor.selection.getContent();
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = selection;
+      const bgContainer = tempDiv.querySelector('.bg-image-container');
+      if (bgContainer) {
+        elementToEdit = bgContainer;
+      }
+    }
+
+    if (elementToEdit) {
+      const props = parseImageProperties(elementToEdit);
+      if (props.file) {
+        setSelectedImage(props.file);
+        setImageAlt(props.alt);
+        setImageCaption(props.caption);
+        setImageWidth(props.width);
+        setImageHeight(props.height);
+        setImageSize(props.size);
+        setImageSpacing(props.spacing);
+        setImageType(props.type);
+        setBackgroundOverlay(props.overlay);
+        setIsEditing(true);
+        setEditingElement(elementToEdit);
+        setShowMediaSelector(true);
+      }
+    }
+  };
+
+  const insertImageWithOptions = () => {
+    if (!selectedImage || !editorRef.current) return;
+
+    const editor = editorRef.current;
+
+    if (isEditing && editingElement) {
+      // Remove the existing element
+      editor.dom.remove(editingElement);
+    }
+
+    if (imageType === 'background') {
+      // Insert as background image with text overlay
+      let bgDiv = `<div class="bg-image-container bg-image-${backgroundOverlay}" style="background-image: url('${selectedImage.url}'); min-height: 300px; background-size: cover; background-position: center; background-repeat: no-repeat; position: relative; display: flex; align-items: center; justify-content: center; margin: 1rem 0;">`;
+      
+      if (backgroundOverlay !== 'none') {
+        bgDiv += `<div class="bg-overlay"></div>`;
+      }
+      
+      bgDiv += `<div class="bg-content"><p>Your text content here. Click to edit.</p></div></div>`;
+      
+      editor.insertContent(bgDiv);
+    } else {
+      // Insert as regular image
+      let imgTag = `<img src="${selectedImage.url}" alt="${imageAlt}"`;
+      
+      // Add size class
+      if (imageSize !== 'medium') {
+        imgTag += ` class="img-${imageSize}"`;
+      }
+      
+      // Add spacing class
+      if (imageSpacing !== 'normal') {
+        imgTag += ` img-spacing-${imageSpacing}`;
+      }
+      
+      // Add custom dimensions
+      if (imageWidth) {
+        imgTag += ` width="${imageWidth}"`;
+      }
+      if (imageHeight) {
+        imgTag += ` height="${imageHeight}"`;
+      }
+      
+      imgTag += ' />';
+      
+      // Add caption if provided
+      if (imageCaption) {
+        imgTag = `<figure>${imgTag}<figcaption>${imageCaption}</figcaption></figure>`;
+      }
+      
+      editor.insertContent(imgTag);
+    }
+    
+    setShowMediaSelector(false);
+    setSelectedImage(null);
+    setIsEditing(false);
+    setEditingElement(null);
+  };
+
   return (
     <div className="tinymce-container">
-      <div className="flex justify-between items-center mb-4">
-        <div className="flex gap-2">
-          <button
-            onClick={openMediaSelector}
-            className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
-          >
-            📁 Media Library
-          </button>
-          <button
-            onClick={openHtmlEditor}
-            className="bg-gray-500 text-white px-3 py-1 rounded text-sm hover:bg-gray-600"
-          >
-            🔧 Edit HTML
-          </button>
-        </div>
+      <div className="mb-2 flex gap-2">
+        <button
+          type="button"
+          onClick={openMediaSelector}
+          className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600 flex items-center gap-2"
+          title="Insert image from media library"
+        >
+          📁 Insert Image
+        </button>
+        <button
+          type="button"
+          onClick={editExistingImage}
+          className="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600 flex items-center gap-2"
+          title="Edit selected image"
+        >
+          ✏️ Edit Image
+        </button>
+        <button
+          type="button"
+          onClick={openHtmlEditor}
+          className="bg-purple-500 text-white px-3 py-1 rounded text-sm hover:bg-purple-600 flex items-center gap-2"
+          title="Edit raw HTML"
+        >
+          🔧 Edit HTML
+        </button>
       </div>
 
       <Editor
@@ -355,6 +596,35 @@ const TinyMCEWithScripts = ({ value, onChange, placeholder = 'Start writing your
             if (meta.filetype === 'image') {
               openMediaSelector();
             }
+          },
+          images_upload_handler: async (blobInfo, progress) => {
+            try {
+              const file = blobInfo.blob();
+              const fileExt = file.name.split('.').pop();
+              const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+
+              const { error: uploadError } = await supabase
+                .storage
+                .from('page-images')
+                .upload(fileName, file, {
+                  contentType: file.type,
+                  upsert: true
+                });
+
+              if (uploadError) {
+                throw new Error(`Upload failed: ${uploadError.message}`);
+              }
+
+              const { data: urlData } = await supabase
+                .storage
+                .from('page-images')
+                .createSignedUrl(fileName, 3600 * 24 * 365);
+
+              return urlData?.signedUrl || '';
+            } catch (error) {
+              console.error('Upload error:', error);
+              throw error;
+            }
           }
         }}
       />
@@ -404,6 +674,221 @@ const TinyMCEWithScripts = ({ value, onChange, placeholder = 'Start writing your
                   className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
                 >
                   Save HTML
+                </button>
+              </div>
+            </div>
+          </Dialog.Panel>
+        </div>
+      </Dialog>
+
+      {/* Media Selector Modal */}
+      <Dialog
+        open={showMediaSelector}
+        onClose={() => setShowMediaSelector(false)}
+        className="relative z-50"
+      >
+        <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
+        
+        <div className="fixed inset-0 flex items-center justify-center p-4">
+          <Dialog.Panel className="mx-auto max-w-6xl w-full bg-white rounded-lg shadow-xl">
+            <div className="p-6">
+              <Dialog.Title className="text-lg font-medium mb-4">
+                {isEditing ? 'Edit Image' : 'Select or Upload Image'}
+              </Dialog.Title>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Left side - Upload and Gallery */}
+                <div>
+                  {/* Upload Section */}
+                  <div className="mb-6 p-4 border rounded-lg">
+                    <h3 className="font-medium mb-2">Upload New Image</h3>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileUpload}
+                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    />
+                    {isUploading && <p className="mt-2 text-sm text-gray-600">Uploading...</p>}
+                  </div>
+                  
+                  {/* Media Gallery */}
+                  <div className="mb-4">
+                    <h3 className="font-medium mb-2">Select from Gallery</h3>
+                    <div className="grid grid-cols-3 gap-4 max-h-64 overflow-y-auto">
+                      {mediaFiles.map((file) => (
+                        <div
+                          key={file.name}
+                          className={`relative group cursor-pointer border rounded-lg overflow-hidden hover:border-blue-500 ${
+                            selectedImage?.name === file.name ? 'border-blue-500 bg-blue-50' : ''
+                          }`}
+                          onClick={() => handleImageSelect(file)}
+                        >
+                          <img
+                            src={file.url}
+                            alt={file.name}
+                            className="w-full h-24 object-cover"
+                            onError={(e) => {
+                              e.target.src = '/placeholder-image.png';
+                            }}
+                          />
+                          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 flex items-center justify-center">
+                            <span className="text-white opacity-0 group-hover:opacity-100 text-sm font-medium">
+                              Select
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right side - Image Options */}
+                {selectedImage && (
+                  <div className="border-l pl-6">
+                    <h3 className="font-medium mb-4">Image Options</h3>
+                    
+                    {/* Preview */}
+                    <div className="mb-4">
+                      <img
+                        src={selectedImage.url}
+                        alt={selectedImage.name}
+                        className="w-full max-h-48 object-contain border rounded"
+                      />
+                    </div>
+
+                    {/* Image Type Selection */}
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium mb-2">Image Type</label>
+                      <select
+                        value={imageType}
+                        onChange={(e) => setImageType(e.target.value)}
+                        className="w-full p-2 border rounded-md"
+                      >
+                        <option value="inline">Regular Image</option>
+                        <option value="background">Background Image (with text overlay)</option>
+                      </select>
+                    </div>
+
+                    {imageType === 'background' && (
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium mb-2">Overlay Style</label>
+                        <select
+                          value={backgroundOverlay}
+                          onChange={(e) => setBackgroundOverlay(e.target.value)}
+                          className="w-full p-2 border rounded-md"
+                        >
+                          <option value="none">No overlay</option>
+                          <option value="dark">Dark overlay (white text)</option>
+                          <option value="light">Light overlay (dark text)</option>
+                        </select>
+                      </div>
+                    )}
+
+                    {imageType === 'inline' && (
+                      <>
+                        {/* Size Options */}
+                        <div className="mb-4">
+                          <label className="block text-sm font-medium mb-2">Size</label>
+                          <select
+                            value={imageSize}
+                            onChange={(e) => setImageSize(e.target.value)}
+                            className="w-full p-2 border rounded-md"
+                          >
+                            <option value="small">Small</option>
+                            <option value="medium">Medium</option>
+                            <option value="large">Large</option>
+                            <option value="fluid">Responsive</option>
+                          </select>
+                        </div>
+
+                        {/* Spacing Options */}
+                        <div className="mb-4">
+                          <label className="block text-sm font-medium mb-2">Spacing & Alignment</label>
+                          <select
+                            value={imageSpacing}
+                            onChange={(e) => setImageSpacing(e.target.value)}
+                            className="w-full p-2 border rounded-md"
+                          >
+                            <option value="normal">Normal (centered)</option>
+                            <option value="tight">Tight spacing</option>
+                            <option value="wide">Wide spacing</option>
+                            <option value="left">Float left</option>
+                            <option value="right">Float right</option>
+                            <option value="center">Center aligned</option>
+                          </select>
+                        </div>
+
+                        {/* Custom Dimensions */}
+                        <div className="mb-4 grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="block text-sm font-medium mb-1">Width (px)</label>
+                            <input
+                              type="number"
+                              value={imageWidth}
+                              onChange={(e) => setImageWidth(e.target.value)}
+                              placeholder="Auto"
+                              className="w-full p-2 border rounded-md"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium mb-1">Height (px)</label>
+                            <input
+                              type="number"
+                              value={imageHeight}
+                              onChange={(e) => setImageHeight(e.target.value)}
+                              placeholder="Auto"
+                              className="w-full p-2 border rounded-md"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Alt Text */}
+                        <div className="mb-4">
+                          <label className="block text-sm font-medium mb-2">Alt Text</label>
+                          <input
+                            type="text"
+                            value={imageAlt}
+                            onChange={(e) => setImageAlt(e.target.value)}
+                            placeholder="Description for accessibility"
+                            className="w-full p-2 border rounded-md"
+                          />
+                        </div>
+
+                        {/* Caption */}
+                        <div className="mb-4">
+                          <label className="block text-sm font-medium mb-2">Caption (optional)</label>
+                          <input
+                            type="text"
+                            value={imageCaption}
+                            onChange={(e) => setImageCaption(e.target.value)}
+                            placeholder="Image caption"
+                            className="w-full p-2 border rounded-md"
+                          />
+                        </div>
+                      </>
+                    )}
+
+                    {/* Insert/Update Button */}
+                    <button
+                      onClick={insertImageWithOptions}
+                      className="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600"
+                    >
+                      {isEditing ? 'Update Image' : (imageType === 'background' ? 'Insert Background Image' : 'Insert Image')}
+                    </button>
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex justify-end space-x-3 mt-6">
+                <button
+                  onClick={() => {
+                    setShowMediaSelector(false);
+                    setIsEditing(false);
+                    setEditingElement(null);
+                  }}
+                  className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
+                >
+                  Cancel
                 </button>
               </div>
             </div>
