@@ -34,11 +34,11 @@ export default function VolunteerApplications() {
 
   const loadApplications = async () => {
     try {
-      console.log('Loading volunteer applications...');
+      console.log('Loading volunteer inductions...');
       
       // First, let's test if we can access the table at all
       const { data: testData, error: testError } = await supabase
-        .from('volunteer_applications')
+        .from('volunteer_inductions')
         .select('id')
         .limit(1);
       
@@ -57,7 +57,7 @@ export default function VolunteerApplications() {
       
       // Now get all applications
       const { data, error } = await supabase
-        .from('volunteer_applications')
+        .from('volunteer_inductions')
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -124,17 +124,17 @@ export default function VolunteerApplications() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-white shadow-lg rounded-lg p-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-8">
-              Volunteer Applications
+              Volunteer Inductions
             </h1>
 
             {isLoading ? (
               <div className="text-center py-8">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                <p className="mt-4 text-gray-600">Loading applications...</p>
+                <p className="mt-4 text-gray-600">Loading inductions...</p>
               </div>
             ) : applications.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-gray-600">No volunteer applications found.</p>
+                <p className="text-gray-600">No volunteer inductions found.</p>
               </div>
             ) : (
               <div className="overflow-x-auto">

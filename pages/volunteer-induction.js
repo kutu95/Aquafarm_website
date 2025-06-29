@@ -114,7 +114,7 @@ export default function VolunteerInduction() {
   const loadExistingApplication = async () => {
     try {
       const { data, error } = await supabase
-        .from('volunteer_applications')
+        .from('volunteer_inductions')
         .select('*')
         .eq('user_id', user.id)
         .single();
@@ -210,13 +210,13 @@ export default function VolunteerInduction() {
       let error;
       if (existingApplication) {
         ({ error } = await supabase
-          .from('volunteer_applications')
+          .from('volunteer_inductions')
           .update(applicationData)
           .eq('id', existingApplication.id));
       } else {
         applicationData.created_at = new Date().toISOString();
         ({ error } = await supabase
-          .from('volunteer_applications')
+          .from('volunteer_inductions')
           .insert([applicationData]));
       }
 

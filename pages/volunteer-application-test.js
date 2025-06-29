@@ -3,11 +3,9 @@
 import { useState, useEffect, useContext } from 'react';
 import { useRouter } from 'next/router';
 import { AuthContext } from '@/pages/_app';
-import { supabase } from '@/lib/supabaseClient';
 import Layout from '@/components/Layout';
-import { trackEvent } from '@/components/GoogleAnalytics';
 
-export default function VolunteerApplication() {
+export default function VolunteerApplicationTest() {
   const { user } = useContext(AuthContext);
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -56,7 +54,7 @@ export default function VolunteerApplication() {
     references: '',
   });
 
-  // Common country codes (short, deduplicated list)
+  // Common country codes
   const countryCodes = [
     '+61', '+1', '+44', '+33', '+49', '+39', '+34', '+31', '+32', '+46',
     '+47', '+45', '+358', '+47', '+46', '+45', '+358', '+47', '+46', '+45'
@@ -84,36 +82,18 @@ export default function VolunteerApplication() {
     setUploadProgress(0);
 
     try {
-      const uploadedImages = [];
-
+      // Simulate upload progress
       for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        const fileExt = file.name.split('.').pop();
-        const fileName = `volunteer-gallery/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from('volunteer-documents')
-          .upload(fileName, file, {
-            contentType: file.type,
-            upsert: true
-          });
-
-        if (uploadError) {
-          throw new Error(`Upload failed: ${uploadError.message}`);
-        }
-
-        const { data: urlData } = await supabase.storage
-          .from('volunteer-documents')
-          .createSignedUrl(fileName, 3600 * 24 * 365);
-
-        uploadedImages.push({
-          name: file.name,
-          url: urlData?.signedUrl || '',
-          path: fileName
-        });
-
+        await new Promise(resolve => setTimeout(resolve, 500)); // Simulate upload delay
         setUploadProgress(((i + 1) / files.length) * 100);
       }
+
+      // Create mock uploaded images
+      const uploadedImages = files.map((file, index) => ({
+        name: file.name,
+        url: URL.createObjectURL(file),
+        path: `mock-path-${Date.now()}-${index}`
+      }));
 
       setGalleryImages(prev => [...prev, ...uploadedImages]);
       event.target.value = '';
@@ -132,28 +112,13 @@ export default function VolunteerApplication() {
 
     setIsSubmitting(true);
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `volunteer-cv/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('volunteer-documents')
-        .upload(fileName, file, {
-          contentType: file.type,
-          upsert: true
-        });
-
-      if (uploadError) {
-        throw new Error(`Upload failed: ${uploadError.message}`);
-      }
-
-      const { data: urlData } = await supabase.storage
-        .from('volunteer-documents')
-        .createSignedUrl(fileName, 3600 * 24 * 365);
+      // Simulate upload delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
       setCvFile({
         name: file.name,
-        url: urlData?.signedUrl || '',
-        path: fileName
+        url: URL.createObjectURL(file),
+        path: `mock-cv-path-${Date.now()}`
       });
 
       event.target.value = '';
@@ -211,41 +176,40 @@ export default function VolunteerApplication() {
 
     setIsSubmitting(true);
     try {
-      const { error } = await supabase
-        .from('volunteer_applications')
-        .insert([{
-          user_id: user.id,
-          full_name: formData.fullName,
-          email: formData.email,
-          phone_country_code: formData.phoneCountryCode,
-          phone_number: formData.phoneNumber,
-          current_city: formData.currentCity,
-          current_country: formData.currentCountry,
-          date_of_birth: formData.dateOfBirth,
-          preferred_start_date: formData.preferredStartDate,
-          stay_details: formData.stayDetails,
-          relevant_skills: formData.relevantSkills,
-          experience_level: formData.experienceLevel,
-          languages_spoken: formData.languagesSpoken,
-          why_applying: formData.whyApplying,
-          previous_experience: formData.previousExperience,
-          preferred_work_areas: formData.preferredWorkAreas,
-          physical_limitations: formData.physicalLimitations,
-          comfortable_shared_chores: formData.comfortableWithSharedChores,
-          transport_ownership: formData.transportOwnership,
-          visa_status: formData.visaStatus,
-          cultural_exchange_meaning: formData.culturalExchangeMeaning,
-          comfortable_shared_household: formData.comfortableSharedHousehold,
-          handle_challenges: formData.handleChallenges,
-          references: formData.references,
-          gallery_images: galleryImages.map(img => img.path),
-          cv_file: cvFile?.path || null,
-          status: 'pending'
-        }]);
+      // Simulate submission delay
+      await new Promise(resolve => setTimeout(resolve, 2000));
 
-      if (error) throw error;
+      console.log('Form data that would be submitted:', {
+        user_id: user.id,
+        full_name: formData.fullName,
+        email: formData.email,
+        phone_country_code: formData.phoneCountryCode,
+        phone_number: formData.phoneNumber,
+        current_city: formData.currentCity,
+        current_country: formData.currentCountry,
+        date_of_birth: formData.dateOfBirth,
+        preferred_start_date: formData.preferredStartDate,
+        stay_details: formData.stayDetails,
+        relevant_skills: formData.relevantSkills,
+        experience_level: formData.experienceLevel,
+        languages_spoken: formData.languagesSpoken,
+        why_applying: formData.whyApplying,
+        previous_experience: formData.previousExperience,
+        preferred_work_areas: formData.preferredWorkAreas,
+        physical_limitations: formData.physicalLimitations,
+        comfortable_shared_chores: formData.comfortableWithSharedChores,
+        transport_ownership: formData.transportOwnership,
+        visa_status: formData.visaStatus,
+        cultural_exchange_meaning: formData.culturalExchangeMeaning,
+        comfortable_shared_household: formData.comfortableSharedHousehold,
+        handle_challenges: formData.handleChallenges,
+        references: formData.references,
+        gallery_images: galleryImages.map(img => img.path),
+        cv_file: cvFile?.path || null,
+        status: 'pending'
+      });
 
-      alert('Application submitted successfully! We will review your application and get back to you soon.');
+      alert('TEST MODE: Application would be submitted successfully! This is a test version.');
       router.push('/dashboard');
     } catch (error) {
       console.error('Submission error:', error);
@@ -270,8 +234,12 @@ export default function VolunteerApplication() {
       <div className="container mx-auto px-4 py-8 bg-gray-50 dark:bg-gray-900 min-h-screen">
         <div className="max-w-4xl mx-auto">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
+            <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-6">
+              <strong>TEST MODE:</strong> This is a test version of the volunteer application form. No data will be saved to the database.
+            </div>
+            
             <h1 className="text-3xl font-bold text-center mb-8 text-gray-900 dark:text-white">
-              🌱 Volunteer Application Form
+              🌱 Volunteer Application Form (Test)
             </h1>
 
             <form onSubmit={handleSubmit} className="space-y-8">
@@ -730,7 +698,7 @@ export default function VolunteerApplication() {
                   disabled={isSubmitting}
                   className="bg-green-600 text-white px-8 py-3 rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-lg font-medium"
                 >
-                  {isSubmitting ? 'Submitting...' : 'Submit Application'}
+                  {isSubmitting ? 'Submitting...' : 'Submit Application (Test)'}
                 </button>
               </div>
             </form>
