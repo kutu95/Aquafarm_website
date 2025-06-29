@@ -116,16 +116,6 @@ export default function NavBar() {
             <DarkModeToggle />
             {user ? (
               <>
-                <Link
-                  href="/volunteer-application"
-                  className={`px-3 py-2 rounded-md text-sm font-medium ${
-                    router.pathname === '/volunteer-application'
-                      ? 'bg-gray-900 text-white'
-                      : 'text-gray-300 hover:bg-gray-700 hover:text-white'
-                  }`}
-                >
-                  Volunteer Application
-                </Link>
                 {role === 'admin' && (
                   <div className="relative inline-block">
                     <button 
@@ -255,13 +245,6 @@ export default function NavBar() {
           ))}
           {user ? (
             <>
-              <Link
-                href="/volunteer-application"
-                className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Volunteer Application
-              </Link>
               {role === 'admin' && (
                 <>
                   <Link
