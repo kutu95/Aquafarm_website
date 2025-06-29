@@ -5,7 +5,7 @@ import { useRouter } from 'next/router';
 import NavBar from '@/components/NavBar';
 import Footer from '@/components/Footer';
 
-export default function VolunteerApplications() {
+export default function VolunteerInductions() {
   const { user, role, loading } = useContext(AuthContext);
   const router = useRouter();
   const [applications, setApplications] = useState([]);
@@ -14,7 +14,7 @@ export default function VolunteerApplications() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
-    console.log('VolunteerApplications - User:', user?.email, 'Role:', role, 'Loading:', loading);
+    console.log('VolunteerInductions - User:', user?.email, 'Role:', role, 'Loading:', loading);
     
     if (loading) {
       return; // Wait for auth to load
@@ -27,7 +27,7 @@ export default function VolunteerApplications() {
       console.log('User not admin, redirecting to home');
       router.push('/');
     } else if (user && role === 'admin') {
-      console.log('User is admin, loading applications');
+      console.log('User is admin, loading inductions');
       loadApplications();
     }
   }, [user, role, loading]);
@@ -62,7 +62,7 @@ export default function VolunteerApplications() {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error loading applications:', error);
+        console.error('Error loading inductions:', error);
         console.error('Error details:', {
           message: error.message,
           code: error.code,
@@ -72,8 +72,8 @@ export default function VolunteerApplications() {
         return;
       }
 
-      console.log('Applications loaded:', data);
-      console.log('Number of applications:', data?.length || 0);
+      console.log('Inductions loaded:', data);
+      console.log('Number of inductions:', data?.length || 0);
       setApplications(data || []);
     } catch (error) {
       console.error('Catch block error:', error);
@@ -210,7 +210,7 @@ export default function VolunteerApplications() {
             <div className="mt-3">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-medium text-gray-900">
-                  Volunteer Application - {selectedApplication.first_name} {selectedApplication.last_name}
+                  Volunteer Induction - {selectedApplication.first_name} {selectedApplication.last_name}
                 </h3>
                 <button
                   onClick={() => setIsModalOpen(false)}
