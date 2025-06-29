@@ -35,7 +35,6 @@ export default function VolunteerApplication() {
 
     // 4. Motivation & Expectations
     whyApplying: '',
-    previousExperience: '',
 
     // 5. Work Preferences
     preferredWorkAreas: '',
@@ -51,7 +50,7 @@ export default function VolunteerApplication() {
     comfortableSharedHousehold: '',
     handleChallenges: '',
 
-    // 8. References & Agreement
+    // 8. References
     references: '',
   });
 
@@ -222,7 +221,6 @@ export default function VolunteerApplication() {
           relevant_skills: formData.relevantSkills,
           languages_spoken: formData.languagesSpoken,
           why_applying: formData.whyApplying,
-          previous_experience: formData.previousExperience,
           preferred_work_areas: formData.preferredWorkAreas,
           physical_limitations: formData.physicalLimitations,
           comfortable_shared_chores: formData.comfortableWithSharedChores,
@@ -408,7 +406,7 @@ export default function VolunteerApplication() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Relevant Skills (gardening, animal care, building, cooking, etc.) *
+                      Relevant Skills (gardening, animal care, building, cooking, mechanics, metal work, electronics, plumbing etc.) *
                     </label>
                     <textarea
                       value={formData.relevantSkills}
@@ -452,17 +450,6 @@ export default function VolunteerApplication() {
                       required
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Have you had similar experiences before? If yes, please describe.
-                    </label>
-                    <textarea
-                      value={formData.previousExperience}
-                      onChange={(e) => handleInputChange('previousExperience', e.target.value)}
-                      rows="3"
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    />
-                  </div>
                 </div>
               </div>
 
@@ -474,7 +461,7 @@ export default function VolunteerApplication() {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Preferred Work Areas (e.g., vegetable garden, animal care, maintenance, teaching) *
+                      Preferred Work Areas (e.g., greenhouse, garden, animal care, carpentry, electronics, metal work, cooking) *
                     </label>
                     <textarea
                       value={formData.preferredWorkAreas}
@@ -590,15 +577,15 @@ export default function VolunteerApplication() {
                 </div>
               </div>
 
-              {/* 8. References & Agreement */}
+              {/* 8. References */}
               <div className="border-b border-gray-200 dark:border-gray-600 pb-6">
                 <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
-                  8. References & Agreement
+                  8. References
                 </h2>
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      References (name, email/phone for at least one host/employer or educator) *
+                      References (name at least one previous host/employer or educator) *
                     </label>
                     <textarea
                       value={formData.references}
