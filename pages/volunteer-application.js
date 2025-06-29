@@ -21,9 +21,9 @@ export default function VolunteerApplication() {
     email: '',
     phoneCountryCode: '+61',
     phoneNumber: '',
-    currentCity: '',
+    currentLocation: '',
     currentCountry: '',
-    dateOfBirth: '',
+    age: '',
 
     // 2. Availability & Stay Preferences
     preferredStartDate: '',
@@ -31,7 +31,6 @@ export default function VolunteerApplication() {
 
     // 3. Skills & Experience
     relevantSkills: '',
-    experienceLevel: '',
     languagesSpoken: '',
 
     // 4. Motivation & Expectations
@@ -175,9 +174,9 @@ export default function VolunteerApplication() {
 
   const validateForm = () => {
     const requiredFields = [
-      'fullName', 'email', 'phoneNumber', 'currentCity', 'currentCountry',
-      'dateOfBirth', 'preferredStartDate', 'stayDetails', 'relevantSkills',
-      'experienceLevel', 'languagesSpoken', 'whyApplying', 'preferredWorkAreas',
+      'fullName', 'email', 'phoneNumber', 'currentLocation', 'currentCountry',
+      'age', 'preferredStartDate', 'stayDetails', 'relevantSkills',
+      'languagesSpoken', 'whyApplying', 'preferredWorkAreas',
       'physicalLimitations', 'comfortableWithSharedChores', 'transportOwnership',
       'visaStatus', 'culturalExchangeMeaning', 'comfortableSharedHousehold',
       'handleChallenges', 'references'
@@ -191,12 +190,8 @@ export default function VolunteerApplication() {
     }
 
     // Check age requirement
-    const birthDate = new Date(formData.dateOfBirth);
-    const today = new Date();
-    const age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    
-    if (age < 18 || (age === 18 && monthDiff < 0)) {
+    const age = parseInt(formData.age);
+    if (isNaN(age) || age < 18) {
       alert('You must be 18 years or older to apply.');
       return false;
     }
@@ -219,13 +214,12 @@ export default function VolunteerApplication() {
           email: formData.email,
           phone_country_code: formData.phoneCountryCode,
           phone_number: formData.phoneNumber,
-          current_city: formData.currentCity,
+          current_city: formData.currentLocation,
           current_country: formData.currentCountry,
-          date_of_birth: formData.dateOfBirth,
+          age: parseInt(formData.age),
           preferred_start_date: formData.preferredStartDate,
           stay_details: formData.stayDetails,
           relevant_skills: formData.relevantSkills,
-          experience_level: formData.experienceLevel,
           languages_spoken: formData.languagesSpoken,
           why_applying: formData.whyApplying,
           previous_experience: formData.previousExperience,
@@ -335,12 +329,12 @@ export default function VolunteerApplication() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Current City *
+                      Current Location *
                     </label>
                     <input
                       type="text"
-                      value={formData.currentCity}
-                      onChange={(e) => handleInputChange('currentCity', e.target.value)}
+                      value={formData.currentLocation}
+                      onChange={(e) => handleInputChange('currentLocation', e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       required
                     />
@@ -359,12 +353,12 @@ export default function VolunteerApplication() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Date of Birth (must be 18+) *
+                      Age *
                     </label>
                     <input
-                      type="date"
-                      value={formData.dateOfBirth}
-                      onChange={(e) => handleInputChange('dateOfBirth', e.target.value)}
+                      type="text"
+                      value={formData.age}
+                      onChange={(e) => handleInputChange('age', e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       required
                     />
@@ -423,23 +417,6 @@ export default function VolunteerApplication() {
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       required
                     />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Level of Experience *
-                    </label>
-                    <select
-                      value={formData.experienceLevel}
-                      onChange={(e) => handleInputChange('experienceLevel', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                      required
-                    >
-                      <option value="">Select level</option>
-                      <option value="none">None</option>
-                      <option value="beginner">Beginner</option>
-                      <option value="intermediate">Intermediate</option>
-                      <option value="expert">Expert</option>
-                    </select>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">

@@ -45,7 +45,7 @@ export default function VolunteerApplicationDetail() {
       if (data.gallery_images?.length > 0) {
         const imageUrlPromises = data.gallery_images.map(async (imagePath) => {
           const { data: urlData } = await supabase.storage
-            .from('volunteer-applications')
+            .from('volunteer-documents')
             .createSignedUrl(imagePath, 3600); // 1 hour expiry
           return urlData?.signedUrl;
         });
@@ -57,7 +57,7 @@ export default function VolunteerApplicationDetail() {
       // Fetch CV URL if cv_file exists
       if (data.cv_file) {
         const { data: cvUrlData } = await supabase.storage
-          .from('volunteer-applications')
+          .from('volunteer-documents')
           .createSignedUrl(data.cv_file, 3600);
         setCvUrl(cvUrlData?.signedUrl);
       }
@@ -191,12 +191,12 @@ export default function VolunteerApplicationDetail() {
                 <p className="text-gray-900 dark:text-white">{application.phone_country_code} {application.phone_number}</p>
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Location</label>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Current Location</label>
                 <p className="text-gray-900 dark:text-white">{application.current_city}, {application.current_country}</p>
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Date of Birth</label>
-                <p className="text-gray-900 dark:text-white">{application.date_of_birth}</p>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Age</label>
+                <p className="text-gray-900 dark:text-white">{application.age}</p>
               </div>
             </div>
           </div>
@@ -218,10 +218,6 @@ export default function VolunteerApplicationDetail() {
               <div>
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Relevant Skills</label>
                 <p className="text-gray-900 dark:text-white">{application.relevant_skills}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Experience Level</label>
-                <p className="text-gray-900 dark:text-white">{application.experience_level}</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Languages</label>
