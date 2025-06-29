@@ -9,6 +9,7 @@ export default function NavBar() {
   const { user, role } = useContext(AuthContext);
   const [menuPages, setMenuPages] = useState([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isAdminMenuOpen, setIsAdminMenuOpen] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -126,11 +127,21 @@ export default function NavBar() {
                   Volunteer Application
                 </Link>
                 {role === 'admin' && (
-                  <div className="relative group inline-block">
-                    <button className="px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white">
+                  <div className="relative inline-block">
+                    <button 
+                      className="px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
+                      onMouseEnter={() => setIsAdminMenuOpen(true)}
+                      onMouseLeave={() => setIsAdminMenuOpen(false)}
+                    >
                       Admin
                     </button>
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-50 border border-gray-200">
+                    <div 
+                      className={`absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 transition-opacity duration-200 z-50 border border-gray-200 ${
+                        isAdminMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                      }`}
+                      onMouseEnter={() => setIsAdminMenuOpen(true)}
+                      onMouseLeave={() => setIsAdminMenuOpen(false)}
+                    >
                       <div className="absolute -top-2 left-0 right-0 h-2 bg-transparent"></div>
                       <Link
                         href="/dashboard"
@@ -149,6 +160,12 @@ export default function NavBar() {
                         className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                       >
                         Media Library
+                      </Link>
+                      <Link
+                        href="/volunteer-inductions"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        Volunteer Inductions
                       </Link>
                       <Link
                         href="/volunteer-applications"
@@ -246,7 +263,7 @@ export default function NavBar() {
                 Volunteer Application
               </Link>
               {role === 'admin' && (
-          <>
+                <>
                   <Link
                     href="/dashboard"
                     className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
@@ -269,6 +286,13 @@ export default function NavBar() {
                     Media Library
                   </Link>
                   <Link
+                    href="/volunteer-inductions"
+                    className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    Volunteer Inductions
+                  </Link>
+                  <Link
                     href="/volunteer-applications"
                     className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
                     onClick={() => setIsMobileMenuOpen(false)}
@@ -289,8 +313,8 @@ export default function NavBar() {
                   >
                     Template Management
                   </Link>
-          </>
-        )}
+                </>
+              )}
               <button
                 onClick={() => {
                   handleLogout();
@@ -307,9 +331,9 @@ export default function NavBar() {
               className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
               onClick={() => setIsMobileMenuOpen(false)}
             >
-            Login
-          </Link>
-        )}
+              Login
+            </Link>
+          )}
         </div>
       </div>
     </nav>

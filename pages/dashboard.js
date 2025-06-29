@@ -97,8 +97,14 @@ export default function Dashboard() {
               Manage Users
             </Link>
             <Link
-              href="/volunteer-applications"
+              href="/volunteer-inductions"
               className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            >
+              View Volunteer Inductions
+            </Link>
+            <Link
+              href="/volunteer-applications"
+              className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
             >
               View Volunteer Applications
             </Link>

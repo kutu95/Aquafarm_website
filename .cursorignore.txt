@@ -1,0 +1,36 @@
+# Build and dependency folders (if they ever get added)
+node_modules/
+.next/
+out/
+dist/
+build/
+
+# Supabase migrations
+supabase/migrations/
+
+# Public assets
+public/
+
+# Static images (already indexed by Next.js)
+images/
+
+# Logs, system files, misc
+.DS_Store
+*.log
+filetree.txt
+
+# Markdown and documentation files
+*.md
+
+# Config files that don’t need to be indexed
+postcss.config.js
+tailwind.config.js
+next.config.js
+jsconfig.json
+package*.json
+run-migrations.js
+database_migration.sql
+
+# Ignore optional backup/duplicate pages if unused
+pages/media-library-backup.js
+pages/media-library-old.js

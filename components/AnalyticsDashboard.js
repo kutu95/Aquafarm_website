@@ -62,7 +62,7 @@ export default function AnalyticsDashboard() {
         </div>
         
         <div className="bg-green-50 p-4 rounded-lg">
-          <h3 className="text-lg font-medium text-green-900">Volunteer Applications</h3>
+          <h3 className="text-lg font-medium text-green-900">Volunteer Inductions</h3>
           <p className="text-3xl font-bold text-green-600">{stats.totalApplications}</p>
         </div>
       </div>
