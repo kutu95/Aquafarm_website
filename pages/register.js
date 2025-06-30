@@ -68,43 +68,26 @@ export default function Register() {
     setError('');
 
     try {
-      // Create user account
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          data: {
-            first_name: formData.firstName,
-            last_name: formData.lastName,
-            full_name: `${formData.firstName} ${formData.lastName}`
-          }
-        }
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          password: formData.password
+        })
       });
 
-      if (authError) {
-        throw new Error(authError.message);
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Registration failed');
       }
 
-      if (authData.user) {
-        // Create profile record
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert([
-            {
-              id: authData.user.id,
-              first_name: formData.firstName,
-              last_name: formData.lastName,
-              full_name: `${formData.firstName} ${formData.lastName}`,
-              email: formData.email,
-              role: 'user'
-            }
-          ]);
-
-        if (profileError) {
-          console.error('Profile creation error:', profileError);
-          // Don't throw error here as the user account was created successfully
-        }
-
+      if (result.success) {
         setSuccess(true);
         setFormData({
           firstName: '',
@@ -113,6 +96,8 @@ export default function Register() {
           password: '',
           confirmPassword: ''
         });
+      } else {
+        throw new Error(result.error || 'Registration failed');
       }
     } catch (error) {
       console.error('Registration error:', error);
