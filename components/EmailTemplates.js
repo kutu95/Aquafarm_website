@@ -1,153 +1,240 @@
+import React from 'react';
+
 export const EmailTemplates = {
   // Account confirmation email template
-  confirmAccount: (email, confirmationUrl) => ({
-    from: 'Aquafarm <onboarding@resend.dev>',
-    to: email,
-    subject: 'Confirm your Aquafarm account',
-    html: `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Confirm your Aquafarm account</title>
-          <style>
-            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-            .header { background-color: #10b981; color: white; padding: 20px; text-align: center; }
-            .content { padding: 20px; background-color: #f9fafb; }
-            .button { display: inline-block; background-color: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
-            .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 14px; }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <div class="header">
-              <h1>Welcome to Aquafarm!</h1>
+  confirmAccount: ({ email, confirmationUrl }) => (
+    <html>
+      <body style={{ 
+        fontFamily: 'Arial, sans-serif', 
+        lineHeight: '1.6', 
+        color: '#333',
+        maxWidth: '600px',
+        margin: '0 auto',
+        padding: '20px'
+      }}>
+        <div style={{ 
+          backgroundColor: '#f8f9fa', 
+          padding: '30px', 
+          borderRadius: '8px',
+          border: '1px solid #e9ecef'
+        }}>
+          <h1 style={{ 
+            color: '#10b981', 
+            marginBottom: '20px',
+            textAlign: 'center'
+          }}>
+            Welcome to Aquafarm!
+          </h1>
+          
+          <div style={{ 
+            backgroundColor: '#ffffff', 
+            padding: '20px', 
+            borderRadius: '6px',
+            marginBottom: '20px'
+          }}>
+            <h2 style={{ color: '#2c3e50', marginBottom: '15px' }}>Confirm your account</h2>
+            <p style={{ fontSize: '16px', marginBottom: '20px' }}>
+              Thank you for creating an account with Aquafarm. To complete your registration and access the volunteer application, please confirm your email address by clicking the button below:
+            </p>
+            
+            <div style={{ textAlign: 'center', margin: '30px 0' }}>
+              <a 
+                href={confirmationUrl}
+                style={{
+                  backgroundColor: '#10b981',
+                  color: '#ffffff',
+                  padding: '12px 30px',
+                  textDecoration: 'none',
+                  borderRadius: '6px',
+                  fontSize: '16px',
+                  fontWeight: 'bold',
+                  display: 'inline-block'
+                }}
+              >
+                Confirm Account
+              </a>
             </div>
-            <div class="content">
-              <h2>Confirm your account</h2>
-              <p>Thank you for creating an account with Aquafarm. To complete your registration and access the volunteer application, please confirm your email address by clicking the button below:</p>
-              
-              <a href="${confirmationUrl}" class="button">Confirm Account</a>
-              
-              <p>If the button doesn't work, you can copy and paste this link into your browser:</p>
-              <p><a href="${confirmationUrl}">${confirmationUrl}</a></p>
-              
-              <p>This link will expire in 24 hours for security reasons.</p>
-              
-              <p>If you didn't create an account with Aquafarm, you can safely ignore this email.</p>
-            </div>
-            <div class="footer">
-              <p>© 2024 Aquafarm. All rights reserved.</p>
-              <p>This email was sent to ${email}</p>
-            </div>
+            
+            <p style={{ fontSize: '14px', marginBottom: '15px' }}>
+              If the button doesn't work, you can copy and paste this link into your browser:
+            </p>
+            <p style={{ fontSize: '14px', wordBreak: 'break-all' }}>
+              <a href={confirmationUrl} style={{ color: '#10b981' }}>{confirmationUrl}</a>
+            </p>
+            
+            <p style={{ fontSize: '14px', color: '#6c757d', marginTop: '20px' }}>
+              This link will expire in 24 hours for security reasons.
+            </p>
+            
+            <p style={{ fontSize: '14px', color: '#6c757d' }}>
+              If you didn't create an account with Aquafarm, you can safely ignore this email.
+            </p>
           </div>
-        </body>
-      </html>
-    `
-  }),
+          
+          <hr style={{ border: 'none', borderTop: '1px solid #e9ecef', margin: '30px 0' }} />
+          
+          <p style={{ fontSize: '14px', color: '#6c757d', textAlign: 'center', fontWeight: 'bold' }}>
+            © 2024 Aquafarm. All rights reserved.
+          </p>
+          <p style={{ fontSize: '14px', color: '#6c757d', textAlign: 'center' }}>
+            This email was sent to {email}
+          </p>
+        </div>
+      </body>
+    </html>
+  ),
 
   // Password reset email template
-  resetPassword: (email, resetUrl) => ({
-    from: 'Aquafarm <onboarding@resend.dev>',
-    to: email,
-    subject: 'Reset your Aquafarm password',
-    html: `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Reset your Aquafarm password</title>
-          <style>
-            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-            .header { background-color: #10b981; color: white; padding: 20px; text-align: center; }
-            .content { padding: 20px; background-color: #f9fafb; }
-            .button { display: inline-block; background-color: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
-            .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 14px; }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <div class="header">
-              <h1>Password Reset Request</h1>
+  resetPassword: ({ email, resetUrl }) => (
+    <html>
+      <body style={{ 
+        fontFamily: 'Arial, sans-serif', 
+        lineHeight: '1.6', 
+        color: '#333',
+        maxWidth: '600px',
+        margin: '0 auto',
+        padding: '20px'
+      }}>
+        <div style={{ 
+          backgroundColor: '#f8f9fa', 
+          padding: '30px', 
+          borderRadius: '8px',
+          border: '1px solid #e9ecef'
+        }}>
+          <h1 style={{ 
+            color: '#10b981', 
+            marginBottom: '20px',
+            textAlign: 'center'
+          }}>
+            Password Reset Request
+          </h1>
+          
+          <div style={{ 
+            backgroundColor: '#ffffff', 
+            padding: '20px', 
+            borderRadius: '6px',
+            marginBottom: '20px'
+          }}>
+            <h2 style={{ color: '#2c3e50', marginBottom: '15px' }}>Reset your password</h2>
+            <p style={{ fontSize: '16px', marginBottom: '20px' }}>
+              We received a request to reset your password for your Aquafarm account. Click the button below to create a new password:
+            </p>
+            
+            <div style={{ textAlign: 'center', margin: '30px 0' }}>
+              <a 
+                href={resetUrl}
+                style={{
+                  backgroundColor: '#10b981',
+                  color: '#ffffff',
+                  padding: '12px 30px',
+                  textDecoration: 'none',
+                  borderRadius: '6px',
+                  fontSize: '16px',
+                  fontWeight: 'bold',
+                  display: 'inline-block'
+                }}
+              >
+                Reset Password
+              </a>
             </div>
-            <div class="content">
-              <h2>Reset your password</h2>
-              <p>We received a request to reset your password for your Aquafarm account. Click the button below to create a new password:</p>
-              
-              <a href="${resetUrl}" class="button">Reset Password</a>
-              
-              <p>If the button doesn't work, you can copy and paste this link into your browser:</p>
-              <p><a href="${resetUrl}">${resetUrl}</a></p>
-              
-              <p>This link will expire in 1 hour for security reasons.</p>
-              
-              <p>If you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged.</p>
-            </div>
-            <div class="footer">
-              <p>© 2024 Aquafarm. All rights reserved.</p>
-              <p>This email was sent to ${email}</p>
-            </div>
+            
+            <p style={{ fontSize: '14px', marginBottom: '15px' }}>
+              If the button doesn't work, you can copy and paste this link into your browser:
+            </p>
+            <p style={{ fontSize: '14px', wordBreak: 'break-all' }}>
+              <a href={resetUrl} style={{ color: '#10b981' }}>{resetUrl}</a>
+            </p>
+            
+            <p style={{ fontSize: '14px', color: '#6c757d', marginTop: '20px' }}>
+              This link will expire in 1 hour for security reasons.
+            </p>
+            
+            <p style={{ fontSize: '14px', color: '#6c757d' }}>
+              If you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged.
+            </p>
           </div>
-        </body>
-      </html>
-    `
-  }),
+          
+          <hr style={{ border: 'none', borderTop: '1px solid #e9ecef', margin: '30px 0' }} />
+          
+          <p style={{ fontSize: '14px', color: '#6c757d', textAlign: 'center', fontWeight: 'bold' }}>
+            © 2024 Aquafarm. All rights reserved.
+          </p>
+          <p style={{ fontSize: '14px', color: '#6c757d', textAlign: 'center' }}>
+            This email was sent to {email}
+          </p>
+        </div>
+      </body>
+    </html>
+  ),
 
   // Application confirmation email template
-  applicationConfirmation: (email, applicationData) => ({
-    from: 'Aquafarm <onboarding@resend.dev>',
-    to: email,
-    subject: 'Your Aquafarm volunteer application has been received',
-    html: `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Application Received - Aquafarm</title>
-          <style>
-            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-            .header { background-color: #10b981; color: white; padding: 20px; text-align: center; }
-            .content { padding: 20px; background-color: #f9fafb; }
-            .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 14px; }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <div class="header">
-              <h1>Application Received!</h1>
-            </div>
-            <div class="content">
-              <h2>Thank you for your application</h2>
-              <p>Dear ${applicationData.firstName} ${applicationData.lastName},</p>
-              
-              <p>We have received your volunteer application for Aquafarm. Our team will review your application and get back to you within 5-7 business days.</p>
-              
-              <h3>Application Details:</h3>
-              <ul>
-                <li><strong>Name:</strong> ${applicationData.firstName} ${applicationData.lastName}</li>
-                <li><strong>Email:</strong> ${applicationData.email}</li>
-                <li><strong>Age:</strong> ${applicationData.age}</li>
-                <li><strong>Current Location:</strong> ${applicationData.currentLocation}</li>
-                <li><strong>Country:</strong> ${applicationData.country}</li>
-              </ul>
-              
-              <p>If you have any questions about your application, please don't hesitate to contact us.</p>
-              
-              <p>Best regards,<br>The Aquafarm Team</p>
-            </div>
-            <div class="footer">
-              <p>© 2024 Aquafarm. All rights reserved.</p>
-              <p>This email was sent to ${email}</p>
-            </div>
+  applicationConfirmation: ({ email, applicationData }) => (
+    <html>
+      <body style={{ 
+        fontFamily: 'Arial, sans-serif', 
+        lineHeight: '1.6', 
+        color: '#333',
+        maxWidth: '600px',
+        margin: '0 auto',
+        padding: '20px'
+      }}>
+        <div style={{ 
+          backgroundColor: '#f8f9fa', 
+          padding: '30px', 
+          borderRadius: '8px',
+          border: '1px solid #e9ecef'
+        }}>
+          <h1 style={{ 
+            color: '#10b981', 
+            marginBottom: '20px',
+            textAlign: 'center'
+          }}>
+            Application Received!
+          </h1>
+          
+          <div style={{ 
+            backgroundColor: '#ffffff', 
+            padding: '20px', 
+            borderRadius: '6px',
+            marginBottom: '20px'
+          }}>
+            <h2 style={{ color: '#2c3e50', marginBottom: '15px' }}>Thank you for your application</h2>
+            <p style={{ fontSize: '16px', marginBottom: '20px' }}>
+              Dear {applicationData.firstName} {applicationData.lastName},
+            </p>
+            
+            <p style={{ fontSize: '16px', marginBottom: '20px' }}>
+              We have received your volunteer application for Aquafarm. Our team will review your application and get back to you within 5-7 business days.
+            </p>
+            
+            <h3 style={{ color: '#2c3e50', marginBottom: '10px' }}>Application Details:</h3>
+            <ul style={{ fontSize: '14px', marginBottom: '20px' }}>
+              <li><strong>Name:</strong> {applicationData.firstName} {applicationData.lastName}</li>
+              <li><strong>Email:</strong> {applicationData.email}</li>
+              <li><strong>Age:</strong> {applicationData.age}</li>
+              <li><strong>Current Location:</strong> {applicationData.currentLocation}</li>
+              <li><strong>Country:</strong> {applicationData.country}</li>
+            </ul>
+            
+            <p style={{ fontSize: '16px', marginBottom: '20px' }}>
+              If you have any questions about your application, please don't hesitate to contact us.
+            </p>
+            
+            <p style={{ fontSize: '16px' }}>
+              Best regards,<br />The Aquafarm Team
+            </p>
           </div>
-        </body>
-      </html>
-    `
-  })
+          
+          <hr style={{ border: 'none', borderTop: '1px solid #e9ecef', margin: '30px 0' }} />
+          
+          <p style={{ fontSize: '14px', color: '#6c757d', textAlign: 'center', fontWeight: 'bold' }}>
+            © 2024 Aquafarm. All rights reserved.
+          </p>
+          <p style={{ fontSize: '14px', color: '#6c757d', textAlign: 'center' }}>
+            This email was sent to {email}
+          </p>
+        </div>
+      </body>
+    </html>
+  )
 }; 
