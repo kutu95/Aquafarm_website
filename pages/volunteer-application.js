@@ -57,7 +57,7 @@ export default function VolunteerApplication() {
   // Common country codes (short, deduplicated list)
   const countryCodes = [
     '+61', '+1', '+44', '+33', '+49', '+39', '+34', '+31', '+32', '+46',
-    '+47', '+45', '+358', '+47', '+46', '+45', '+358', '+47', '+46', '+45'
+    '+47', '+45', '+358'
   ];
 
   useEffect(() => {
