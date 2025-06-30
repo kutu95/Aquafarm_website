@@ -1,12 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../lib/supabaseClient';
 import Layout from '../components/Layout';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
 
 export default function ConfirmEmail() {
   const router = useRouter();
@@ -24,16 +19,20 @@ export default function ConfirmEmail() {
       }
 
       try {
-        // Update user to confirmed
-        const { error } = await supabase.auth.admin.updateUserById(token, {
-          email_confirm: true
+        // Since we can't use admin functions on the client side,
+        // we'll need to call an API endpoint to handle the confirmation
+        const response = await fetch('/api/auth/confirm-email', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ token, email }),
         });
 
-        if (error) {
-          console.error('Confirmation error:', error);
-          setStatus('error');
-          setMessage('Failed to confirm email. Please try again or contact support.');
-          return;
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || 'Failed to confirm email');
         }
 
         setStatus('success');
