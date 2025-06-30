@@ -72,12 +72,6 @@ export default function VolunteerApplication() {
   };
 
   const handleGalleryUpload = async (event) => {
-    if (!user) {
-      alert('Please log in to upload images. You can still submit your application without images.');
-      event.target.value = '';
-      return;
-    }
-
     const files = Array.from(event.target.files);
     if (files.length === 0) return;
 
@@ -128,12 +122,6 @@ export default function VolunteerApplication() {
   };
 
   const handleCvUpload = async (event) => {
-    if (!user) {
-      alert('Please log in to upload a CV. You can still submit your application without a CV.');
-      event.target.value = '';
-      return;
-    }
-
     const file = event.target.files[0];
     if (!file) return;
 
@@ -214,7 +202,7 @@ export default function VolunteerApplication() {
 
     setIsSubmitting(true);
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('volunteer_applications')
         .insert([{
           user_id: user?.id || null,
@@ -239,14 +227,36 @@ export default function VolunteerApplication() {
           comfortable_shared_household: formData.comfortableSharedHousehold,
           handle_challenges: formData.handleChallenges,
           references: formData.references,
-          gallery_images: user ? galleryImages.map(img => img.path) : [],
-          cv_file: user ? (cvFile?.path || null) : null,
+          gallery_images: galleryImages.map(img => img.path),
+          cv_file: cvFile?.path || null,
           status: 'pending'
-        }]);
+        }])
+        .select();
 
       if (error) throw error;
 
-      alert('Application submitted successfully! We will review your application and get back to you soon.');
+      // Send confirmation email with PDF
+      if (data && data[0]) {
+        try {
+          const response = await fetch('/api/send-application-confirmation', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              applicationId: data[0].id
+            })
+          });
+
+          if (!response.ok) {
+            console.error('Failed to send confirmation email');
+          }
+        } catch (emailError) {
+          console.error('Error sending confirmation email:', emailError);
+        }
+      }
+
+      alert('Application submitted successfully! Check your email for a confirmation with your application details.');
       router.push('/');
     } catch (error) {
       console.error('Submission error:', error);
