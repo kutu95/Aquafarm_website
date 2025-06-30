@@ -614,13 +614,6 @@ export default function VolunteerApplication() {
                   Image Gallery (Optional)
                 </h2>
                 <div className="space-y-4">
-                  {!user && (
-                    <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md">
-                      <p className="text-sm text-blue-700 dark:text-blue-300">
-                        💡 <strong>Note:</strong> You need to be logged in to upload images. You can still submit your application without images, or log in first to add photos.
-                      </p>
-                    </div>
-                  )}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Upload Photos to Support Your Application
@@ -675,13 +668,6 @@ export default function VolunteerApplication() {
                   CV/Resume (Optional)
                 </h2>
                 <div className="space-y-4">
-                  {!user && (
-                    <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md">
-                      <p className="text-sm text-blue-700 dark:text-blue-300">
-                        💡 <strong>Note:</strong> You need to be logged in to upload a CV. You can still submit your application without a CV, or log in first to add one.
-                      </p>
-                    </div>
-                  )}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Upload CV or Resume
