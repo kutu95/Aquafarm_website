@@ -61,11 +61,8 @@ export default function VolunteerApplication() {
   ];
 
   useEffect(() => {
-    if (!user) {
-      router.push('/login');
-      return;
-    }
-  }, [user, router]);
+    // No longer requiring login - page is open to everyone
+  }, []);
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
@@ -75,6 +72,12 @@ export default function VolunteerApplication() {
   };
 
   const handleGalleryUpload = async (event) => {
+    if (!user) {
+      alert('Please log in to upload images. You can still submit your application without images.');
+      event.target.value = '';
+      return;
+    }
+
     const files = Array.from(event.target.files);
     if (files.length === 0) return;
 
@@ -125,6 +128,12 @@ export default function VolunteerApplication() {
   };
 
   const handleCvUpload = async (event) => {
+    if (!user) {
+      alert('Please log in to upload a CV. You can still submit your application without a CV.');
+      event.target.value = '';
+      return;
+    }
+
     const file = event.target.files[0];
     if (!file) return;
 
@@ -208,7 +217,7 @@ export default function VolunteerApplication() {
       const { error } = await supabase
         .from('volunteer_applications')
         .insert([{
-          user_id: user.id,
+          user_id: user?.id || null,
           full_name: formData.fullName,
           email: formData.email,
           phone_country_code: formData.phoneCountryCode,
@@ -230,15 +239,15 @@ export default function VolunteerApplication() {
           comfortable_shared_household: formData.comfortableSharedHousehold,
           handle_challenges: formData.handleChallenges,
           references: formData.references,
-          gallery_images: galleryImages.map(img => img.path),
-          cv_file: cvFile?.path || null,
+          gallery_images: user ? galleryImages.map(img => img.path) : [],
+          cv_file: user ? (cvFile?.path || null) : null,
           status: 'pending'
         }]);
 
       if (error) throw error;
 
       alert('Application submitted successfully! We will review your application and get back to you soon.');
-      router.push('/dashboard');
+      router.push('/');
     } catch (error) {
       console.error('Submission error:', error);
       alert('Error submitting application. Please try again.');
@@ -246,16 +255,6 @@ export default function VolunteerApplication() {
       setIsSubmitting(false);
     }
   };
-
-  if (!user) {
-    return (
-      <Layout>
-        <div className="flex justify-center items-center min-h-screen">
-          <div className="text-lg">Loading...</div>
-        </div>
-      </Layout>
-    );
-  }
 
   return (
     <Layout>
@@ -605,6 +604,13 @@ export default function VolunteerApplication() {
                   Image Gallery (Optional)
                 </h2>
                 <div className="space-y-4">
+                  {!user && (
+                    <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md">
+                      <p className="text-sm text-blue-700 dark:text-blue-300">
+                        💡 <strong>Note:</strong> You need to be logged in to upload images. You can still submit your application without images, or log in first to add photos.
+                      </p>
+                    </div>
+                  )}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Upload Photos to Support Your Application
@@ -659,6 +665,13 @@ export default function VolunteerApplication() {
                   CV/Resume (Optional)
                 </h2>
                 <div className="space-y-4">
+                  {!user && (
+                    <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md">
+                      <p className="text-sm text-blue-700 dark:text-blue-300">
+                        💡 <strong>Note:</strong> You need to be logged in to upload a CV. You can still submit your application without a CV, or log in first to add one.
+                      </p>
+                    </div>
+                  )}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Upload CV or Resume
