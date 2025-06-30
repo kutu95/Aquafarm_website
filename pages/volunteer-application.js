@@ -6,10 +6,17 @@ import { AuthContext } from '@/pages/_app';
 import { supabase } from '@/lib/supabaseClient';
 import Layout from '@/components/Layout';
 import { trackEvent } from '@/components/GoogleAnalytics';
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseClient = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+);
 
 export default function VolunteerApplication() {
   const { user } = useContext(AuthContext);
   const router = useRouter();
+  const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [galleryImages, setGalleryImages] = useState([]);
@@ -60,9 +67,33 @@ export default function VolunteerApplication() {
     '+47', '+45', '+358'
   ];
 
+  // Check authentication on component mount
   useEffect(() => {
-    // No longer requiring login - page is open to everyone
-  }, []);
+    if (!user) {
+      router.push('/login?redirect=volunteer-application');
+      return;
+    }
+    setLoading(false);
+  }, [user, router]);
+
+  // If still loading, show loading state
+  if (loading) {
+    return (
+      <Layout>
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600 dark:text-gray-400">Loading...</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  // If no user, don't render the form
+  if (!user) {
+    return null;
+  }
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
@@ -96,6 +127,8 @@ export default function VolunteerApplication() {
       }
 
       const result = await response.json();
+      
+      console.log('Upload API response:', result);
       
       if (result.success && result.files) {
         setGalleryImages(prev => [...prev, ...result.files]);

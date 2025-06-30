@@ -60,20 +60,45 @@ export default async function handler(req, res) {
         return res.status(500).json({ error: `Upload failed: ${uploadError.message}` });
       }
 
-      // Create signed URL using service role key
-      const { data: urlData, error: urlError } = await supabase.storage
-        .from('volunteer-documents')
-        .createSignedUrl(fileName, 3600 * 24 * 365);
+      // Create URL - use public URL for images, signed URL for documents
+      let fileUrl;
+      if (file.mimetype.startsWith('image/')) {
+        // For images, use public URL
+        const { data: publicUrl } = supabase.storage
+          .from('volunteer-documents')
+          .getPublicUrl(fileName);
+        fileUrl = publicUrl.publicUrl;
+      } else {
+        // For documents, use signed URL
+        const { data: urlData, error: urlError } = await supabase.storage
+          .from('volunteer-documents')
+          .createSignedUrl(fileName, 3600 * 24 * 7); // 7 days
 
-      if (urlError) {
-        console.error('URL creation error:', urlError);
-        return res.status(500).json({ error: `URL creation failed: ${urlError.message}` });
+        if (urlError) {
+          console.error('URL creation error:', urlError);
+          return res.status(500).json({ error: `URL creation failed: ${urlError.message}` });
+        }
+        fileUrl = urlData.signedUrl;
       }
+
+      console.log('File URL created:', {
+        fileName,
+        url: fileUrl,
+        type: file.mimetype.startsWith('image/') ? 'public' : 'signed',
+        expiresAt: file.mimetype.startsWith('image/') ? 'never' : new Date(Date.now() + 3600 * 24 * 7 * 1000)
+      });
 
       uploadedFiles.push({
         name: file.originalFilename,
-        url: urlData.signedUrl,
+        url: fileUrl,
         path: fileName
+      });
+      
+      console.log('Uploaded file:', {
+        name: file.originalFilename,
+        url: fileUrl,
+        path: fileName,
+        mimetype: file.mimetype
       });
     }
 
