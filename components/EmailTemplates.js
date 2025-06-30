@@ -1,7 +1,7 @@
 export const EmailTemplates = {
   // Account confirmation email template
   confirmAccount: (email, confirmationUrl) => ({
-    from: 'Aquafarm <noreply@aquafarm.au>',
+    from: 'Aquafarm <onboarding@resend.dev>',
     to: email,
     subject: 'Confirm your Aquafarm account',
     html: `
@@ -50,7 +50,7 @@ export const EmailTemplates = {
 
   // Password reset email template
   resetPassword: (email, resetUrl) => ({
-    from: 'Aquafarm <noreply@aquafarm.au>',
+    from: 'Aquafarm <onboarding@resend.dev>',
     to: email,
     subject: 'Reset your Aquafarm password',
     html: `
@@ -99,7 +99,7 @@ export const EmailTemplates = {
 
   // Application confirmation email template
   applicationConfirmation: (email, applicationData) => ({
-    from: 'Aquafarm <noreply@aquafarm.au>',
+    from: 'Aquafarm <onboarding@resend.dev>',
     to: email,
     subject: 'Your Aquafarm volunteer application has been received',
     html: `

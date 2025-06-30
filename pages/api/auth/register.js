@@ -49,7 +49,6 @@ export default async function handler(req, res) {
             id: authData.user.id,
             first_name: firstName,
             last_name: lastName,
-            full_name: `${firstName} ${lastName}`,
             email: email,
             role: 'user'
           }
