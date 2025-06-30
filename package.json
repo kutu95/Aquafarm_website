@@ -13,6 +13,7 @@
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.39.0",
     "@tinymce/tinymce-react": "^6.2.1",
+    "formidable": "^3.5.4",
     "gtag": "^1.0.1",
     "next": "^14.2.29",
     "puppeteer": "^24.11.1",

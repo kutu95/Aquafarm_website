@@ -79,38 +79,31 @@ export default function VolunteerApplication() {
     setUploadProgress(0);
 
     try {
-      const uploadedImages = [];
-
+      const formData = new FormData();
+      
       for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        const fileExt = file.name.split('.').pop();
-        const fileName = `volunteer-gallery/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from('volunteer-documents')
-          .upload(fileName, file, {
-            contentType: file.type,
-            upsert: true
-          });
-
-        if (uploadError) {
-          throw new Error(`Upload failed: ${uploadError.message}`);
-        }
-
-        const { data: urlData } = await supabase.storage
-          .from('volunteer-documents')
-          .createSignedUrl(fileName, 3600 * 24 * 365);
-
-        uploadedImages.push({
-          name: file.name,
-          url: urlData?.signedUrl || '',
-          path: fileName
-        });
-
-        setUploadProgress(((i + 1) / files.length) * 100);
+        formData.append('file', files[i]);
       }
 
-      setGalleryImages(prev => [...prev, ...uploadedImages]);
+      const response = await fetch('/api/upload-volunteer-file', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Upload failed');
+      }
+
+      const result = await response.json();
+      
+      if (result.success && result.files) {
+        setGalleryImages(prev => [...prev, ...result.files]);
+        setUploadProgress(100);
+      } else {
+        throw new Error('Upload response was invalid');
+      }
+
       event.target.value = '';
     } catch (error) {
       console.error('Gallery upload error:', error);
@@ -127,29 +120,26 @@ export default function VolunteerApplication() {
 
     setIsSubmitting(true);
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `volunteer-cv/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const formData = new FormData();
+      formData.append('file', file);
 
-      const { error: uploadError } = await supabase.storage
-        .from('volunteer-documents')
-        .upload(fileName, file, {
-          contentType: file.type,
-          upsert: true
-        });
+      const response = await fetch('/api/upload-volunteer-file', {
+        method: 'POST',
+        body: formData
+      });
 
-      if (uploadError) {
-        throw new Error(`Upload failed: ${uploadError.message}`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Upload failed');
       }
 
-      const { data: urlData } = await supabase.storage
-        .from('volunteer-documents')
-        .createSignedUrl(fileName, 3600 * 24 * 365);
-
-      setCvFile({
-        name: file.name,
-        url: urlData?.signedUrl || '',
-        path: fileName
-      });
+      const result = await response.json();
+      
+      if (result.success && result.files && result.files.length > 0) {
+        setCvFile(result.files[0]);
+      } else {
+        throw new Error('Upload response was invalid');
+      }
 
       event.target.value = '';
     } catch (error) {
