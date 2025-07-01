@@ -56,7 +56,7 @@ export default function Page({ page }) {
   return (
     <>
       <NavBar />
-      <Head key={`${page.slug}-${page.meta_description}`}>
+      <Head>
         <title>{page.meta_title || page.title || 'Aquafarm'}</title>
         <meta name="description" content={page.meta_description || page.title || 'Aquafarm - Sustainable Aquaculture'} />
         <meta name="robots" content={page.robots_meta || 'index, follow'} />
