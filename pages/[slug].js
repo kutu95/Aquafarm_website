@@ -14,11 +14,13 @@ export default function Page({ page }) {
 
   // Debug logging
   if (page) {
+    const finalMetaDescription = page.meta_description || page.title || 'Aquafarm - Sustainable Aquaculture';
     console.log('Page data:', {
       title: page.title,
       meta_title: page.meta_title,
       meta_description: page.meta_description,
-      slug: page.slug
+      slug: page.slug,
+      finalMetaDescription: finalMetaDescription
     });
   }
 
@@ -54,7 +56,7 @@ export default function Page({ page }) {
   return (
     <>
       <NavBar />
-      <Head>
+      <Head key={`${page.slug}-${page.meta_description}`}>
         <title>{page.meta_title || page.title || 'Aquafarm'}</title>
         <meta name="description" content={page.meta_description || page.title || 'Aquafarm - Sustainable Aquaculture'} />
         <meta name="robots" content={page.robots_meta || 'index, follow'} />
