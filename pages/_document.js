@@ -12,6 +12,7 @@ export default function Document() {
         <link rel="manifest" href="/site.webmanifest" />
         
         {/* Meta tags for better SEO and display */}
+        <meta name="description" content="Aquafarm - Sustainable Aquaculture" />
         <meta name="theme-color" content="#ffffff" />
       </Head>
       <body>

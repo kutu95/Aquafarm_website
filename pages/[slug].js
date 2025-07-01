@@ -12,6 +12,16 @@ export default function Page({ page }) {
   const { user, role } = useContext(AuthContext);
   const isAdmin = role === 'admin';
 
+  // Debug logging
+  if (page) {
+    console.log('Page data:', {
+      title: page.title,
+      meta_title: page.meta_title,
+      meta_description: page.meta_description,
+      slug: page.slug
+    });
+  }
+
   useEffect(() => {
     if (router.query.edit && user && isAdmin) {
       router.push(`/dashboard?edit=${page.id}`);
@@ -45,8 +55,8 @@ export default function Page({ page }) {
     <>
       <NavBar />
       <Head>
-        <title>{page.meta_title || page.title}</title>
-        <meta name="description" content={page.meta_description || page.title} />
+        <title>{page.meta_title || page.title || 'Aquafarm'}</title>
+        <meta name="description" content={page.meta_description || page.title || 'Aquafarm - Sustainable Aquaculture'} />
         <meta name="robots" content={page.robots_meta || 'index, follow'} />
         
         {/* Canonical URL */}
@@ -55,8 +65,8 @@ export default function Page({ page }) {
         )}
         
         {/* Open Graph Tags */}
-        <meta property="og:title" content={page.og_title || page.meta_title || page.title} />
-        <meta property="og:description" content={page.og_description || page.meta_description || page.title} />
+        <meta property="og:title" content={page.og_title || page.meta_title || page.title || 'Aquafarm'} />
+        <meta property="og:description" content={page.og_description || page.meta_description || page.title || 'Aquafarm - Sustainable Aquaculture'} />
         <meta property="og:type" content="website" />
         <meta property="og:url" content={page.canonical_url || `${process.env.NEXT_PUBLIC_SITE_URL || 'https://aquafarm.com'}/${page.slug}`} />
         {page.og_image && (
@@ -65,8 +75,8 @@ export default function Page({ page }) {
         
         {/* Twitter Card Tags */}
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={page.og_title || page.meta_title || page.title} />
-        <meta name="twitter:description" content={page.og_description || page.meta_description || page.title} />
+        <meta name="twitter:title" content={page.og_title || page.meta_title || page.title || 'Aquafarm'} />
+        <meta name="twitter:description" content={page.og_description || page.meta_description || page.title || 'Aquafarm - Sustainable Aquaculture'} />
         {page.og_image && (
           <meta name="twitter:image" content={page.og_image} />
         )}
@@ -145,6 +155,14 @@ export async function getServerSideProps({ params, req, res }) {
         }
       };
     }
+
+    // Debug logging
+    console.log('Server-side page data for slug:', params.slug, {
+      title: page.title,
+      meta_title: page.meta_title,
+      meta_description: page.meta_description,
+      slug: page.slug
+    });
 
     // Check access permissions (temporarily disabled until migration is run)
     // if (page.security === 'user' && !session) {
