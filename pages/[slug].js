@@ -14,7 +14,7 @@ export default function Page({ page }) {
 
   // Debug logging
   if (page) {
-    const finalMetaDescription = page.meta_description || page.title || 'Aquafarm - Sustainable Aquaculture';
+    const finalMetaDescription = page.meta_description || page.title || 'Sustainable agriculture, community living and permaculture';
     console.log('Page data:', {
       title: page.title,
       meta_title: page.meta_title,
@@ -22,6 +22,9 @@ export default function Page({ page }) {
       slug: page.slug,
       finalMetaDescription: finalMetaDescription
     });
+    
+    // Additional browser-side logging
+    console.log('Meta description that should be rendered:', finalMetaDescription);
   }
 
   useEffect(() => {
@@ -58,7 +61,7 @@ export default function Page({ page }) {
       <NavBar />
       <Head>
         <title>{page.meta_title || page.title || 'Aquafarm'}</title>
-        <meta name="description" content={page.meta_description || page.title || 'Aquafarm - Sustainable Aquaculture'} />
+        <meta name="description" content={page.meta_description || page.title || 'Sustainable agriculture, community living and permaculture'} />
         <meta name="robots" content={page.robots_meta || 'index, follow'} />
         
         {/* Canonical URL */}
@@ -68,7 +71,7 @@ export default function Page({ page }) {
         
         {/* Open Graph Tags */}
         <meta property="og:title" content={page.og_title || page.meta_title || page.title || 'Aquafarm'} />
-        <meta property="og:description" content={page.og_description || page.meta_description || page.title || 'Aquafarm - Sustainable Aquaculture'} />
+        <meta property="og:description" content={page.og_description || page.meta_description || page.title || 'Sustainable agriculture, community living and permaculture'} />
         <meta property="og:type" content="website" />
         <meta property="og:url" content={page.canonical_url || `${process.env.NEXT_PUBLIC_SITE_URL || 'https://aquafarm.com'}/${page.slug}`} />
         {page.og_image && (
@@ -78,7 +81,7 @@ export default function Page({ page }) {
         {/* Twitter Card Tags */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={page.og_title || page.meta_title || page.title || 'Aquafarm'} />
-        <meta name="twitter:description" content={page.og_description || page.meta_description || page.title || 'Aquafarm - Sustainable Aquaculture'} />
+        <meta name="twitter:description" content={page.og_description || page.meta_description || page.title || 'Sustainable agriculture, community living and permaculture'} />
         {page.og_image && (
           <meta name="twitter:image" content={page.og_image} />
         )}
