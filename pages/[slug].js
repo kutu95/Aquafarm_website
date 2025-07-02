@@ -1,37 +1,92 @@
-import { useEffect, useContext } from 'react';
+// [slug].js
+import { useContext, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import Link from 'next/link';
 import Head from 'next/head';
+import Link from 'next/link';
 import NavBar from '@/components/NavBar';
 import Footer from '@/components/Footer';
 import { AuthContext } from './_app';
 import { createServerClient } from '@supabase/ssr';
 
+// 👇 Component definition
 export default function Page({ page }) {
   const router = useRouter();
   const { user, role } = useContext(AuthContext);
   const isAdmin = role === 'admin';
 
-  // Debug logging
-  if (page) {
-    const finalMetaDescription = page.meta_description || page.title || 'Sustainable agriculture, community living and permaculture';
-    console.log('Page data:', {
-      title: page.title,
-      meta_title: page.meta_title,
-      meta_description: page.meta_description,
-      slug: page.slug,
-      finalMetaDescription: finalMetaDescription
-    });
-    
-    // Additional browser-side logging
-    console.log('Meta description that should be rendered:', finalMetaDescription);
-  }
-
   useEffect(() => {
-    if (router.query.edit && user && isAdmin) {
+    if (router.query.edit && user && isAdmin && page?.id) {
       router.push(`/dashboard?edit=${page.id}`);
     }
-  }, [router, page, isAdmin, user]);
+  }, [router, user, isAdmin, page?.id]);
+
+  // Client-side meta tag injection (fallback for when Head component doesn't work)
+  useEffect(() => {
+    if (page) {
+      const title = page.meta_title || page.title || 'Aquafarm';
+      const description = page.meta_description || page.title || 'Sustainable agriculture, community living and permaculture';
+      
+      // Update document title
+      document.title = title;
+      
+      // Update or create meta description
+      let metaDescription = document.querySelector('meta[name="description"]');
+      if (!metaDescription) {
+        metaDescription = document.createElement('meta');
+        metaDescription.name = 'description';
+        document.head.appendChild(metaDescription);
+      }
+      metaDescription.content = description;
+      
+      // Update or create robots meta
+      let metaRobots = document.querySelector('meta[name="robots"]');
+      if (!metaRobots) {
+        metaRobots = document.createElement('meta');
+        metaRobots.name = 'robots';
+        document.head.appendChild(metaRobots);
+      }
+      metaRobots.content = page.robots_meta || 'index, follow';
+      
+      // Update or create og:title
+      let ogTitle = document.querySelector('meta[property="og:title"]');
+      if (!ogTitle) {
+        ogTitle = document.createElement('meta');
+        ogTitle.setAttribute('property', 'og:title');
+        document.head.appendChild(ogTitle);
+      }
+      ogTitle.content = page.og_title || title;
+      
+      // Update or create og:description
+      let ogDescription = document.querySelector('meta[property="og:description"]');
+      if (!ogDescription) {
+        ogDescription = document.createElement('meta');
+        ogDescription.setAttribute('property', 'og:description');
+        document.head.appendChild(ogDescription);
+      }
+      ogDescription.content = page.og_description || description;
+      
+      // Update or create og:url
+      const ogUrl = page.canonical_url || `${process.env.NEXT_PUBLIC_SITE_URL || 'https://aquafarm.au'}/${page.slug}`;
+      let ogUrlMeta = document.querySelector('meta[property="og:url"]');
+      if (!ogUrlMeta) {
+        ogUrlMeta = document.createElement('meta');
+        ogUrlMeta.setAttribute('property', 'og:url');
+        document.head.appendChild(ogUrlMeta);
+      }
+      ogUrlMeta.content = ogUrl;
+      
+      // Update or create canonical link
+      if (page.canonical_url) {
+        let canonicalLink = document.querySelector('link[rel="canonical"]');
+        if (!canonicalLink) {
+          canonicalLink = document.createElement('link');
+          canonicalLink.rel = 'canonical';
+          document.head.appendChild(canonicalLink);
+        }
+        canonicalLink.href = page.canonical_url;
+      }
+    }
+  }, [page]);
 
   if (!page) {
     return (
@@ -41,55 +96,47 @@ export default function Page({ page }) {
           <title>Page Not Found</title>
           <meta name="description" content="The page you are looking for could not be found." />
         </Head>
-        <div className="p-6 max-w-4xl mx-auto">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold mb-4">Page Not Found</h1>
-            {user && isAdmin && (
-              <Link href={`/dashboard?edit=${router.query.slug}`} className="text-blue-600 hover:text-blue-800">
-                Create this page
-              </Link>
-            )}
-          </div>
+        <div className="p-6 max-w-4xl mx-auto text-center">
+          <h1 className="text-2xl font-bold mb-4">Page Not Found</h1>
+          {user && isAdmin && (
+            <Link href={`/dashboard?edit=${router.query.slug}`} className="text-blue-600 hover:underline">
+              Create this page
+            </Link>
+          )}
         </div>
         <Footer />
       </>
     );
   }
 
+  const title = page.meta_title || page.title || 'Aquafarm';
+  const description = page.meta_description || page.title || 'Sustainable agriculture, community living and permaculture';
+  const ogUrl = page.canonical_url || `${process.env.NEXT_PUBLIC_SITE_URL || 'https://aquafarm.au'}/${page.slug}`;
+
   return (
     <>
       <NavBar />
       <Head>
-        <title>{page.meta_title || page.title || 'Aquafarm'}</title>
-        <meta name="description" content={page.meta_description || page.title || 'Sustainable agriculture, community living and permaculture'} />
+        <title>{title}</title>
+        <meta name="description" content={description} />
         <meta name="robots" content={page.robots_meta || 'index, follow'} />
-        
-        {/* Canonical URL */}
-        {page.canonical_url && (
-          <link rel="canonical" href={page.canonical_url} />
-        )}
-        
-        {/* Open Graph Tags */}
-        <meta property="og:title" content={page.og_title || page.meta_title || page.title || 'Aquafarm'} />
-        <meta property="og:description" content={page.og_description || page.meta_description || page.title || 'Sustainable agriculture, community living and permaculture'} />
+        {page.canonical_url && <link rel="canonical" href={page.canonical_url} />}
+        <meta property="og:title" content={page.og_title || title} />
+        <meta property="og:description" content={page.og_description || description} />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content={page.canonical_url || `${process.env.NEXT_PUBLIC_SITE_URL || 'https://aquafarm.com'}/${page.slug}`} />
-        {page.og_image && (
-          <meta property="og:image" content={page.og_image} />
-        )}
-        
-        {/* Twitter Card Tags */}
+        <meta property="og:url" content={ogUrl} />
+        {page.og_image && <meta property="og:image" content={page.og_image} />}
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={page.og_title || page.meta_title || page.title || 'Aquafarm'} />
-        <meta name="twitter:description" content={page.og_description || page.meta_description || page.title || 'Sustainable agriculture, community living and permaculture'} />
-        {page.og_image && (
-          <meta name="twitter:image" content={page.og_image} />
-        )}
+        <meta name="twitter:title" content={page.og_title || title} />
+        <meta name="twitter:description" content={page.og_description || description} />
+        {page.og_image && <meta name="twitter:image" content={page.og_image} />}
       </Head>
+
       <div className="p-6 max-w-4xl mx-auto">
         <article className="prose max-w-none">
           <div dangerouslySetInnerHTML={{ __html: page.content }} />
         </article>
+
         {user && isAdmin && (
           <div className="mt-8 text-center text-gray-500">
             <Link href={`/publishing?edit=${page.id}`} className="hover:text-gray-700">
@@ -103,40 +150,27 @@ export default function Page({ page }) {
   );
 }
 
+// 👇 SSR logic goes here, after the component
 export async function getServerSideProps({ params, req, res }) {
-  try {
-    // Create server-side Supabase client
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-      {
-        cookies: {
-          get(name) {
-            return req.cookies[name];
-          },
-          set(name, value, options) {
-            res.setHeader('Set-Cookie', `${name}=${value}; Path=/; HttpOnly`);
-          },
-          remove(name, options) {
-            res.setHeader('Set-Cookie', `${name}=; Path=/; HttpOnly; Max-Age=0`);
-          },
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    {
+      cookies: {
+        get(name) {
+          return req.cookies[name];
         },
-      }
-    );
-
-    const { data: { session }, error: authError } = await supabase.auth.getSession();
-    
-    let userRole = null;
-    if (session?.user) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', session.user.id)
-        .single();
-      userRole = profile?.role;
+        set(name, value, options) {
+          res.setHeader('Set-Cookie', `${name}=${value}; Path=/; HttpOnly`);
+        },
+        remove(name) {
+          res.setHeader('Set-Cookie', `${name}=; Path=/; HttpOnly; Max-Age=0`);
+        },
+      },
     }
+  );
 
-    // Use maybeSingle() instead of single() to handle cases where page might not exist
+  try {
     const { data: page, error } = await supabase
       .from('pages')
       .select('*')
@@ -144,63 +178,42 @@ export async function getServerSideProps({ params, req, res }) {
       .maybeSingle();
 
     if (error) {
-      console.error('Error fetching page:', error);
-      return {
-        props: {
-          page: null
-        }
-      };
+      console.error('Supabase error:', error);
+      return { props: { page: null } };
     }
 
-    // If no page found, return null
-    if (!page) {
-      return {
-        props: {
-          page: null
-        }
+    // Set meta tags in response headers for better SEO
+    if (page) {
+      const title = page.meta_title || page.title || 'Aquafarm';
+      const description = page.meta_description || page.title || 'Sustainable agriculture, community living and permaculture';
+      
+      // Sanitize content for HTTP headers (remove invalid characters)
+      const sanitizeHeader = (str) => {
+        if (!str) return '';
+        return str
+          .replace(/[\r\n]/g, ' ') // Remove line breaks
+          .replace(/[^\x20-\x7E]/g, '') // Remove non-printable characters
+          .substring(0, 1000); // Limit length
       };
+      
+      // Set meta tags as response headers (only if content is safe)
+      try {
+        res.setHeader('X-Meta-Title', sanitizeHeader(title));
+        res.setHeader('X-Meta-Description', sanitizeHeader(description));
+        res.setHeader('X-Meta-Robots', sanitizeHeader(page.robots_meta || 'index, follow'));
+        
+        if (page.canonical_url) {
+          res.setHeader('X-Meta-Canonical', sanitizeHeader(page.canonical_url));
+        }
+      } catch (headerError) {
+        console.warn('Could not set meta headers:', headerError);
+        // Continue without headers rather than failing
+      }
     }
 
-    // Debug logging
-    console.log('Server-side page data for slug:', params.slug, {
-      title: page.title,
-      meta_title: page.meta_title,
-      meta_description: page.meta_description,
-      slug: page.slug
-    });
-
-    // Check access permissions (temporarily disabled until migration is run)
-    // if (page.security === 'user' && !session) {
-    //   // User-only page but no session
-    //   return {
-    //     redirect: {
-    //       destination: '/login',
-    //       permanent: false,
-    //     },
-    //   };
-    // }
-
-    // if (page.security === 'admin' && (!session || userRole !== 'admin')) {
-    //   // Admin-only page but not admin
-    //   return {
-    //     redirect: {
-    //       destination: '/',
-    //       permanent: false,
-    //     },
-    //   };
-    // }
-
-    return {
-      props: {
-        page
-      }
-    };
-  } catch (error) {
-    console.error('Error fetching page:', error);
-    return {
-      props: {
-        page: null
-      }
-    };
+    return { props: { page } };
+  } catch (err) {
+    console.error('Server error:', err);
+    return { props: { page: null } };
   }
 }
