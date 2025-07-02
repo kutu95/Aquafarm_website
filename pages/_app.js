@@ -1,15 +1,14 @@
 import '@/styles/globals.css';
-import { createContext, useEffect, useState } from 'react';
+import { useEffect, useState, createContext } from 'react';
 import { createClient } from '@supabase/supabase-js';
+import Head from 'next/head';
 import GoogleAnalytics from '@/components/GoogleAnalytics';
 
-// Create Supabase client
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Create contexts
 export const AuthContext = createContext();
 export const DarkModeContext = createContext();
 
@@ -18,32 +17,25 @@ export default function App({ Component, pageProps }) {
   const [role, setRole] = useState(null);
   const [darkMode, setDarkMode] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [hasMounted, setHasMounted] = useState(false);
 
+  // Track when component has mounted (prevents hydration mismatch)
   useEffect(() => {
-    // Check for saved dark mode preference or default to system preference
+    setHasMounted(true);
+
+    // Load dark mode preference
     const savedDarkMode = localStorage.getItem('darkMode');
     const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    
-    if (savedDarkMode !== null) {
-      setDarkMode(JSON.parse(savedDarkMode));
-    } else {
-      setDarkMode(systemPrefersDark);
-    }
-  }, []);
 
-  useEffect(() => {
-    // Apply dark mode class to document
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-    
-    // Save preference to localStorage
-    localStorage.setItem('darkMode', JSON.stringify(darkMode));
-  }, [darkMode]);
+    const preferredDark = savedDarkMode !== null
+      ? JSON.parse(savedDarkMode)
+      : systemPrefersDark;
 
-  useEffect(() => {
+    setDarkMode(preferredDark);
+    document.documentElement.classList.toggle('dark', preferredDark);
+    localStorage.setItem('darkMode', JSON.stringify(preferredDark));
+
+    // Load Supabase auth session
     async function loadUser() {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
@@ -53,17 +45,27 @@ export default function App({ Component, pageProps }) {
           setRole(null);
         } else {
           setUser(session?.user ?? null);
+          
+          // Fetch role from profiles table if user is authenticated
           if (session?.user) {
-            // Get role from user metadata
-            const userRole = session.user.user_metadata?.role;
-            console.log('User role from metadata:', userRole);
-            setRole(userRole || null);
+            const { data: profile, error: profileError } = await supabase
+              .from('profiles')
+              .select('role')
+              .eq('id', session.user.id)
+              .single();
+            
+            if (profileError) {
+              console.error('Profile fetch error:', profileError);
+              setRole(null);
+            } else {
+              setRole(profile?.role || null);
+            }
           } else {
             setRole(null);
           }
         }
-      } catch (error) {
-        console.error('Load user error:', error);
+      } catch (err) {
+        console.error('Auth load error:', err);
         setUser(null);
         setRole(null);
       } finally {
@@ -73,36 +75,50 @@ export default function App({ Component, pageProps }) {
 
     loadUser();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state change:', event, session?.user?.email);
-      
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setUser(session?.user ?? null);
       
+      // Fetch role from profiles table if user is authenticated
       if (session?.user) {
-        // Get role from user metadata
-        const userRole = session.user.user_metadata?.role;
-        console.log('User role from auth change:', userRole);
-        setRole(userRole || null);
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', session.user.id)
+          .single();
+        
+        if (profileError) {
+          console.error('Profile fetch error:', profileError);
+          setRole(null);
+        } else {
+          setRole(profile?.role || null);
+        }
       } else {
         setRole(null);
       }
     });
 
-    return () => {
-      subscription?.unsubscribe();
-    };
+    return () => subscription?.unsubscribe();
   }, []);
 
-  if (loading) {
-    return <div className="p-6">Loading...</div>;
-  }
+  // Avoid hydration mismatch by delaying render
+  if (!hasMounted) return null;
 
   return (
-    <AuthContext.Provider value={{ user, role, setUser, loading }}>
-      <DarkModeContext.Provider value={{ darkMode, setDarkMode }}>
-        <GoogleAnalytics />
-        <Component {...pageProps} />
-      </DarkModeContext.Provider>
-    </AuthContext.Provider>
+    <>
+      <Head>
+        {/* Global meta tags */}
+        <meta name="description" content="Sustainable agriculture, community living and permaculture" />
+        <meta name="robots" content="index, follow" />
+        <meta property="og:type" content="website" />
+        <meta name="twitter:card" content="summary_large_image" />
+      </Head>
+
+      <AuthContext.Provider value={{ user, role, setUser, loading }}>
+        <DarkModeContext.Provider value={{ darkMode, setDarkMode }}>
+          <GoogleAnalytics />
+          <Component {...pageProps} />
+        </DarkModeContext.Provider>
+      </AuthContext.Provider>
+    </>
   );
 }
