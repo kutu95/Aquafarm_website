@@ -146,7 +146,18 @@ export default function NavBar() {
                     { title: 'What to Expect', href: '/volunteering-description' },
                     { title: 'Apply to Volunteer', href: '/volunteer-application' }
                   ]
-                }
+                },
+                // Add Products submenu if there are product pages
+                ...(productPages.length > 0 ? [{
+                  id: 'products',
+                  title: 'Products',
+                  priority: 3,
+                  type: 'submenu',
+                  items: productPages.map(product => ({
+                    title: product.title,
+                    href: `/${product.slug}`
+                  }))
+                }] : [])
               ].sort((a, b) => (a.priority || 0) - (b.priority || 0));
 
               return combinedMenu.map((item) => {
@@ -198,37 +209,6 @@ export default function NavBar() {
                 }
               });
             })()}
-
-            {/* Products menu */}
-            {productPages.length > 0 && (
-              <div
-                className="relative"
-                onMouseEnter={() => setIsProductsMenuOpen(true)}
-                onMouseLeave={() => setIsProductsMenuOpen(false)}
-              >
-                <button
-                  className="px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
-                >
-                  Products
-                </button>
-                <div
-                  className={`absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 transition-opacity duration-200 z-50 border border-gray-200 ${
-                    isProductsMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
-                  }`}
-                >
-                  <div className="absolute -top-2 left-0 right-0 h-2 bg-transparent"></div>
-                  {productPages.map((product) => (
-                    <Link
-                      key={product.slug}
-                      href={`/${product.slug}`}
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                      {product.title}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            )}
             <DarkModeToggle />
             {user ? (
               <>
@@ -328,20 +308,36 @@ export default function NavBar() {
                   { title: 'What to Expect', href: '/volunteering-description' },
                   { title: 'Apply to Volunteer', href: '/volunteer-application' }
                 ]
-              }
+              },
+              // Add Products submenu if there are product pages
+              ...(productPages.length > 0 ? [{
+                id: 'products',
+                title: 'Products',
+                priority: 3,
+                type: 'submenu',
+                items: productPages.map(product => ({
+                  title: product.title,
+                  href: `/${product.slug}`
+                }))
+              }] : [])
             ].sort((a, b) => (a.priority || 0) - (b.priority || 0));
 
             return combinedMenu.map((item) => {
               if (item.type === 'submenu') {
+                const isOpen = item.id === 'volunteering' ? isMobileVolunteeringMenuOpen : 
+                               item.id === 'products' ? isMobileProductsMenuOpen : false;
+                const setIsOpen = item.id === 'volunteering' ? setIsMobileVolunteeringMenuOpen : 
+                                 item.id === 'products' ? setIsMobileProductsMenuOpen : () => {};
+                
                 return (
                   <div key={item.id} className="border-t border-gray-700 pt-2">
                     <button
-                      onClick={() => setIsMobileVolunteeringMenuOpen(!isMobileVolunteeringMenuOpen)}
+                      onClick={() => setIsOpen(!isOpen)}
                       className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
                     >
                       {item.title}
                     </button>
-                    {isMobileVolunteeringMenuOpen && (
+                    {isOpen && (
                       <div className="pl-4 space-y-1">
                         {item.items.map((subItem) => (
                           <Link
@@ -350,7 +346,7 @@ export default function NavBar() {
                             className="block px-3 py-2 rounded-md text-sm font-medium text-gray-400 hover:bg-gray-700 hover:text-white"
                             onClick={() => {
                               setIsMobileMenuOpen(false);
-                              setIsMobileVolunteeringMenuOpen(false);
+                              setIsOpen(false);
                             }}
                           >
                             {subItem.title}
@@ -378,34 +374,6 @@ export default function NavBar() {
               }
             });
           })()}
-          {/* Mobile Products menu */}
-          {productPages.length > 0 && (
-            <div className="border-t border-gray-700 pt-2">
-              <button
-                onClick={() => setIsMobileProductsMenuOpen(!isMobileProductsMenuOpen)}
-                className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
-              >
-                Products
-              </button>
-              {isMobileProductsMenuOpen && (
-                <div className="pl-4 space-y-1">
-                  {productPages.map((product) => (
-                    <Link
-                      key={product.slug}
-                      href={`/${product.slug}`}
-                      className="block px-3 py-2 rounded-md text-sm font-medium text-gray-400 hover:bg-gray-700 hover:text-white"
-                      onClick={() => {
-                        setIsMobileMenuOpen(false);
-                        setIsMobileProductsMenuOpen(false);
-                      }}
-                    >
-                      {product.title}
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
           {user ? (
             <>
               {role === 'admin' && (
