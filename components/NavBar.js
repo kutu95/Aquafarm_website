@@ -24,7 +24,10 @@ export default function NavBar() {
       NODE_ENV: process.env.NODE_ENV
     });
     
+    console.log('NavBar: useEffect is running, about to call fetchMenuPages...');
+    
     const fetchMenuPages = async () => {
+      console.log('NavBar: fetchMenuPages function called');
       try {
         console.log('NavBar: Fetching menu pages...');
         
@@ -81,6 +84,7 @@ export default function NavBar() {
     };
     
     const fetchProductPages = async () => {
+      console.log('NavBar: fetchProductPages function called');
       try {
         console.log('NavBar: Fetching product pages...');
         
@@ -103,8 +107,11 @@ export default function NavBar() {
       }
     };
     
+    console.log('NavBar: Calling fetchMenuPages...');
     fetchMenuPages();
+    console.log('NavBar: Calling fetchProductPages...');
     fetchProductPages();
+    console.log('NavBar: Both functions called');
   }, []); // Temporarily removed user, role dependencies
 
   const handleLogout = async () => {
