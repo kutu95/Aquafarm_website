@@ -124,35 +124,7 @@ export default function App({ Component, pageProps }) {
   // Avoid hydration mismatch by delaying render
   if (!hasMounted) return null;
 
-  // Add manual role fetch function for debugging
-  const manualFetchRole = async () => {
-    if (user) {
-      console.log('Manual role fetch for user:', user.id);
-      try {
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', user.id)
-          .single();
-        
-        console.log('Manual role fetch result:', { profile, profileError });
-        
-        if (profileError) {
-          console.error('Manual role fetch error:', profileError);
-        } else {
-          console.log('Manual role fetch: Setting role:', profile?.role);
-          setRole(profile?.role || null);
-        }
-      } catch (error) {
-        console.error('Manual role fetch error:', error);
-      }
-    }
-  };
 
-  // Expose manual fetch function globally for debugging
-  if (typeof window !== 'undefined') {
-    window.manualFetchRole = manualFetchRole;
-  }
 
   return (
     <>

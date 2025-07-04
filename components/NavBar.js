@@ -199,10 +199,7 @@ export default function NavBar() {
             <DarkModeToggle />
             {user ? (
               <>
-                {/* Debug info */}
-                {console.log('NavBar Debug:', { user: !!user, role, isAdmin: role === 'admin', loading })}
                 {/* Admin submenu, always before Logout, only for admin users */}
-                {/* Debug: User={!!user}, Role={role}, IsAdmin={role === 'admin' ? 'Yes' : 'No'}, Loading={loading} */}
                 {!loading && role === 'admin' && (
                   <div
                     className="relative"
