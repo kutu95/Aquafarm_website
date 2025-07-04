@@ -1,3 +1,39 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Reset default margins and ensure no gap between header and content */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+/* Ensure the main content starts immediately after the nav */
+main {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+/* Remove any default margins from the first element in content */
+main > *:first-child {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+/* Remove margins from the first element in the content area */
+.prose > *:first-child {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+/* Remove margins from any first child in the content div */
+div[class*="max-w-4xl"] > *:first-child {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}

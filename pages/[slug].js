@@ -133,7 +133,7 @@ export default function Page({ page }) {
       </Head>
 
       <div className="px-6 pb-6 max-w-4xl mx-auto">
-        <article className="prose max-w-none">
+        <article className="prose max-w-none mt-0 pt-0">
           <div dangerouslySetInnerHTML={{ __html: page.content }} />
         </article>
 
