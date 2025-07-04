@@ -43,6 +43,15 @@ export default async function handler(req, res) {
 
     console.log('Fetching role for user:', session.user.id);
     
+    // First, let's check if the user exists in profiles table
+    const { data: allProfiles, error: listError } = await supabase
+      .from('profiles')
+      .select('id, role')
+      .limit(10);
+    
+    console.log('All profiles in table:', allProfiles);
+    console.log('List error:', listError);
+    
     // Fetch role from profiles table
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
