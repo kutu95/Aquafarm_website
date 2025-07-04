@@ -15,27 +15,56 @@ export default function NavBar() {
   const router = useRouter();
 
   useEffect(() => {
+    // Debug Supabase client
+    console.log('NavBar: Supabase client initialized:', !!supabase);
+    console.log('NavBar: Environment check:', {
+      NODE_ENV: process.env.NODE_ENV,
+      hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+      hasKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    });
+    
     const fetchMenuPages = async () => {
-      // Temporarily simplified until security migration is run
-      const { data, error } = await supabase
-        .from('pages')
-        .select('title, slug, priority')
-        .gt('priority', 0)
-        .order('priority');
-      
-      if (!error && data) {
-        setMenuPages(data);
+      try {
+        console.log('Fetching menu pages...');
+        // Temporarily simplified until security migration is run
+        const { data, error } = await supabase
+          .from('pages')
+          .select('title, slug, priority')
+          .gt('priority', 0)
+          .order('priority');
+        
+        if (error) {
+          console.error('Error fetching menu pages:', error);
+          return;
+        }
+        
+        console.log('Menu pages fetched:', data);
+        setMenuPages(data || []);
+      } catch (err) {
+        console.error('Exception fetching menu pages:', err);
       }
     };
+    
     const fetchProductPages = async () => {
-      const { data, error } = await supabase
-        .from('pages')
-        .select('title, slug')
-        .eq('page_type', 'product');
-      if (!error && data) {
-        setProductPages(data);
+      try {
+        console.log('Fetching product pages...');
+        const { data, error } = await supabase
+          .from('pages')
+          .select('title, slug')
+          .eq('page_type', 'product');
+        
+        if (error) {
+          console.error('Error fetching product pages:', error);
+          return;
+        }
+        
+        console.log('Product pages fetched:', data);
+        setProductPages(data || []);
+      } catch (err) {
+        console.error('Exception fetching product pages:', err);
       }
     };
+    
     fetchMenuPages();
     fetchProductPages();
   }, []); // Temporarily removed user, role dependencies
@@ -118,6 +147,12 @@ export default function NavBar() {
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-4">
+            {/* Debug info - remove in production */}
+            {process.env.NODE_ENV === 'development' && (
+              <span className="text-xs text-gray-400">
+                Menu: {menuPages.length}, Products: {productPages.length}
+              </span>
+            )}
             {menuPages.map((page) => (
               <Link
                 key={page.slug}
@@ -131,6 +166,12 @@ export default function NavBar() {
                 {page.title}
               </Link>
             ))}
+            {/* Fallback menu item if no pages are loaded */}
+            {menuPages.length === 0 && (
+              <span className="px-3 py-2 text-sm text-gray-400">
+                Loading...
+              </span>
+            )}
             {/* Products menu */}
             {productPages.length > 0 && (
               <div
