@@ -67,6 +67,15 @@ export default function NavBar() {
 
       console.log('Server-side logout successful');
 
+      // Also call client-side logout to update auth context
+      console.log('Calling client-side logout...');
+      const { error: clientError } = await supabase.auth.signOut();
+      if (clientError) {
+        console.error('Client-side logout error:', clientError);
+      } else {
+        console.log('Client-side logout successful');
+      }
+
       // Force clear any local storage or session data
       if (typeof window !== 'undefined') {
         console.log('Clearing local storage...');
