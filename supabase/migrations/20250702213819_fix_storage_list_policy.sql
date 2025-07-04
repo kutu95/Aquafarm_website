@@ -41,13 +41,4 @@ CREATE POLICY "Authenticated users can delete page-images"
   );
 
 -- Also ensure the admin policy covers all operations
--- This should already exist from the previous migration, but let's make sure
-CREATE POLICY "Admins can manage all storage buckets"
-  ON storage.objects
-  FOR ALL USING (
-    EXISTS (
-      SELECT 1 FROM profiles 
-      WHERE profiles.id = auth.uid() 
-      AND profiles.role = 'admin'
-    )
-  ); 
+-- This should already exist from the previous migration, but let's make sure 

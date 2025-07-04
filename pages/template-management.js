@@ -17,7 +17,6 @@ export default function TemplateManagement() {
     name: '',
     title: '',
     content: '',
-    meta_description: '',
     meta_title: '',
     og_title: '',
     og_description: '',
@@ -82,7 +81,6 @@ export default function TemplateManagement() {
           name: selectedTemplate.name,
           title: selectedTemplate.title,
           content: selectedTemplate.content,
-          meta_description: selectedTemplate.meta_description,
           meta_title: selectedTemplate.meta_title,
           og_title: selectedTemplate.og_title,
           og_description: selectedTemplate.og_description,
@@ -143,7 +141,6 @@ export default function TemplateManagement() {
         name: '',
         title: '',
         content: '',
-        meta_description: '',
         meta_title: '',
         og_title: '',
         og_description: '',
@@ -235,7 +232,6 @@ export default function TemplateManagement() {
                     <div className="flex-1">
                       <h3 className="text-lg font-medium text-gray-900 dark:text-white">{template.title}</h3>
                       <p className="text-sm text-gray-600 dark:text-gray-400">Name: {template.name}</p>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">{template.meta_description}</p>
                       <div className="flex gap-2 mt-2">
                         <span className={`inline-block px-2 py-1 text-xs rounded-full ${
                           template.is_active
@@ -296,19 +292,6 @@ export default function TemplateManagement() {
                       placeholder="Page title"
                     />
                   </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Meta Description
-                  </label>
-                  <textarea
-                    value={newTemplate.meta_description}
-                    onChange={(e) => setNewTemplate({ ...newTemplate, meta_description: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    rows="3"
-                    placeholder="SEO meta description"
-                  />
                 </div>
 
                 <div>
@@ -380,18 +363,6 @@ export default function TemplateManagement() {
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     />
                   </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Meta Description
-                  </label>
-                  <textarea
-                    value={selectedTemplate.meta_description}
-                    onChange={(e) => setSelectedTemplate({ ...selectedTemplate, meta_description: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    rows="3"
-                  />
                 </div>
 
                 <div>

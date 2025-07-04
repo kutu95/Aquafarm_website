@@ -7,8 +7,11 @@ import DarkModeToggle from './DarkModeToggle';
 export default function NavBar() {
   const { user, role } = useContext(AuthContext);
   const [menuPages, setMenuPages] = useState([]);
+  const [productPages, setProductPages] = useState([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAdminMenuOpen, setIsAdminMenuOpen] = useState(false);
+  const [isProductsMenuOpen, setIsProductsMenuOpen] = useState(false);
+  const [isMobileProductsMenuOpen, setIsMobileProductsMenuOpen] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -24,8 +27,17 @@ export default function NavBar() {
         setMenuPages(data);
       }
     };
-
+    const fetchProductPages = async () => {
+      const { data, error } = await supabase
+        .from('pages')
+        .select('title, slug')
+        .eq('page_type', 'product');
+      if (!error && data) {
+        setProductPages(data);
+      }
+    };
     fetchMenuPages();
+    fetchProductPages();
   }, []); // Temporarily removed user, role dependencies
 
   const handleLogout = async () => {
@@ -119,6 +131,36 @@ export default function NavBar() {
                 {page.title}
               </Link>
             ))}
+            {/* Products menu */}
+            {productPages.length > 0 && (
+              <div
+                className="relative"
+                onMouseEnter={() => setIsProductsMenuOpen(true)}
+                onMouseLeave={() => setIsProductsMenuOpen(false)}
+              >
+                <button
+                  className="px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
+                >
+                  Products
+                </button>
+                <div
+                  className={`absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 transition-opacity duration-200 z-50 border border-gray-200 ${
+                    isProductsMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                  }`}
+                >
+                  <div className="absolute -top-2 left-0 right-0 h-2 bg-transparent"></div>
+                  {productPages.map((product) => (
+                    <Link
+                      key={product.slug}
+                      href={`/${product.slug}`}
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      {product.title}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
             <DarkModeToggle />
             {user ? (
               <>
@@ -249,6 +291,34 @@ export default function NavBar() {
               {page.title}
             </Link>
           ))}
+          {/* Mobile Products menu */}
+          {productPages.length > 0 && (
+            <div className="border-t border-gray-700 pt-2">
+              <button
+                onClick={() => setIsMobileProductsMenuOpen(!isMobileProductsMenuOpen)}
+                className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
+              >
+                Products
+              </button>
+              {isMobileProductsMenuOpen && (
+                <div className="pl-4 space-y-1">
+                  {productPages.map((product) => (
+                    <Link
+                      key={product.slug}
+                      href={`/${product.slug}`}
+                      className="block px-3 py-2 rounded-md text-sm font-medium text-gray-400 hover:bg-gray-700 hover:text-white"
+                      onClick={() => {
+                        setIsMobileMenuOpen(false);
+                        setIsMobileProductsMenuOpen(false);
+                      }}
+                    >
+                      {product.title}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
           {user ? (
             <>
               {role === 'admin' && (

@@ -27,7 +27,8 @@ export default function Publishing() {
     robots_meta: 'index, follow',
     is_published: false,
     priority: 0,
-    security: 'open'
+    security: 'open',
+    page_type: 'page',
   });
   const [resizeLoading, setResizeLoading] = useState(false);
   const [renameLoading, setRenameLoading] = useState(false);
@@ -152,6 +153,7 @@ export default function Publishing() {
           is_published: selectedPage.is_published,
           priority: selectedPage.priority,
           security: selectedPage.security,
+          page_type: selectedPage.page_type,
           updated_at: new Date().toISOString()
         })
         .eq('id', selectedPage.id)
@@ -198,21 +200,7 @@ export default function Publishing() {
     try {
       const { error } = await supabase
         .from('pages')
-        .insert([{
-          title: newPage.title,
-          slug: newPage.slug,
-          content: newPage.content,
-          meta_description: newPage.meta_description,
-          meta_title: newPage.meta_title,
-          og_title: newPage.og_title,
-          og_description: newPage.og_description,
-          og_image: newPage.og_image,
-          canonical_url: newPage.canonical_url,
-          robots_meta: newPage.robots_meta,
-          is_published: newPage.is_published,
-          priority: newPage.priority,
-          security: newPage.security
-        }]);
+        .insert([{ ...newPage }]);
 
       if (error) throw error;
 
@@ -233,7 +221,8 @@ export default function Publishing() {
         robots_meta: 'index, follow',
         is_published: false,
         priority: 0,
-        security: 'open'
+        security: 'open',
+        page_type: 'page',
       });
       setShowCreateForm(false);
       fetchPages();
@@ -328,6 +317,7 @@ export default function Publishing() {
           is_published: pageData.is_published,
           priority: pageData.priority,
           security: pageData.security,
+          page_type: pageData.page_type,
           updated_at: new Date().toISOString()
         })
         .eq('id', pageData.id);
@@ -578,6 +568,20 @@ export default function Publishing() {
                           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                             {newPage.meta_description?.length || 0}/160 characters
                           </p>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Page Type *
+                          </label>
+                          <select
+                            value={newPage.page_type}
+                            onChange={e => setNewPage({ ...newPage, page_type: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          >
+                            <option value="page">Page</option>
+                            <option value="document">Document</option>
+                            <option value="product">Product</option>
+                          </select>
                         </div>
                       </div>
                     )}
@@ -955,6 +959,20 @@ export default function Publishing() {
                         <option value="admin">Admin - Administrators only</option>
                       </select>
                     </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Page Type *
+                    </label>
+                    <select
+                      value={selectedPage.page_type}
+                      onChange={e => setSelectedPage({ ...selectedPage, page_type: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    >
+                      <option value="page">Page</option>
+                      <option value="document">Document</option>
+                      <option value="product">Product</option>
+                    </select>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
