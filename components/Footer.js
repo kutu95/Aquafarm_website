@@ -1,7 +1,6 @@
 import { useEffect, useState, useContext } from 'react';
 import Link from 'next/link';
 import { AuthContext } from '@/pages/_app';
-import { supabase } from '@/lib/supabaseClient';
 
 const Footer = () => {
   const [footerContent, setFooterContent] = useState('');
@@ -10,13 +9,13 @@ const Footer = () => {
   useEffect(() => {
     const fetchFooter = async () => {
       try {
-        const { data, error } = await supabase
-          .from('pages')
-          .select('content')
-          .eq('slug', 'footer')
-          .single();
+        const response = await fetch('/api/footer');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
         
-        if (!error && data) {
+        if (data.content) {
           setFooterContent(data.content);
         }
       } catch (error) {
