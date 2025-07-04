@@ -1,13 +1,13 @@
 import '@/styles/globals.css';
 import { useEffect, useState, createContext } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { createBrowserClient } from '@supabase/ssr';
 import Head from 'next/head';
 import GoogleAnalytics from '@/components/GoogleAnalytics';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey);
 
 export const AuthContext = createContext();
 export const DarkModeContext = createContext();
