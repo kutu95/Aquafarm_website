@@ -3,8 +3,7 @@ import { useContext, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Link from 'next/link';
-import NavBar from '@/components/NavBar';
-import Footer from '@/components/Footer';
+import Layout from '@/components/Layout';
 import { AuthContext } from './_app';
 import { createServerClient } from '@supabase/ssr';
 
@@ -90,13 +89,12 @@ export default function Page({ page }) {
 
   if (!page) {
     return (
-      <>
-        <NavBar />
+      <Layout>
         <Head>
           <title>Page Not Found</title>
           <meta name="description" content="The page you are looking for could not be found." />
         </Head>
-        <div className="px-6 pb-6 max-w-4xl mx-auto text-center">
+        <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-2xl font-bold mb-4">Page Not Found</h1>
           {user && isAdmin && (
             <Link href={`/dashboard?edit=${router.query.slug}`} className="text-blue-600 hover:underline">
@@ -104,8 +102,7 @@ export default function Page({ page }) {
             </Link>
           )}
         </div>
-        <Footer />
-      </>
+      </Layout>
     );
   }
 
@@ -114,8 +111,7 @@ export default function Page({ page }) {
   const ogUrl = page.canonical_url || `${process.env.NEXT_PUBLIC_SITE_URL || 'https://aquafarm.au'}/${page.slug}`;
 
   return (
-    <>
-      <NavBar />
+    <Layout>
       <Head>
         <title>{title}</title>
         <meta name="description" content={description} />
@@ -132,7 +128,7 @@ export default function Page({ page }) {
         {page.og_image && <meta name="twitter:image" content={page.og_image} />}
       </Head>
 
-      <div className="px-6 pb-6 max-w-4xl mx-auto">
+      <div className="max-w-4xl mx-auto">
         <article className="prose max-w-none mt-0 pt-0">
           <div dangerouslySetInnerHTML={{ __html: page.content }} />
         </article>
@@ -145,8 +141,7 @@ export default function Page({ page }) {
           </div>
         )}
       </div>
-      <Footer />
-    </>
+    </Layout>
   );
 }
 
