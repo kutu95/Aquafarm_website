@@ -1,0 +1,56 @@
+import { createServerClient } from '@supabase/ssr';
+
+export default async function handler(req, res) {
+  if (req.method !== 'GET') {
+    return res.status(405).json({ message: 'Method not allowed' });
+  }
+
+  try {
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      {
+        cookies: {
+          get(name) {
+            return req.cookies[name];
+          },
+          set(name, value, options) {
+            res.setHeader('Set-Cookie', `${name}=${value}; Path=/; HttpOnly`);
+          },
+          remove(name) {
+            res.setHeader('Set-Cookie', `${name}=; Path=/; HttpOnly; Max-Age=0`);
+          },
+        },
+      }
+    );
+
+    // Get the current user session
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError) {
+      console.error('Session error:', sessionError);
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+
+    if (!session?.user) {
+      return res.status(200).json({ role: null });
+    }
+
+    // Fetch role from profiles table
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', session.user.id)
+      .single();
+
+    if (profileError) {
+      console.error('Profile fetch error:', profileError);
+      return res.status(200).json({ role: null });
+    }
+
+    return res.status(200).json({ role: profile?.role || null });
+  } catch (error) {
+    console.error('Server error:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+} 

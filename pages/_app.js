@@ -46,19 +46,20 @@ export default function App({ Component, pageProps }) {
         } else {
           setUser(session?.user ?? null);
           
-          // Fetch role from profiles table if user is authenticated
+          // Fetch role from server-side API if user is authenticated
           if (session?.user) {
-            const { data: profile, error: profileError } = await supabase
-              .from('profiles')
-              .select('role')
-              .eq('id', session.user.id)
-              .single();
-            
-            if (profileError) {
-              console.error('Profile fetch error:', profileError);
+            try {
+              const response = await fetch('/api/auth/user-role');
+              if (response.ok) {
+                const data = await response.json();
+                setRole(data.role);
+              } else {
+                console.error('Role fetch error:', response.status);
+                setRole(null);
+              }
+            } catch (roleError) {
+              console.error('Role fetch error:', roleError);
               setRole(null);
-            } else {
-              setRole(profile?.role || null);
             }
           } else {
             setRole(null);
@@ -78,19 +79,20 @@ export default function App({ Component, pageProps }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setUser(session?.user ?? null);
       
-      // Fetch role from profiles table if user is authenticated
+      // Fetch role from server-side API if user is authenticated
       if (session?.user) {
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', session.user.id)
-          .single();
-        
-        if (profileError) {
-          console.error('Profile fetch error:', profileError);
+        try {
+          const response = await fetch('/api/auth/user-role');
+          if (response.ok) {
+            const data = await response.json();
+            setRole(data.role);
+          } else {
+            console.error('Role fetch error:', response.status);
+            setRole(null);
+          }
+        } catch (roleError) {
+          console.error('Role fetch error:', roleError);
           setRole(null);
-        } else {
-          setRole(profile?.role || null);
         }
       } else {
         setRole(null);
