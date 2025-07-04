@@ -7,7 +7,28 @@ import GoogleAnalytics from '@/components/GoogleAnalytics';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey, {
+  cookies: {
+    getAll() {
+      return document.cookie.split(';').map(cookie => {
+        const [name, value] = cookie.trim().split('=')
+        return { name, value }
+      })
+    },
+    get(name) {
+      return document.cookie
+        .split(';')
+        .find(cookie => cookie.trim().startsWith(`${name}=`))
+        ?.split('=')[1]
+    },
+    set(name, value, options) {
+      document.cookie = `${name}=${value}; path=/; max-age=${options?.maxAge || 31536000}`
+    },
+    remove(name) {
+      document.cookie = `${name}=; path=/; max-age=0`
+    }
+  }
+});
 
 export const AuthContext = createContext();
 export const DarkModeContext = createContext();
