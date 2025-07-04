@@ -6,7 +6,7 @@ import { useRouter } from 'next/router';
 import DarkModeToggle from './DarkModeToggle';
 
 export default function NavBar() {
-  const { user, role, loading } = useContext(AuthContext);
+  const { user, role, setUser, setRole, loading } = useContext(AuthContext);
   const [menuPages, setMenuPages] = useState([]);
   const [productPages, setProductPages] = useState([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -88,6 +88,11 @@ export default function NavBar() {
           sessionStorage.removeItem(key);
           console.log('Removed from sessionStorage:', key);
         });
+        
+        // Clear the auth context state
+        console.log('Clearing auth context state...');
+        setUser(null);
+        setRole(null);
         
         console.log('Session cleared manually');
       } else {
