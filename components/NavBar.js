@@ -53,13 +53,36 @@ export default function NavBar() {
         });
       }
 
+      // Check current session before logout
+      const { data: { session } } = await supabase.auth.getSession();
+      console.log('Current session before logout:', { hasSession: !!session, userId: session?.user?.id });
+
       // Call client-side logout
       console.log('Calling client-side logout...');
       const { error } = await supabase.auth.signOut();
       if (error) {
         console.error('Client-side logout error:', error);
+        // Even if logout fails, we should still redirect and clear local state
       } else {
         console.log('Client-side logout successful');
+      }
+
+      // Force clear any local storage or session data
+      if (typeof window !== 'undefined') {
+        console.log('Clearing local storage...');
+        // Clear any cached auth data
+        localStorage.removeItem('supabase.auth.token');
+        sessionStorage.removeItem('supabase.auth.token');
+        
+        // Clear any other potential auth-related storage
+        localStorage.removeItem('supabase.auth.expires_at');
+        localStorage.removeItem('supabase.auth.refresh_token');
+        sessionStorage.removeItem('supabase.auth.expires_at');
+        sessionStorage.removeItem('supabase.auth.refresh_token');
+        
+        // Clear any user-related data
+        localStorage.removeItem('user');
+        sessionStorage.removeItem('user');
       }
 
       console.log('Redirecting to home page...');

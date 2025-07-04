@@ -24,15 +24,26 @@ export default function Login() {
     setIsLoading(true);
 
     try {
+      console.log('Attempting login for:', credentials.email);
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email: credentials.email,
         password: credentials.password
       });
 
+      console.log('Login response:', { hasData: !!data, hasUser: !!data?.user, error });
+
       if (error) {
+        console.error('Login error:', error);
         setError(error.message);
         trackEvent('login_failed', 'authentication', 'login_attempt', 0);
       } else {
+        console.log('Login successful, user:', data.user?.id);
+        
+        // Check session after login
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log('Session after login:', { hasSession: !!session, userId: session?.user?.id });
+        
         trackEvent('login_success', 'authentication', 'login_attempt', 1);
         // Redirect to the intended page or home
         const redirect = router.query.redirect || '/';
