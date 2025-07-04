@@ -146,22 +146,7 @@ export default function NavBar() {
                     { title: 'What to Expect', href: '/volunteering-description' },
                     { title: 'Apply to Volunteer', href: '/volunteer-application' }
                   ]
-                },
-                ...(user && role === 'admin' ? [{
-                  id: 'admin',
-                  title: 'Admin',
-                  priority: 9,
-                  type: 'submenu',
-                  items: [
-                    { title: 'Dashboard', href: '/dashboard' },
-                    { title: 'Publishing', href: '/publishing' },
-                    { title: 'Media Library', href: '/media-library' },
-                    { title: 'Volunteer Inductions', href: '/volunteer-inductions' },
-                    { title: 'Volunteer Applications', href: '/volunteer-applications' },
-                    { title: 'Manage Users', href: '/admin/users' },
-                    { title: 'Template Management', href: '/template-management' }
-                  ]
-                }] : [])
+                }
               ].sort((a, b) => (b.priority || 0) - (a.priority || 0));
 
               return combinedMenu.map((item) => {
@@ -179,7 +164,7 @@ export default function NavBar() {
                         {item.title}
                       </button>
                       <div
-                        className={`absolute ${item.id === 'admin' ? 'right-0' : 'left-0'} mt-2 w-48 bg-white rounded-md shadow-lg py-1 transition-opacity duration-200 z-50 border border-gray-200 ${
+                        className={`absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 transition-opacity duration-200 z-50 border border-gray-200 ${
                           openSubmenu === item.id ? 'opacity-100' : 'opacity-0 pointer-events-none'
                         }`}
                       >
@@ -247,6 +232,34 @@ export default function NavBar() {
             <DarkModeToggle />
             {user ? (
               <>
+                {/* Admin submenu, always before Logout, only for admin users */}
+                {role === 'admin' && (
+                  <div
+                    className="relative"
+                    onMouseEnter={() => setOpenSubmenu('admin')}
+                    onMouseLeave={() => setOpenSubmenu(null)}
+                  >
+                    <button
+                      className="px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
+                    >
+                      Admin
+                    </button>
+                    <div
+                      className={`absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 transition-opacity duration-200 z-50 border border-gray-200 ${
+                        openSubmenu === 'admin' ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                      }`}
+                    >
+                      <div className="absolute -top-2 left-0 right-0 h-2 bg-transparent"></div>
+                      <Link href="/dashboard" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Dashboard</Link>
+                      <Link href="/publishing" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Publishing</Link>
+                      <Link href="/media-library" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Media Library</Link>
+                      <Link href="/volunteer-inductions" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Volunteer Inductions</Link>
+                      <Link href="/volunteer-applications" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Volunteer Applications</Link>
+                      <Link href="/admin/users" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Manage Users</Link>
+                      <Link href="/template-management" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Template Management</Link>
+                    </div>
+                  </div>
+                )}
                 <button
                   onClick={handleLogout}
                   className="px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
@@ -298,37 +311,22 @@ export default function NavBar() {
       {/* Mobile menu */}
       <div className={`${isMobileMenuOpen ? 'block' : 'hidden'} md:hidden`}>
         <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-                      {(() => {
-              // Create a combined menu array with regular pages and submenus
-              const combinedMenu = [
-                ...menuPages.map(page => ({ ...page, type: 'page' })),
-                {
-                  id: 'volunteering',
-                  title: 'Volunteering',
-                  priority: 4,
-                  type: 'submenu',
-                  items: [
-                    { title: 'About Volunteering', href: '/volunteer' },
-                    { title: 'What to Expect', href: '/volunteering-description' },
-                    { title: 'Apply to Volunteer', href: '/volunteer-application' }
-                  ]
-                },
-                ...(user && role === 'admin' ? [{
-                  id: 'admin',
-                  title: 'Admin',
-                  priority: 9,
-                  type: 'submenu',
-                  items: [
-                    { title: 'Dashboard', href: '/dashboard' },
-                    { title: 'Publishing', href: '/publishing' },
-                    { title: 'Media Library', href: '/media-library' },
-                    { title: 'Volunteer Inductions', href: '/volunteer-inductions' },
-                    { title: 'Volunteer Applications', href: '/volunteer-applications' },
-                    { title: 'Manage Users', href: '/admin/users' },
-                    { title: 'Template Management', href: '/template-management' }
-                  ]
-                }] : [])
-              ].sort((a, b) => (b.priority || 0) - (a.priority || 0));
+          {(() => {
+            // Create a combined menu array with regular pages and submenus
+            const combinedMenu = [
+              ...menuPages.map(page => ({ ...page, type: 'page' })),
+              {
+                id: 'volunteering',
+                title: 'Volunteering',
+                priority: 4,
+                type: 'submenu',
+                items: [
+                  { title: 'About Volunteering', href: '/volunteer' },
+                  { title: 'What to Expect', href: '/volunteering-description' },
+                  { title: 'Apply to Volunteer', href: '/volunteer-application' }
+                ]
+              }
+            ].sort((a, b) => (b.priority || 0) - (a.priority || 0));
 
             return combinedMenu.map((item) => {
               if (item.type === 'submenu') {
