@@ -15,6 +15,7 @@ export default function NavBar() {
   const [isMobileProductsMenuOpen, setIsMobileProductsMenuOpen] = useState(false);
   const [isVolunteeringMenuOpen, setIsVolunteeringMenuOpen] = useState(false);
   const [isMobileVolunteeringMenuOpen, setIsMobileVolunteeringMenuOpen] = useState(false);
+  const [openSubmenu, setOpenSubmenu] = useState(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -165,21 +166,12 @@ export default function NavBar() {
 
               return combinedMenu.map((item) => {
                 if (item.type === 'submenu') {
-                  const isVolunteering = item.id === 'volunteering';
-                  const isAdmin = item.id === 'admin';
-                  
                   return (
                     <div
                       key={item.id}
                       className="relative"
-                      onMouseEnter={() => {
-                        if (isVolunteering) setIsVolunteeringMenuOpen(true);
-                        if (isAdmin) setIsAdminMenuOpen(true);
-                      }}
-                      onMouseLeave={() => {
-                        if (isVolunteering) setIsVolunteeringMenuOpen(false);
-                        if (isAdmin) setIsAdminMenuOpen(false);
-                      }}
+                      onMouseEnter={() => setOpenSubmenu(item.id)}
+                      onMouseLeave={() => setOpenSubmenu(null)}
                     >
                       <button
                         className="px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
@@ -187,8 +179,8 @@ export default function NavBar() {
                         {item.title}
                       </button>
                       <div
-                        className={`absolute ${isAdmin ? 'right-0' : 'left-0'} mt-2 w-48 bg-white rounded-md shadow-lg py-1 transition-opacity duration-200 z-50 border border-gray-200 ${
-                          (isVolunteering && isVolunteeringMenuOpen) || (isAdmin && isAdminMenuOpen) ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                        className={`absolute ${item.id === 'admin' ? 'right-0' : 'left-0'} mt-2 w-48 bg-white rounded-md shadow-lg py-1 transition-opacity duration-200 z-50 border border-gray-200 ${
+                          openSubmenu === item.id ? 'opacity-100' : 'opacity-0 pointer-events-none'
                         }`}
                       >
                         <div className="absolute -top-2 left-0 right-0 h-2 bg-transparent"></div>
