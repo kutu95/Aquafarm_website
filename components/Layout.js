@@ -93,7 +93,7 @@ export default function Layout({ children }) {
   return (
     <div className="min-h-screen flex flex-col">
       <NavBar />
-      <main className="container mx-auto px-4 py-8 flex-grow">
+      <main className="container mx-auto px-4 pb-8 flex-grow">
         {children}
       </main>
       <Footer />

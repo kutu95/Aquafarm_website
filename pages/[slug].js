@@ -96,7 +96,7 @@ export default function Page({ page }) {
           <title>Page Not Found</title>
           <meta name="description" content="The page you are looking for could not be found." />
         </Head>
-        <div className="p-6 max-w-4xl mx-auto text-center">
+        <div className="px-6 pb-6 max-w-4xl mx-auto text-center">
           <h1 className="text-2xl font-bold mb-4">Page Not Found</h1>
           {user && isAdmin && (
             <Link href={`/dashboard?edit=${router.query.slug}`} className="text-blue-600 hover:underline">
@@ -132,7 +132,7 @@ export default function Page({ page }) {
         {page.og_image && <meta name="twitter:image" content={page.og_image} />}
       </Head>
 
-      <div className="p-6 max-w-4xl mx-auto">
+      <div className="px-6 pb-6 max-w-4xl mx-auto">
         <article className="prose max-w-none">
           <div dangerouslySetInnerHTML={{ __html: page.content }} />
         </article>
