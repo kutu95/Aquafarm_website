@@ -48,10 +48,13 @@ export default function App({ Component, pageProps }) {
           
           // Fetch role from server-side API if user is authenticated
           if (session?.user) {
+            console.log('Fetching role for user:', session.user.id);
             try {
               const response = await fetch('/api/auth/user-role');
+              console.log('Role API response status:', response.status);
               if (response.ok) {
                 const data = await response.json();
+                console.log('Role API response data:', data);
                 setRole(data.role);
               } else {
                 console.error('Role fetch error:', response.status);
