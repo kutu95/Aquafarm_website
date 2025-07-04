@@ -6,7 +6,7 @@ import { useRouter } from 'next/router';
 import DarkModeToggle from './DarkModeToggle';
 
 export default function NavBar() {
-  const { user, role } = useContext(AuthContext);
+  const { user, role, loading } = useContext(AuthContext);
   const [menuPages, setMenuPages] = useState([]);
   const [productPages, setProductPages] = useState([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -233,10 +233,10 @@ export default function NavBar() {
             {user ? (
               <>
                 {/* Debug info */}
-                {console.log('NavBar Debug:', { user: !!user, role, isAdmin: role === 'admin' })}
+                {console.log('NavBar Debug:', { user: !!user, role, isAdmin: role === 'admin', loading })}
                 {/* Admin submenu, always before Logout, only for admin users */}
-                {/* Debug: User={!!user}, Role={role}, IsAdmin={role === 'admin' ? 'Yes' : 'No'} */}
-                {role === 'admin' && (
+                {/* Debug: User={!!user}, Role={role}, IsAdmin={role === 'admin' ? 'Yes' : 'No'}, Loading={loading} */}
+                {!loading && role === 'admin' && (
                   <div
                     className="relative"
                     onMouseEnter={() => setOpenSubmenu('admin')}
