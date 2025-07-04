@@ -31,52 +31,30 @@ export default function NavBar() {
       try {
         console.log('NavBar: Fetching menu pages...');
         
-        // Try a very simple query first
-        console.log('NavBar: Trying simple count query...');
-        const { data: countData, error: countError } = await supabase
-          .from('pages')
-          .select('*', { count: 'exact', head: true });
-        
-        console.log('NavBar: Count query result:', { countData, countError });
-        
-        if (countError) {
-          console.error('NavBar: Count query failed:', countError);
-          return;
-        }
-        
-        // Now try to get menu pages
-        console.log('NavBar: Trying menu pages query...');
+        // Try the simplest possible query first
+        console.log('NavBar: Trying basic select query...');
         const { data, error } = await supabase
           .from('pages')
           .select('title, slug, priority')
-          .gt('priority', 0)
-          .order('priority');
+          .limit(10);
         
-        console.log('NavBar: Menu pages query result:', { data, error });
+        console.log('NavBar: Basic query result:', { data, error });
         
         if (error) {
-          console.error('NavBar: Error fetching menu pages:', error);
+          console.error('NavBar: Basic query failed:', error);
           return;
         }
         
-        console.log('NavBar: Menu pages fetched:', data);
-        setMenuPages(data || []);
+        // Filter for priority pages on the client side
+        const priorityPages = data?.filter(page => page.priority > 0) || [];
+        console.log('NavBar: Priority pages filtered:', priorityPages);
         
-        // If no priority pages found, try getting all pages
-        if (!data || data.length === 0) {
-          console.log('NavBar: No priority pages found, trying all pages...');
-          const { data: allData, error: allError } = await supabase
-            .from('pages')
-            .select('title, slug, priority')
-            .order('priority');
-          
-          if (allError) {
-            console.error('NavBar: Error fetching all pages:', allError);
-            return;
-          }
-          
-          console.log('NavBar: All pages fetched:', allData);
-          setMenuPages(allData || []);
+        setMenuPages(priorityPages);
+        
+        // If no priority pages, use all pages
+        if (priorityPages.length === 0 && data && data.length > 0) {
+          console.log('NavBar: Using all pages as menu:', data);
+          setMenuPages(data);
         }
       } catch (err) {
         console.error('NavBar: Exception fetching menu pages:', err);
@@ -90,8 +68,8 @@ export default function NavBar() {
         
         const { data, error } = await supabase
           .from('pages')
-          .select('title, slug')
-          .eq('page_type', 'product');
+          .select('title, slug, page_type')
+          .limit(20);
         
         console.log('NavBar: Product pages query result:', { data, error });
         
@@ -100,8 +78,11 @@ export default function NavBar() {
           return;
         }
         
-        console.log('NavBar: Product pages fetched:', data);
-        setProductPages(data || []);
+        // Filter for product pages on the client side
+        const productPages = data?.filter(page => page.page_type === 'product') || [];
+        console.log('NavBar: Product pages filtered:', productPages);
+        
+        setProductPages(productPages);
       } catch (err) {
         console.error('NavBar: Exception fetching product pages:', err);
       }
