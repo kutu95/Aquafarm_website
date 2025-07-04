@@ -131,57 +131,72 @@ export default function NavBar() {
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-4">
-            {menuPages.map((page) => (
-              <Link
-                key={page.slug}
-                href={`/${page.slug}`}
-                className={`px-3 py-2 rounded-md text-sm font-medium ${
-                  router.asPath === `/${page.slug}`
-                    ? 'bg-gray-900 text-white'
-                    : 'text-gray-300 hover:bg-gray-700 hover:text-white'
-                }`}
-              >
-                {page.title}
-              </Link>
-            ))}
+            {(() => {
+              // Create a combined menu array with regular pages and the Volunteering submenu
+              const combinedMenu = [
+                ...menuPages.map(page => ({ ...page, type: 'page' })),
+                {
+                  id: 'volunteering',
+                  title: 'Volunteering',
+                  priority: 4,
+                  type: 'submenu',
+                  items: [
+                    { title: 'About Volunteering', href: '/volunteer' },
+                    { title: 'What to Expect', href: '/volunteering-description' },
+                    { title: 'Apply to Volunteer', href: '/volunteer-application' }
+                  ]
+                }
+              ].sort((a, b) => (b.priority || 0) - (a.priority || 0));
 
-            {/* Volunteering menu */}
-            <div
-              className="relative"
-              onMouseEnter={() => setIsVolunteeringMenuOpen(true)}
-              onMouseLeave={() => setIsVolunteeringMenuOpen(false)}
-            >
-              <button
-                className="px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
-              >
-                Volunteering
-              </button>
-              <div
-                className={`absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 transition-opacity duration-200 z-50 border border-gray-200 ${
-                  isVolunteeringMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
-                }`}
-              >
-                <div className="absolute -top-2 left-0 right-0 h-2 bg-transparent"></div>
-                <Link
-                  href="/volunteer"
-                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                >
-                  About Volunteering
-                </Link>
-                <Link
-                  href="/volunteering-description"
-                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                >
-                  What to Expect
-                </Link>
-                <Link
-                  href="/volunteer-application"
-                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                >
-                  Apply to Volunteer
-                </Link>
-              </div>
-            </div>
+              return combinedMenu.map((item) => {
+                if (item.type === 'submenu') {
+                  return (
+                    <div
+                      key={item.id}
+                      className="relative"
+                      onMouseEnter={() => setIsVolunteeringMenuOpen(true)}
+                      onMouseLeave={() => setIsVolunteeringMenuOpen(false)}
+                    >
+                      <button
+                        className="px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
+                      >
+                        {item.title}
+                      </button>
+                      <div
+                        className={`absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 transition-opacity duration-200 z-50 border border-gray-200 ${
+                          isVolunteeringMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                        }`}
+                      >
+                        <div className="absolute -top-2 left-0 right-0 h-2 bg-transparent"></div>
+                        {item.items.map((subItem) => (
+                          <Link
+                            key={subItem.href}
+                            href={subItem.href}
+                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          >
+                            {subItem.title}
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                } else {
+                  return (
+                    <Link
+                      key={item.slug}
+                      href={`/${item.slug}`}
+                      className={`px-3 py-2 rounded-md text-sm font-medium ${
+                        router.asPath === `/${item.slug}`
+                          ? 'bg-gray-900 text-white'
+                          : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                      }`}
+                    >
+                      {item.title}
+                    </Link>
+                  );
+                }
+              });
+            })()}
 
             {/* Products menu */}
             {productPages.length > 0 && (
@@ -329,20 +344,70 @@ export default function NavBar() {
       {/* Mobile menu */}
       <div className={`${isMobileMenuOpen ? 'block' : 'hidden'} md:hidden`}>
         <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-          {menuPages.map((page) => (
-            <Link
-              key={page.slug}
-              href={`/${page.slug}`}
-              className={`block px-3 py-2 rounded-md text-base font-medium ${
-                router.asPath === `/${page.slug}`
-                  ? 'bg-gray-900 text-white'
-                  : 'text-gray-300 hover:bg-gray-700 hover:text-white'
-              }`}
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              {page.title}
-            </Link>
-          ))}
+          {(() => {
+            // Create a combined menu array with regular pages and the Volunteering submenu
+            const combinedMenu = [
+              ...menuPages.map(page => ({ ...page, type: 'page' })),
+              {
+                id: 'volunteering',
+                title: 'Volunteering',
+                priority: 4,
+                type: 'submenu',
+                items: [
+                  { title: 'About Volunteering', href: '/volunteer' },
+                  { title: 'What to Expect', href: '/volunteering-description' },
+                  { title: 'Apply to Volunteer', href: '/volunteer-application' }
+                ]
+              }
+            ].sort((a, b) => (b.priority || 0) - (a.priority || 0));
+
+            return combinedMenu.map((item) => {
+              if (item.type === 'submenu') {
+                return (
+                  <div key={item.id} className="border-t border-gray-700 pt-2">
+                    <button
+                      onClick={() => setIsMobileVolunteeringMenuOpen(!isMobileVolunteeringMenuOpen)}
+                      className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
+                    >
+                      {item.title}
+                    </button>
+                    {isMobileVolunteeringMenuOpen && (
+                      <div className="pl-4 space-y-1">
+                        {item.items.map((subItem) => (
+                          <Link
+                            key={subItem.href}
+                            href={subItem.href}
+                            className="block px-3 py-2 rounded-md text-sm font-medium text-gray-400 hover:bg-gray-700 hover:text-white"
+                            onClick={() => {
+                              setIsMobileMenuOpen(false);
+                              setIsMobileVolunteeringMenuOpen(false);
+                            }}
+                          >
+                            {subItem.title}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              } else {
+                return (
+                  <Link
+                    key={item.slug}
+                    href={`/${item.slug}`}
+                    className={`block px-3 py-2 rounded-md text-base font-medium ${
+                      router.asPath === `/${item.slug}`
+                        ? 'bg-gray-900 text-white'
+                        : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                    }`}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    {item.title}
+                  </Link>
+                );
+              }
+            });
+          })()}
           {/* Mobile Products menu */}
           {productPages.length > 0 && (
             <div className="border-t border-gray-700 pt-2">
@@ -371,49 +436,6 @@ export default function NavBar() {
               )}
             </div>
           )}
-          {/* Mobile Volunteering menu */}
-          <div className="border-t border-gray-700 pt-2">
-            <button
-              onClick={() => setIsMobileVolunteeringMenuOpen(!isMobileVolunteeringMenuOpen)}
-              className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
-            >
-              Volunteering
-            </button>
-            {isMobileVolunteeringMenuOpen && (
-              <div className="pl-4 space-y-1">
-                <Link
-                  href="/volunteer"
-                  className="block px-3 py-2 rounded-md text-sm font-medium text-gray-400 hover:bg-gray-700 hover:text-white"
-                  onClick={() => {
-                    setIsMobileMenuOpen(false);
-                    setIsMobileVolunteeringMenuOpen(false);
-                  }}
-                >
-                  About Volunteering
-                </Link>
-                <Link
-                  href="/volunteering-description"
-                  className="block px-3 py-2 rounded-md text-sm font-medium text-gray-400 hover:bg-gray-700 hover:text-white"
-                  onClick={() => {
-                    setIsMobileMenuOpen(false);
-                    setIsMobileVolunteeringMenuOpen(false);
-                  }}
-                >
-                  What to Expect
-                </Link>
-                <Link
-                  href="/volunteer-application"
-                  className="block px-3 py-2 rounded-md text-sm font-medium text-gray-400 hover:bg-gray-700 hover:text-white"
-                  onClick={() => {
-                    setIsMobileMenuOpen(false);
-                    setIsMobileVolunteeringMenuOpen(false);
-                  }}
-                >
-                  Apply to Volunteer
-                </Link>
-              </div>
-            )}
-          </div>
           {user ? (
             <>
               {role === 'admin' && (
