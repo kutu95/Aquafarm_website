@@ -147,7 +147,7 @@ export default function NavBar() {
                     { title: 'Apply to Volunteer', href: '/volunteer-application' }
                   ]
                 }
-              ].sort((a, b) => (b.priority || 0) - (a.priority || 0));
+              ].sort((a, b) => (a.priority || 0) - (b.priority || 0));
 
               return combinedMenu.map((item) => {
                 if (item.type === 'submenu') {
@@ -329,7 +329,7 @@ export default function NavBar() {
                   { title: 'Apply to Volunteer', href: '/volunteer-application' }
                 ]
               }
-            ].sort((a, b) => (b.priority || 0) - (a.priority || 0));
+            ].sort((a, b) => (a.priority || 0) - (b.priority || 0));
 
             return combinedMenu.map((item) => {
               if (item.type === 'submenu') {
