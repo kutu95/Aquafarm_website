@@ -26,27 +26,27 @@ export default function Login() {
     try {
       console.log('Attempting login for:', credentials.email);
       
-      // Use server-side login API instead of client-side Supabase
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: credentials.email,
-          password: credentials.password
-        })
+      // Use client-side Supabase with timeout to prevent hanging
+      const loginPromise = supabase.auth.signInWithPassword({
+        email: credentials.email,
+        password: credentials.password
       });
 
-      const result = await response.json();
-      console.log('Login response:', result);
+      // Add a timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Login timeout')), 10000); // 10 second timeout
+      });
 
-      if (!response.ok) {
-        console.error('Login error:', result.message);
-        setError(result.message || 'Login failed');
+      const { data, error } = await Promise.race([loginPromise, timeoutPromise]);
+
+      console.log('Login response:', { hasData: !!data, hasUser: !!data?.user, error });
+
+      if (error) {
+        console.error('Login error:', error);
+        setError(error.message);
         trackEvent('login_failed', 'authentication', 'login_attempt', 0);
       } else {
-        console.log('Login successful, user:', result.user?.id);
+        console.log('Login successful, user:', data.user?.id);
         
         trackEvent('login_success', 'authentication', 'login_attempt', 1);
         // Redirect to the intended page or home
@@ -55,7 +55,7 @@ export default function Login() {
       }
     } catch (error) {
       console.error('Login error:', error);
-      setError('An unexpected error occurred. Please try again.');
+      setError('Login timed out or failed. Please try again.');
       trackEvent('login_failed', 'authentication', 'login_attempt', 0);
     }
 
