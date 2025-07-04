@@ -1,5 +1,6 @@
 import { useContext, useEffect, useState } from 'react';
-import { AuthContext, supabase } from '@/pages/_app';
+import { AuthContext } from '@/pages/_app';
+import { supabase } from '@/lib/supabaseClient';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import DarkModeToggle from './DarkModeToggle';
@@ -15,9 +16,26 @@ export default function NavBar() {
   const router = useRouter();
 
   useEffect(() => {
+    // Debug Supabase client initialization
+    console.log('NavBar: Supabase client check:', {
+      hasClient: !!supabase,
+      hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+      hasKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      NODE_ENV: process.env.NODE_ENV
+    });
+    
     const fetchMenuPages = async () => {
       try {
         console.log('NavBar: Fetching menu pages...');
+        
+        // First, test if Supabase is working with a simple query
+        const { data: testData, error: testError } = await supabase
+          .from('pages')
+          .select('count')
+          .limit(1);
+        
+        console.log('NavBar: Test query result:', { testData, testError });
+        
         // Temporarily simplified until security migration is run
         const { data, error } = await supabase
           .from('pages')
