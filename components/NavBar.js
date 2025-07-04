@@ -16,84 +16,26 @@ export default function NavBar() {
   const router = useRouter();
 
   useEffect(() => {
-    // Debug Supabase client initialization
-    console.log('NavBar: Supabase client check:', {
-      hasClient: !!supabase,
-      hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-      hasKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-      NODE_ENV: process.env.NODE_ENV
-    });
-    
-    console.log('NavBar: useEffect is running, about to call fetchMenuPages...');
-    
-    const fetchMenuPages = async () => {
-      console.log('NavBar: fetchMenuPages function called');
+    const fetchMenuData = async () => {
       try {
-        console.log('NavBar: Fetching menu pages...');
-        
-        // Try the simplest possible query first
-        console.log('NavBar: Trying basic select query...');
-        const { data, error } = await supabase
-          .from('pages')
-          .select('title, slug, priority')
-          .limit(10);
-        
-        console.log('NavBar: Basic query result:', { data, error });
-        
-        if (error) {
-          console.error('NavBar: Basic query failed:', error);
-          return;
+        const response = await fetch('/api/menu');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
+        const data = await response.json();
         
-        // Filter for priority pages on the client side
-        const priorityPages = data?.filter(page => page.priority > 0) || [];
-        console.log('NavBar: Priority pages filtered:', priorityPages);
-        
-        setMenuPages(priorityPages);
-        
-        // If no priority pages, use all pages
-        if (priorityPages.length === 0 && data && data.length > 0) {
-          console.log('NavBar: Using all pages as menu:', data);
-          setMenuPages(data);
-        }
-      } catch (err) {
-        console.error('NavBar: Exception fetching menu pages:', err);
+        setMenuPages(data.menuItems || []);
+        setProductPages(data.productItems || []);
+      } catch (error) {
+        console.error('Error fetching menu data:', error);
+        // Fallback to empty arrays
+        setMenuPages([]);
+        setProductPages([]);
       }
     };
-    
-    const fetchProductPages = async () => {
-      console.log('NavBar: fetchProductPages function called');
-      try {
-        console.log('NavBar: Fetching product pages...');
-        
-        const { data, error } = await supabase
-          .from('pages')
-          .select('title, slug, page_type')
-          .limit(20);
-        
-        console.log('NavBar: Product pages query result:', { data, error });
-        
-        if (error) {
-          console.error('NavBar: Error fetching product pages:', error);
-          return;
-        }
-        
-        // Filter for product pages on the client side
-        const productPages = data?.filter(page => page.page_type === 'product') || [];
-        console.log('NavBar: Product pages filtered:', productPages);
-        
-        setProductPages(productPages);
-      } catch (err) {
-        console.error('NavBar: Exception fetching product pages:', err);
-      }
-    };
-    
-    console.log('NavBar: Calling fetchMenuPages...');
-    fetchMenuPages();
-    console.log('NavBar: Calling fetchProductPages...');
-    fetchProductPages();
-    console.log('NavBar: Both functions called');
-  }, []); // Temporarily removed user, role dependencies
+
+    fetchMenuData();
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -186,12 +128,7 @@ export default function NavBar() {
                 {page.title}
               </Link>
             ))}
-            {/* Fallback menu item if no pages are loaded */}
-            {menuPages.length === 0 && (
-              <span className="px-3 py-2 text-sm text-gray-400">
-                No menu pages ({process.env.NODE_ENV})
-              </span>
-            )}
+
             {/* Products menu */}
             {productPages.length > 0 && (
               <div
