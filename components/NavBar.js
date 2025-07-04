@@ -36,12 +36,24 @@ export default function NavBar() {
         
         console.log('NavBar: Test query result:', { testData, testError });
         
-        // Temporarily simplified until security migration is run
+        // Try a simple query first - get all pages
+        console.log('NavBar: Trying simple query - all pages...');
+        const { data: allPages, error: allError } = await supabase
+          .from('pages')
+          .select('title, slug, priority')
+          .order('priority');
+        
+        console.log('NavBar: All pages query result:', { allPages, allError });
+        
+        // Now try the priority query
+        console.log('NavBar: Trying priority query - pages with priority > 0...');
         const { data, error } = await supabase
           .from('pages')
           .select('title, slug, priority')
           .gt('priority', 0)
           .order('priority');
+        
+        console.log('NavBar: Priority query result:', { data, error });
         
         if (error) {
           console.error('NavBar: Error fetching menu pages:', error);
@@ -51,21 +63,13 @@ export default function NavBar() {
         console.log('NavBar: Menu pages fetched:', data);
         setMenuPages(data || []);
         
-        // If no priority pages found, try fetching all pages
+        // If no priority pages found, use all pages
         if (!data || data.length === 0) {
-          console.log('NavBar: No priority pages found, fetching all pages...');
-          const { data: allData, error: allError } = await supabase
-            .from('pages')
-            .select('title, slug, priority')
-            .order('priority');
-          
-          if (allError) {
-            console.error('NavBar: Error fetching all pages:', allError);
-            return;
+          console.log('NavBar: No priority pages found, using all pages...');
+          if (allPages && allPages.length > 0) {
+            console.log('NavBar: Using all pages as menu:', allPages);
+            setMenuPages(allPages);
           }
-          
-          console.log('NavBar: All pages fetched:', allData);
-          setMenuPages(allData || []);
         }
       } catch (err) {
         console.error('NavBar: Exception fetching menu pages:', err);
