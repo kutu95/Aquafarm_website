@@ -53,70 +53,23 @@ export default function NavBar() {
         });
       }
 
-      // Call server-side logout API
-      console.log('Calling server-side logout...');
-      const response = await fetch('/api/auth/logout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      console.log('Server-side logout successful');
-
-      // Also call client-side logout to update auth context
+      // Call client-side logout
       console.log('Calling client-side logout...');
-      const { error: clientError } = await supabase.auth.signOut();
-      if (clientError) {
-        console.error('Client-side logout error:', clientError);
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Client-side logout error:', error);
       } else {
         console.log('Client-side logout successful');
-      }
-
-      // Force clear any local storage or session data
-      if (typeof window !== 'undefined') {
-        console.log('Clearing local storage...');
-        // Clear any cached auth data
-        localStorage.removeItem('supabase.auth.token');
-        sessionStorage.removeItem('supabase.auth.token');
-        
-        // Clear any other potential auth-related storage
-        localStorage.removeItem('supabase.auth.expires_at');
-        localStorage.removeItem('supabase.auth.refresh_token');
-        sessionStorage.removeItem('supabase.auth.expires_at');
-        sessionStorage.removeItem('supabase.auth.refresh_token');
-        
-        // Clear any user-related data
-        localStorage.removeItem('user');
-        sessionStorage.removeItem('user');
       }
 
       console.log('Redirecting to home page...');
       // Redirect to home page
       router.push('/');
       
-      // Force a page reload to ensure clean state (only in production)
-      if (process.env.NODE_ENV === 'production') {
-        setTimeout(() => {
-          window.location.reload();
-        }, 100);
-      }
-      
     } catch (error) {
       console.error('Logout failed:', error);
       // Still redirect even if logout fails
       router.push('/');
-      
-      // Force reload in production even on error
-      if (process.env.NODE_ENV === 'production') {
-        setTimeout(() => {
-          window.location.reload();
-        }, 100);
-      }
     }
   };
 
