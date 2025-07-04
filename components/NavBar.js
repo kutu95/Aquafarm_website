@@ -13,6 +13,8 @@ export default function NavBar() {
   const [isAdminMenuOpen, setIsAdminMenuOpen] = useState(false);
   const [isProductsMenuOpen, setIsProductsMenuOpen] = useState(false);
   const [isMobileProductsMenuOpen, setIsMobileProductsMenuOpen] = useState(false);
+  const [isVolunteeringMenuOpen, setIsVolunteeringMenuOpen] = useState(false);
+  const [isMobileVolunteeringMenuOpen, setIsMobileVolunteeringMenuOpen] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -128,6 +130,44 @@ export default function NavBar() {
                 {page.title}
               </Link>
             ))}
+
+            {/* Volunteering menu */}
+            <div
+              className="relative"
+              onMouseEnter={() => setIsVolunteeringMenuOpen(true)}
+              onMouseLeave={() => setIsVolunteeringMenuOpen(false)}
+            >
+              <button
+                className="px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
+              >
+                Volunteering
+              </button>
+              <div
+                className={`absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 transition-opacity duration-200 z-50 border border-gray-200 ${
+                  isVolunteeringMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                }`}
+              >
+                <div className="absolute -top-2 left-0 right-0 h-2 bg-transparent"></div>
+                <Link
+                  href="/volunteer"
+                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                >
+                  About Volunteering
+                </Link>
+                <Link
+                  href="/volunteering-description"
+                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                >
+                  What to Expect
+                </Link>
+                <Link
+                  href="/volunteer-application"
+                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                >
+                  Apply to Volunteer
+                </Link>
+              </div>
+            </div>
 
             {/* Products menu */}
             {productPages.length > 0 && (
@@ -317,6 +357,49 @@ export default function NavBar() {
               )}
             </div>
           )}
+          {/* Mobile Volunteering menu */}
+          <div className="border-t border-gray-700 pt-2">
+            <button
+              onClick={() => setIsMobileVolunteeringMenuOpen(!isMobileVolunteeringMenuOpen)}
+              className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
+            >
+              Volunteering
+            </button>
+            {isMobileVolunteeringMenuOpen && (
+              <div className="pl-4 space-y-1">
+                <Link
+                  href="/volunteer"
+                  className="block px-3 py-2 rounded-md text-sm font-medium text-gray-400 hover:bg-gray-700 hover:text-white"
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    setIsMobileVolunteeringMenuOpen(false);
+                  }}
+                >
+                  About Volunteering
+                </Link>
+                <Link
+                  href="/volunteering-description"
+                  className="block px-3 py-2 rounded-md text-sm font-medium text-gray-400 hover:bg-gray-700 hover:text-white"
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    setIsMobileVolunteeringMenuOpen(false);
+                  }}
+                >
+                  What to Expect
+                </Link>
+                <Link
+                  href="/volunteer-application"
+                  className="block px-3 py-2 rounded-md text-sm font-medium text-gray-400 hover:bg-gray-700 hover:text-white"
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    setIsMobileVolunteeringMenuOpen(false);
+                  }}
+                >
+                  Apply to Volunteer
+                </Link>
+              </div>
+            )}
+          </div>
           {user ? (
             <>
               {role === 'admin' && (
