@@ -79,25 +79,30 @@ export default function App({ Component, pageProps }) {
 
     loadUser();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state change:', event, { hasUser: !!session?.user, userId: session?.user?.id });
       setUser(session?.user ?? null);
       
       // Fetch role from server-side API if user is authenticated
       if (session?.user) {
+        console.log('Auth state change: Fetching role for user:', session.user.id);
         try {
           const response = await fetch('/api/auth/user-role');
+          console.log('Auth state change: Role API response status:', response.status);
           if (response.ok) {
             const data = await response.json();
+            console.log('Auth state change: Role API response data:', data);
             setRole(data.role);
           } else {
-            console.error('Role fetch error:', response.status);
+            console.error('Auth state change: Role fetch error:', response.status);
             setRole(null);
           }
         } catch (roleError) {
-          console.error('Role fetch error:', roleError);
+          console.error('Auth state change: Role fetch error:', roleError);
           setRole(null);
         }
       } else {
+        console.log('Auth state change: No user, setting role to null');
         setRole(null);
       }
     });
@@ -107,6 +112,31 @@ export default function App({ Component, pageProps }) {
 
   // Avoid hydration mismatch by delaying render
   if (!hasMounted) return null;
+
+  // Add manual role fetch function for debugging
+  const manualFetchRole = async () => {
+    if (user) {
+      console.log('Manual role fetch for user:', user.id);
+      try {
+        const response = await fetch('/api/auth/user-role');
+        console.log('Manual role fetch response status:', response.status);
+        if (response.ok) {
+          const data = await response.json();
+          console.log('Manual role fetch response data:', data);
+          setRole(data.role);
+        } else {
+          console.error('Manual role fetch error:', response.status);
+        }
+      } catch (error) {
+        console.error('Manual role fetch error:', error);
+      }
+    }
+  };
+
+  // Expose manual fetch function globally for debugging
+  if (typeof window !== 'undefined') {
+    window.manualFetchRole = manualFetchRole;
+  }
 
   return (
     <>
