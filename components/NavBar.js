@@ -57,33 +57,47 @@ export default function NavBar() {
       const { data: { session } } = await supabase.auth.getSession();
       console.log('Current session before logout:', { hasSession: !!session, userId: session?.user?.id });
 
-      // Only call signOut if we have a session
+      // Clear the session manually instead of using signOut
       if (session) {
-        console.log('Calling client-side logout...');
-        const { error } = await supabase.auth.signOut();
-        if (error) {
-          console.error('Client-side logout error:', error);
-        } else {
-          console.log('Client-side logout successful');
+        console.log('Clearing session manually...');
+        
+        // Clear all Supabase auth data from localStorage
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith('supabase.auth.')) {
+            keysToRemove.push(key);
+          }
         }
+        
+        keysToRemove.forEach(key => {
+          localStorage.removeItem(key);
+          console.log('Removed:', key);
+        });
+        
+        // Also clear sessionStorage
+        const sessionKeysToRemove = [];
+        for (let i = 0; i < sessionStorage.length; i++) {
+          const key = sessionStorage.key(i);
+          if (key && key.startsWith('supabase.auth.')) {
+            sessionKeysToRemove.push(key);
+          }
+        }
+        
+        sessionKeysToRemove.forEach(key => {
+          sessionStorage.removeItem(key);
+          console.log('Removed from sessionStorage:', key);
+        });
+        
+        console.log('Session cleared manually');
       } else {
-        console.log('No session found, skipping signOut call');
+        console.log('No session found, skipping logout');
       }
 
-      // Force clear any local storage or session data
+      // Force clear any other local storage or session data
       if (typeof window !== 'undefined') {
-        console.log('Clearing local storage...');
-        // Clear any cached auth data
-        localStorage.removeItem('supabase.auth.token');
-        sessionStorage.removeItem('supabase.auth.token');
-        
+        console.log('Clearing additional local storage...');
         // Clear any other potential auth-related storage
-        localStorage.removeItem('supabase.auth.expires_at');
-        localStorage.removeItem('supabase.auth.refresh_token');
-        sessionStorage.removeItem('supabase.auth.expires_at');
-        sessionStorage.removeItem('supabase.auth.refresh_token');
-        
-        // Clear any user-related data
         localStorage.removeItem('user');
         sessionStorage.removeItem('user');
       }
