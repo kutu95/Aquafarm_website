@@ -6,12 +6,6 @@ import { AuthContext } from '@/pages/_app';
 import { supabase } from '@/lib/supabaseClient';
 import Layout from '@/components/Layout';
 import { trackEvent } from '@/components/GoogleAnalytics';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseClient = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-);
 
 export default function VolunteerApplication() {
   const { user } = useContext(AuthContext);

@@ -38,12 +38,16 @@ export default function App({ Component, pageProps }) {
     // Load Supabase auth session
     async function loadUser() {
       try {
+        console.log('Loading user session...');
         const { data: { session }, error } = await supabase.auth.getSession();
+        console.log('Session result:', { session: !!session, error, userId: session?.user?.id });
+        
         if (error) {
           console.error('Session error:', error);
           setUser(null);
           setRole(null);
         } else {
+          console.log('Setting user:', session?.user?.id || 'null');
           setUser(session?.user ?? null);
           
           // Fetch role from server-side API if user is authenticated
@@ -65,6 +69,7 @@ export default function App({ Component, pageProps }) {
               setRole(null);
             }
           } else {
+            console.log('No session user, setting role to null');
             setRole(null);
           }
         }
@@ -73,6 +78,7 @@ export default function App({ Component, pageProps }) {
         setUser(null);
         setRole(null);
       } finally {
+        console.log('Setting loading to false');
         setLoading(false);
       }
     }
@@ -81,6 +87,7 @@ export default function App({ Component, pageProps }) {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth state change:', event, { hasUser: !!session?.user, userId: session?.user?.id });
+      console.log('Session details:', session);
       setUser(session?.user ?? null);
       
       // Fetch role from server-side API if user is authenticated
