@@ -28,57 +28,52 @@ export default function NavBar() {
       try {
         console.log('NavBar: Fetching menu pages...');
         
-        // Add timeout wrapper
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Query timeout')), 10000)
-        );
-        
-        // First, test if Supabase is working with a simple query
-        console.log('NavBar: Starting test query...');
-        const testPromise = supabase
+        // Try a very simple query first
+        console.log('NavBar: Trying simple count query...');
+        const { data: countData, error: countError } = await supabase
           .from('pages')
-          .select('count')
-          .limit(1);
+          .select('*', { count: 'exact', head: true });
         
-        const testResult = await Promise.race([testPromise, timeoutPromise]);
-        console.log('NavBar: Test query result:', testResult);
+        console.log('NavBar: Count query result:', { countData, countError });
         
-        // Try a simple query first - get all pages
-        console.log('NavBar: Trying simple query - all pages...');
-        const allPagesPromise = supabase
-          .from('pages')
-          .select('title, slug, priority')
-          .order('priority');
+        if (countError) {
+          console.error('NavBar: Count query failed:', countError);
+          return;
+        }
         
-        const allPagesResult = await Promise.race([allPagesPromise, timeoutPromise]);
-        console.log('NavBar: All pages query result:', allPagesResult);
-        
-        // Now try the priority query
-        console.log('NavBar: Trying priority query - pages with priority > 0...');
-        const priorityPromise = supabase
+        // Now try to get menu pages
+        console.log('NavBar: Trying menu pages query...');
+        const { data, error } = await supabase
           .from('pages')
           .select('title, slug, priority')
           .gt('priority', 0)
           .order('priority');
         
-        const priorityResult = await Promise.race([priorityPromise, timeoutPromise]);
-        console.log('NavBar: Priority query result:', priorityResult);
+        console.log('NavBar: Menu pages query result:', { data, error });
         
-        if (priorityResult.error) {
-          console.error('NavBar: Error fetching menu pages:', priorityResult.error);
+        if (error) {
+          console.error('NavBar: Error fetching menu pages:', error);
           return;
         }
         
-        console.log('NavBar: Menu pages fetched:', priorityResult.data);
-        setMenuPages(priorityResult.data || []);
+        console.log('NavBar: Menu pages fetched:', data);
+        setMenuPages(data || []);
         
-        // If no priority pages found, use all pages
-        if (!priorityResult.data || priorityResult.data.length === 0) {
-          console.log('NavBar: No priority pages found, using all pages...');
-          if (allPagesResult.data && allPagesResult.data.length > 0) {
-            console.log('NavBar: Using all pages as menu:', allPagesResult.data);
-            setMenuPages(allPagesResult.data);
+        // If no priority pages found, try getting all pages
+        if (!data || data.length === 0) {
+          console.log('NavBar: No priority pages found, trying all pages...');
+          const { data: allData, error: allError } = await supabase
+            .from('pages')
+            .select('title, slug, priority')
+            .order('priority');
+          
+          if (allError) {
+            console.error('NavBar: Error fetching all pages:', allError);
+            return;
           }
+          
+          console.log('NavBar: All pages fetched:', allData);
+          setMenuPages(allData || []);
         }
       } catch (err) {
         console.error('NavBar: Exception fetching menu pages:', err);
@@ -89,26 +84,20 @@ export default function NavBar() {
       try {
         console.log('NavBar: Fetching product pages...');
         
-        // Add timeout wrapper
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Product query timeout')), 10000)
-        );
-        
-        const productPromise = supabase
+        const { data, error } = await supabase
           .from('pages')
           .select('title, slug')
           .eq('page_type', 'product');
         
-        const productResult = await Promise.race([productPromise, timeoutPromise]);
-        console.log('NavBar: Product pages query result:', productResult);
+        console.log('NavBar: Product pages query result:', { data, error });
         
-        if (productResult.error) {
-          console.error('NavBar: Error fetching product pages:', productResult.error);
+        if (error) {
+          console.error('NavBar: Error fetching product pages:', error);
           return;
         }
         
-        console.log('NavBar: Product pages fetched:', productResult.data);
-        setProductPages(productResult.data || []);
+        console.log('NavBar: Product pages fetched:', data);
+        setProductPages(data || []);
       } catch (err) {
         console.error('NavBar: Exception fetching product pages:', err);
       }
