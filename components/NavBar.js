@@ -57,14 +57,17 @@ export default function NavBar() {
       const { data: { session } } = await supabase.auth.getSession();
       console.log('Current session before logout:', { hasSession: !!session, userId: session?.user?.id });
 
-      // Call client-side logout
-      console.log('Calling client-side logout...');
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error('Client-side logout error:', error);
-        // Even if logout fails, we should still redirect and clear local state
+      // Only call signOut if we have a session
+      if (session) {
+        console.log('Calling client-side logout...');
+        const { error } = await supabase.auth.signOut();
+        if (error) {
+          console.error('Client-side logout error:', error);
+        } else {
+          console.log('Client-side logout successful');
+        }
       } else {
-        console.log('Client-side logout successful');
+        console.log('No session found, skipping signOut call');
       }
 
       // Force clear any local storage or session data
