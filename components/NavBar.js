@@ -53,51 +53,40 @@ export default function NavBar() {
         });
       }
 
-      // Check current session before logout
-      const { data: { session } } = await supabase.auth.getSession();
-      console.log('Current session before logout:', { hasSession: !!session, userId: session?.user?.id });
-
-      // Clear the session manually instead of using signOut
-      if (session) {
-        console.log('Clearing session manually...');
-        
-        // Clear all Supabase auth data from localStorage
-        const keysToRemove = [];
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i);
-          if (key && key.startsWith('supabase.auth.')) {
-            keysToRemove.push(key);
-          }
+      // Clear all Supabase auth data from localStorage
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('supabase.auth.')) {
+          keysToRemove.push(key);
         }
-        
-        keysToRemove.forEach(key => {
-          localStorage.removeItem(key);
-          console.log('Removed:', key);
-        });
-        
-        // Also clear sessionStorage
-        const sessionKeysToRemove = [];
-        for (let i = 0; i < sessionStorage.length; i++) {
-          const key = sessionStorage.key(i);
-          if (key && key.startsWith('supabase.auth.')) {
-            sessionKeysToRemove.push(key);
-          }
-        }
-        
-        sessionKeysToRemove.forEach(key => {
-          sessionStorage.removeItem(key);
-          console.log('Removed from sessionStorage:', key);
-        });
-        
-        // Clear the auth context state
-        console.log('Clearing auth context state...');
-        setUser(null);
-        setRole(null);
-        
-        console.log('Session cleared manually');
-      } else {
-        console.log('No session found, skipping logout');
       }
+      
+      keysToRemove.forEach(key => {
+        localStorage.removeItem(key);
+        console.log('Removed:', key);
+      });
+      
+      // Also clear sessionStorage
+      const sessionKeysToRemove = [];
+      for (let i = 0; i < sessionStorage.length; i++) {
+        const key = sessionStorage.key(i);
+        if (key && key.startsWith('supabase.auth.')) {
+          sessionKeysToRemove.push(key);
+        }
+      }
+      
+      sessionKeysToRemove.forEach(key => {
+        sessionStorage.removeItem(key);
+        console.log('Removed from sessionStorage:', key);
+      });
+      
+      // Clear the auth context state
+      console.log('Clearing auth context state...');
+      setUser(null);
+      setRole(null);
+      
+      console.log('Session cleared manually');
 
       // Force clear any other local storage or session data
       if (typeof window !== 'undefined') {
