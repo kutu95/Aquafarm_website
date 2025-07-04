@@ -17,6 +17,7 @@ export default function NavBar() {
   useEffect(() => {
     const fetchMenuPages = async () => {
       try {
+        console.log('NavBar: Fetching menu pages...');
         // Temporarily simplified until security migration is run
         const { data, error } = await supabase
           .from('pages')
@@ -25,31 +26,51 @@ export default function NavBar() {
           .order('priority');
         
         if (error) {
-          console.error('Error fetching menu pages:', error);
+          console.error('NavBar: Error fetching menu pages:', error);
           return;
         }
         
+        console.log('NavBar: Menu pages fetched:', data);
         setMenuPages(data || []);
+        
+        // If no priority pages found, try fetching all pages
+        if (!data || data.length === 0) {
+          console.log('NavBar: No priority pages found, fetching all pages...');
+          const { data: allData, error: allError } = await supabase
+            .from('pages')
+            .select('title, slug, priority')
+            .order('priority');
+          
+          if (allError) {
+            console.error('NavBar: Error fetching all pages:', allError);
+            return;
+          }
+          
+          console.log('NavBar: All pages fetched:', allData);
+          setMenuPages(allData || []);
+        }
       } catch (err) {
-        console.error('Exception fetching menu pages:', err);
+        console.error('NavBar: Exception fetching menu pages:', err);
       }
     };
     
     const fetchProductPages = async () => {
       try {
+        console.log('NavBar: Fetching product pages...');
         const { data, error } = await supabase
           .from('pages')
           .select('title, slug')
           .eq('page_type', 'product');
         
         if (error) {
-          console.error('Error fetching product pages:', error);
+          console.error('NavBar: Error fetching product pages:', error);
           return;
         }
         
+        console.log('NavBar: Product pages fetched:', data);
         setProductPages(data || []);
       } catch (err) {
-        console.error('Exception fetching product pages:', err);
+        console.error('NavBar: Exception fetching product pages:', err);
       }
     };
     
@@ -148,6 +169,12 @@ export default function NavBar() {
                 {page.title}
               </Link>
             ))}
+            {/* Fallback menu item if no pages are loaded */}
+            {menuPages.length === 0 && (
+              <span className="px-3 py-2 text-sm text-gray-400">
+                No menu pages ({process.env.NODE_ENV})
+              </span>
+            )}
             {/* Products menu */}
             {productPages.length > 0 && (
               <div
