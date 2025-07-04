@@ -24,21 +24,13 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: credentials.email,
-          password: credentials.password
-        }),
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: credentials.email,
+        password: credentials.password
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.message || 'Login failed');
+      if (error) {
+        setError(error.message);
         trackEvent('login_failed', 'authentication', 'login_attempt', 0);
       } else {
         trackEvent('login_success', 'authentication', 'login_attempt', 1);
