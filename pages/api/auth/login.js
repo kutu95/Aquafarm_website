@@ -21,10 +21,10 @@ export default async function handler(req, res) {
             return req.cookies[name];
           },
           set(name, value, options) {
-            res.setHeader('Set-Cookie', `${name}=${value}; Path=/; HttpOnly`);
+            res.setHeader('Set-Cookie', `${name}=${value}; Path=/`);
           },
           remove(name) {
-            res.setHeader('Set-Cookie', `${name}=; Path=/; HttpOnly; Max-Age=0`);
+            res.setHeader('Set-Cookie', `${name}=; Path=/; Max-Age=0`);
           },
         },
       }
