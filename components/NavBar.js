@@ -52,15 +52,20 @@ export default function NavBar() {
         });
       }
 
-      // Sign out from Supabase
-      console.log('Signing out from Supabase...');
-      const { error } = await supabase.auth.signOut();
-      
-      if (error) {
-        console.error('Logout error:', error);
-      } else {
-        console.log('Supabase signout successful');
+      // Call server-side logout API
+      console.log('Calling server-side logout...');
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
+
+      console.log('Server-side logout successful');
 
       // Force clear any local storage or session data
       if (typeof window !== 'undefined') {
