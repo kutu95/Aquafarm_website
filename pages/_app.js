@@ -50,24 +50,21 @@ export default function App({ Component, pageProps }) {
           console.log('Setting user:', session?.user?.id || 'null');
           setUser(session?.user ?? null);
           
-          // Fetch role from client-side Supabase if user is authenticated
+          // Fetch role from server-side API if user is authenticated
           if (session?.user) {
             console.log('Fetching role for user:', session.user.id);
             try {
-              const { data: profile, error: profileError } = await supabase
-                .from('profiles')
-                .select('role')
-                .eq('id', session.user.id)
-                .single();
+              const response = await fetch('/api/auth/user-role');
+              const result = await response.json();
               
-              console.log('Profile fetch result:', { profile, profileError });
+              console.log('Role fetch result:', result);
               
-              if (profileError) {
-                console.error('Profile fetch error:', profileError);
-                setRole(null);
+              if (response.ok && result.role) {
+                console.log('Setting role:', result.role);
+                setRole(result.role);
               } else {
-                console.log('Setting role:', profile?.role);
-                setRole(profile?.role || null);
+                console.log('No role found or error:', result);
+                setRole(null);
               }
             } catch (roleError) {
               console.error('Role fetch error:', roleError);
@@ -95,24 +92,21 @@ export default function App({ Component, pageProps }) {
       console.log('Session details:', session);
       setUser(session?.user ?? null);
       
-      // Fetch role from client-side Supabase if user is authenticated
+      // Fetch role from server-side API if user is authenticated
       if (session?.user) {
         console.log('Auth state change: Fetching role for user:', session.user.id);
         try {
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', session.user.id)
-            .single();
+          const response = await fetch('/api/auth/user-role');
+          const result = await response.json();
           
-          console.log('Auth state change: Profile fetch result:', { profile, profileError });
+          console.log('Auth state change: Role fetch result:', result);
           
-          if (profileError) {
-            console.error('Auth state change: Profile fetch error:', profileError);
-            setRole(null);
+          if (response.ok && result.role) {
+            console.log('Auth state change: Setting role:', result.role);
+            setRole(result.role);
           } else {
-            console.log('Auth state change: Setting role:', profile?.role);
-            setRole(profile?.role || null);
+            console.log('Auth state change: No role found or error:', result);
+            setRole(null);
           }
         } catch (roleError) {
           console.error('Auth state change: Role fetch error:', roleError);
