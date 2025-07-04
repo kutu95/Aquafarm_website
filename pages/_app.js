@@ -170,7 +170,7 @@ export default function App({ Component, pageProps }) {
         <meta name="twitter:card" content="summary_large_image" />
       </Head>
 
-      <AuthContext.Provider value={{ user, role, setUser, loading }}>
+      <AuthContext.Provider value={{ user, role, setUser, setRole, loading }}>
         <DarkModeContext.Provider value={{ darkMode, setDarkMode }}>
           <GoogleAnalytics />
           <Component {...pageProps} />
