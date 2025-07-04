@@ -1,17 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
-import { Resend } from 'resend';
-import ReactDOMServer from 'react-dom/server';
-import React from 'react';
-import InvitationEmail from '@/components/EmailTemplate';
+import { emailService } from '@/lib/emailService';
 
 // Create admin client with service role key
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
-
-// Initialize Resend
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -92,30 +86,10 @@ export default async function handler(req, res) {
     // Use a default admin name for the email
     const adminName = 'Margaret River Aquafarm';
 
-    // Convert React component to HTML string
-    const emailHtml = ReactDOMServer.renderToString(
-      React.createElement(InvitationEmail, {
-        invitationLink: linkData.properties.action_link,
-        adminName: adminName
-      })
-    );
-
-    // Send invitation email
+    // Send invitation email using the email service
     try {
-      const { data: emailData, error: emailError } = await resend.emails.send({
-        from: process.env.RESEND_FROM_EMAIL || 'noreply@yourdomain.com',
-        to: email,
-        subject: 'Margaret River Aquafarm - Your Login Link',
-        html: emailHtml
-      });
-
-      if (emailError) {
-        console.error('Email error:', emailError);
-        // Don't fail the whole operation if email fails
-        console.warn('Could not send invitation email:', emailError.message);
-      } else {
-        console.log('Invitation email sent successfully:', emailData);
-      }
+      await emailService.sendUserInvitation(email, linkData.properties.action_link, adminName);
+      console.log('Invitation email sent successfully');
     } catch (emailError) {
       console.error('Email sending failed:', emailError);
       // Don't fail the whole operation if email fails

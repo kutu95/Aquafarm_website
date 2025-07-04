@@ -277,6 +277,25 @@ export default function VolunteerApplication() {
         } catch (emailError) {
           console.error('Error sending confirmation email:', emailError);
         }
+
+        // Send admin notification
+        try {
+          const adminResponse = await fetch('/api/notify-admin-application', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              applicationData: data[0]
+            })
+          });
+
+          if (!adminResponse.ok) {
+            console.error('Failed to send admin notification');
+          }
+        } catch (adminError) {
+          console.error('Error sending admin notification:', adminError);
+        }
       }
 
       alert('Application submitted successfully! Check your email for a confirmation with your application details.');
@@ -665,11 +684,7 @@ export default function VolunteerApplication() {
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         {galleryImages.map((image, index) => (
                           <div key={index} className="relative group">
-                            <img
-                              src={image.url}
-                              alt={image.name}
-                              className="w-full h-24 object-cover rounded border"
-                            />
+                            <GalleryImageThumbnail image={image} />
                             <button
                               type="button"
                               onClick={() => removeGalleryImage(index)}
@@ -734,5 +749,48 @@ export default function VolunteerApplication() {
         </div>
       </div>
     </Layout>
+  );
+}
+
+function GalleryImageThumbnail({ image }) {
+  const [signedUrl, setSignedUrl] = useState(null);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    async function fetchSignedUrl() {
+      console.log('GalleryImageThumbnail image prop:', image);
+      if (!image.path) {
+        setError('No image path');
+        return;
+      }
+      try {
+        const res = await fetch(`/api/media/signed-url?fileName=${encodeURIComponent(image.path)}&bucket=volunteer-documents`);
+        const data = await res.json();
+        console.log('Signed URL API response:', data);
+        if (data.signedUrl) {
+          setSignedUrl(data.signedUrl);
+        } else {
+          setError(data.error || 'No signed URL returned');
+        }
+      } catch (err) {
+        setError('Failed to fetch signed URL');
+      }
+    }
+    fetchSignedUrl();
+  }, [image.path]);
+
+  if (error) {
+    return <div className="w-full h-24 bg-red-200 text-red-800 flex items-center justify-center rounded">{error}</div>;
+  }
+  if (!signedUrl) {
+    return <div className="w-full h-24 bg-gray-200 animate-pulse rounded" />;
+  }
+  return (
+    <img
+      src={signedUrl}
+      alt={image.name}
+      className="w-full h-24 object-cover rounded border"
+      onError={() => setError('Image failed to load')}
+    />
   );
 } 

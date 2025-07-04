@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import formidable from 'formidable';
+import fs from 'fs';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -47,10 +48,13 @@ export default async function handler(req, res) {
       
       const fileName = `${folder}/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
 
+      // Read file as Buffer
+      const fileBuffer = fs.readFileSync(file.filepath);
+
       // Upload file using service role key
       const { error: uploadError } = await supabase.storage
         .from('volunteer-documents')
-        .upload(fileName, file.filepath, {
+        .upload(fileName, fileBuffer, {
           contentType: file.mimetype,
           upsert: true
         });
@@ -60,32 +64,23 @@ export default async function handler(req, res) {
         return res.status(500).json({ error: `Upload failed: ${uploadError.message}` });
       }
 
-      // Create URL - use public URL for images, signed URL for documents
-      let fileUrl;
-      if (file.mimetype.startsWith('image/')) {
-        // For images, use public URL
-        const { data: publicUrl } = supabase.storage
-          .from('volunteer-documents')
-          .getPublicUrl(fileName);
-        fileUrl = publicUrl.publicUrl;
-      } else {
-        // For documents, use signed URL
-        const { data: urlData, error: urlError } = await supabase.storage
-          .from('volunteer-documents')
-          .createSignedUrl(fileName, 3600 * 24 * 7); // 7 days
+      // Create signed URL for all files (since bucket is private)
+      const { data: urlData, error: urlError } = await supabase.storage
+        .from('volunteer-documents')
+        .createSignedUrl(fileName, 3600 * 24 * 7); // 7 days
 
-        if (urlError) {
-          console.error('URL creation error:', urlError);
-          return res.status(500).json({ error: `URL creation failed: ${urlError.message}` });
-        }
-        fileUrl = urlData.signedUrl;
+      if (urlError) {
+        console.error('URL creation error:', urlError);
+        return res.status(500).json({ error: `URL creation failed: ${urlError.message}` });
       }
+
+      const fileUrl = urlData.signedUrl;
 
       console.log('File URL created:', {
         fileName,
         url: fileUrl,
-        type: file.mimetype.startsWith('image/') ? 'public' : 'signed',
-        expiresAt: file.mimetype.startsWith('image/') ? 'never' : new Date(Date.now() + 3600 * 24 * 7 * 1000)
+        type: 'signed',
+        expiresAt: new Date(Date.now() + 3600 * 24 * 7 * 1000)
       });
 
       uploadedFiles.push({

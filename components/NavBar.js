@@ -1,6 +1,5 @@
 import { useContext, useEffect, useState } from 'react';
-import { AuthContext } from '@/pages/_app';
-import { supabase } from '@/lib/supabaseClient';
+import { AuthContext, supabase } from '@/pages/_app';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import DarkModeToggle from './DarkModeToggle';
@@ -31,6 +30,8 @@ export default function NavBar() {
 
   const handleLogout = async () => {
     try {
+      console.log('Logout initiated');
+      
       // Track logout event
       if (typeof window !== 'undefined' && window.gtag) {
         window.gtag('event', 'logout', {
@@ -41,14 +42,18 @@ export default function NavBar() {
       }
 
       // Sign out from Supabase
+      console.log('Signing out from Supabase...');
       const { error } = await supabase.auth.signOut();
       
       if (error) {
         console.error('Logout error:', error);
+      } else {
+        console.log('Supabase signout successful');
       }
 
       // Force clear any local storage or session data
       if (typeof window !== 'undefined') {
+        console.log('Clearing local storage...');
         // Clear any cached auth data
         localStorage.removeItem('supabase.auth.token');
         sessionStorage.removeItem('supabase.auth.token');
@@ -64,6 +69,7 @@ export default function NavBar() {
         sessionStorage.removeItem('user');
       }
 
+      console.log('Redirecting to home page...');
       // Redirect to home page
       router.push('/');
       

@@ -316,17 +316,22 @@ function PassportViewer({ path }) {
   useEffect(() => {
     const loadImage = async () => {
       try {
-        const { data } = await supabase
-          .storage
-          .from('volunteer-documents')
-          .createSignedUrl(path, 3600);
+        // Use the new API route for signed URLs
+        const response = await fetch(`/api/media/signed-url?fileName=${encodeURIComponent(path)}&bucket=volunteer-documents`);
         
-        if (data?.signedUrl) {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.signedUrl) {
           setImageUrl(data.signedUrl);
         } else {
           setError('Unable to load image');
         }
       } catch (err) {
+        console.error('Error loading passport image:', err);
         setError('Error loading image');
       } finally {
         setIsLoading(false);

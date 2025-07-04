@@ -24,6 +24,9 @@ export default function MediaLibrary() {
   const [originalDimensions, setOriginalDimensions] = useState({ width: 0, height: 0 });
   const [resizeLoading, setResizeLoading] = useState(false);
   const [renameLoading, setRenameLoading] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     if (user === null || role === null) return;
@@ -37,28 +40,15 @@ export default function MediaLibrary() {
 
   const checkBucketsAndFetchFiles = async () => {
     try {
-      const { data: { session }, error: authError } = await supabase.auth.getSession();
-      if (authError) {
-        console.error('Auth error:', authError);
-        setListError('Authentication error');
-        return;
-      }
-
-      const { data: files, error: filesError } = await supabase
-        .storage
-        .from('page-images')
-        .list('');
-
-      if (filesError) {
-        console.error('Error listing files:', filesError);
-        setListError(`Error listing files: ${filesError.message}`);
+      const res = await fetch('/api/media/list');
+      const result = await res.json();
+      if (!res.ok) {
+        setListError(`Error listing files: ${result.error}`);
         setFiles([]);
         return;
       }
-
-      setFiles(files || []);
+      setFiles(result.files || []);
       setListError('');
-
     } catch (err) {
       console.error('Unexpected error:', err);
       setListError(`Unexpected error: ${err.message}`);
@@ -73,29 +63,23 @@ export default function MediaLibrary() {
       setUploadError('Please select a file to upload.');
       return;
     }
-
     try {
       setLoading(true);
       const fileExt = uploadFile.name.split('.').pop().toLowerCase();
-      
       if (!uploadFile.type.startsWith('image/')) {
         setUploadError('Only image files are allowed.');
         return;
       }
-
       const fileName = `${Date.now()}.${fileExt}`;
-
-      const { error: uploadError } = await supabase
-        .storage
-        .from('page-images')
-        .upload(fileName, uploadFile, {
-          contentType: uploadFile.type,
-          upsert: true
-        });
-
-      if (uploadError) {
-        console.error('Upload error:', uploadError);
-        setUploadError('Image upload failed: ' + uploadError.message);
+      const formData = new FormData();
+      formData.append('file', uploadFile, fileName);
+      const res = await fetch('/api/media/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      const result = await res.json();
+      if (!res.ok) {
+        setUploadError('Image upload failed: ' + (result.error || 'Unknown error'));
       } else {
         setUploadFile(null);
         await checkBucketsAndFetchFiles();
@@ -133,24 +117,53 @@ export default function MediaLibrary() {
     }
   };
 
-  const getPublicURL = async (fileName) => {
-    try {
-      const { data, error } = await supabase
-        .storage
-        .from('page-images')
-        .createSignedUrl(fileName, 60 * 60);
+  const getSignedURL = async (fileName) => {
+    const res = await fetch(`/api/media/signed-url?fileName=${encodeURIComponent(fileName)}`);
+    const result = await res.json();
+    return result.url || '';
+  };
 
-      if (error) {
-        console.error('Error creating signed URL:', error);
-        return '';
-      }
+  const openImageModal = (image) => {
+    setSelectedImage(image);
+    setIsModalOpen(true);
+  };
 
-      return data.signedUrl;
-    } catch (err) {
-      console.error('Error generating URL:', err);
-      return '';
+  const closeImageModal = () => {
+    setIsModalOpen(false);
+    setSelectedImage(null);
+  };
+
+  const navigateImage = (direction) => {
+    if (!selectedImage || files.length === 0) return;
+    
+    const currentIndex = files.findIndex(file => file.name === selectedImage.name);
+    let newIndex;
+    
+    if (direction === 'next') {
+      newIndex = (currentIndex + 1) % files.length;
+    } else {
+      newIndex = currentIndex === 0 ? files.length - 1 : currentIndex - 1;
+    }
+    
+    setSelectedImage(files[newIndex]);
+  };
+
+  const handleKeyDown = (e) => {
+    if (!isModalOpen) return;
+    
+    if (e.key === 'Escape') {
+      closeImageModal();
+    } else if (e.key === 'ArrowRight') {
+      navigateImage('next');
+    } else if (e.key === 'ArrowLeft') {
+      navigateImage('prev');
     }
   };
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isModalOpen, selectedImage, files]);
 
   const ImageWithUrl = ({ file }) => {
     const [url, setUrl] = useState('');
@@ -160,7 +173,7 @@ export default function MediaLibrary() {
     useEffect(() => {
       setIsLoading(true);
       setHasError(false);
-      getPublicURL(file.name).then(url => {
+      getSignedURL(file.name).then(url => {
         setUrl(url);
         setIsLoading(false);
       }).catch(() => {
@@ -169,49 +182,34 @@ export default function MediaLibrary() {
       });
     }, [file.name]);
 
-    const handleLoad = () => {
-      setIsLoading(false);
-      setHasError(false);
-    };
+    if (isLoading) {
+      return (
+        <div className="w-90 h-68 bg-gray-200 animate-pulse rounded-lg flex items-center justify-center">
+          <div className="text-gray-400">Loading...</div>
+        </div>
+      );
+    }
 
-    const handleError = () => {
-      setIsLoading(false);
-      setHasError(true);
-    };
+    if (hasError) {
+      return (
+        <div className="w-90 h-68 bg-red-100 border-2 border-red-300 rounded-lg flex items-center justify-center">
+          <div className="text-red-500 text-sm">Error loading image</div>
+        </div>
+      );
+    }
 
     return (
-      <>
-        <div className="relative">
-          {url && (
-            <img
-              src={url}
-              alt={file.name}
-              className={`w-full h-32 object-cover mb-2 rounded ${isLoading ? 'opacity-50' : ''}`}
-              onLoad={handleLoad}
-              onError={handleError}
-            />
-          )}
-          {isLoading && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-sm">Loading...</span>
-            </div>
-          )}
-          {hasError && (
-            <div className="absolute inset-0 flex items-center justify-center bg-gray-100 rounded">
-              <span className="text-sm text-red-500">Failed to load</span>
-            </div>
-          )}
-        </div>
-        <div className="text-sm break-all mb-2">
-          <p className="text-xs mb-1">File: {file.name}</p>
-          <input
-            readOnly
-            className="border p-1 text-xs w-full"
-            value={url}
-            onClick={(e) => e.target.select()}
-          />
-        </div>
-      </>
+      <div 
+        className="w-90 h-68 bg-gray-100 border-2 border-gray-300 rounded-lg overflow-hidden cursor-pointer hover:border-blue-400 transition-colors"
+        onClick={() => openImageModal(file)}
+      >
+        <img
+          src={url}
+          alt={file.name}
+          className="w-full h-full object-cover"
+          onError={() => setHasError(true)}
+        />
+      </div>
     );
   };
 
@@ -404,6 +402,38 @@ export default function MediaLibrary() {
       const ratio = parseInt(value) / originalDimensions.height;
       setResizeWidth(Math.round(originalDimensions.width * ratio).toString());
     }
+  };
+
+  // Modal Image Component
+  const ModalImage = ({ file }) => {
+    const [url, setUrl] = useState('');
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+      setIsLoading(true);
+      getSignedURL(file.name).then(url => {
+        setUrl(url);
+        setIsLoading(false);
+      }).catch(() => {
+        setIsLoading(false);
+      });
+    }, [file.name]);
+
+    if (isLoading) {
+      return (
+        <div className="flex items-center justify-center h-96">
+          <div className="text-white text-lg">Loading...</div>
+        </div>
+      );
+    }
+
+    return (
+      <img
+        src={url}
+        alt={file.name}
+        className="max-w-full max-h-full object-contain"
+      />
+    );
   };
 
   if (user === null || role === null) {
@@ -623,6 +653,47 @@ export default function MediaLibrary() {
             </div>
           </div>
         </Dialog>
+
+        {/* Image Modal/Lightbox */}
+        {isModalOpen && selectedImage && (
+          <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+            <div className="relative max-w-4xl max-h-full p-4">
+              {/* Close button */}
+              <button
+                onClick={closeImageModal}
+                className="absolute top-2 right-2 text-white text-2xl font-bold hover:text-gray-300 z-10"
+              >
+                ×
+              </button>
+              
+              {/* Navigation buttons */}
+              <button
+                onClick={() => navigateImage('prev')}
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white text-4xl font-bold hover:text-gray-300 z-10"
+              >
+                ‹
+              </button>
+              <button
+                onClick={() => navigateImage('next')}
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white text-4xl font-bold hover:text-gray-300 z-10"
+              >
+                ›
+              </button>
+              
+              {/* Image */}
+              <div className="flex items-center justify-center">
+                <ModalImage file={selectedImage} />
+              </div>
+              
+              {/* Image info */}
+              <div className="absolute bottom-4 left-4 right-4 text-white text-center">
+                <p className="text-sm bg-black bg-opacity-50 px-2 py-1 rounded">
+                  {selectedImage.name} ({files.findIndex(f => f.name === selectedImage.name) + 1} of {files.length})
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
       <Footer />
     </>

@@ -72,6 +72,18 @@ export default async function handler(req, res) {
         // You might want to implement a retry mechanism or queue
       }
 
+      // Send admin notification
+      try {
+        await emailService.notifyAdminsOfNewUser({
+          firstName,
+          lastName,
+          email
+        });
+      } catch (adminNotificationError) {
+        console.error('Admin notification error:', adminNotificationError);
+        // Don't fail registration if admin notification fails
+      }
+
       return res.status(200).json({
         success: true,
         message: 'Account created successfully! Please check your email to confirm your account.',

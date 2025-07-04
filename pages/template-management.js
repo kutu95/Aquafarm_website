@@ -1,23 +1,21 @@
 import { useState, useEffect, useContext } from 'react';
 import { useRouter } from 'next/router';
-import { AuthContext } from '@/pages/_app';
-import { supabase } from '@/lib/supabaseClient';
+import { AuthContext, supabase } from '@/pages/_app';
 import Layout from '@/components/Layout';
 import TinyMCE from '@/components/TinyMCE-WithScripts';
 
 export default function TemplateManagement() {
-  const { user, role } = useContext(AuthContext);
+  const { user, role, loading: authLoading } = useContext(AuthContext);
   const router = useRouter();
   const [templates, setTemplates] = useState([]);
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [editingTemplate, setEditingTemplate] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
-
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showTemplateList, setShowTemplateList] = useState(true);
   const [newTemplate, setNewTemplate] = useState({
     name: '',
     title: '',
-    slug: '',
     content: '',
     meta_description: '',
     meta_title: '',
@@ -26,12 +24,16 @@ export default function TemplateManagement() {
     og_image: '',
     canonical_url: '',
     robots_meta: 'index, follow',
-    priority: 1,
-    security: 'open',
-    is_active: true
+    is_active: true,
+    security: 'open'
   });
 
   useEffect(() => {
+    // Wait for auth context to be initialized
+    if (authLoading) {
+      return; // Still loading
+    }
+
     if (!user) {
       router.push('/login');
       return;
@@ -43,27 +45,84 @@ export default function TemplateManagement() {
     }
 
     fetchTemplates();
-  }, [user, role, router]);
+    setIsLoading(false);
+  }, [user, role, authLoading, router]);
 
   const fetchTemplates = async () => {
     try {
       const { data, error } = await supabase
         .from('page_templates')
         .select('*')
-        .order('priority', { ascending: false })
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching templates:', error);
+        return;
+      }
+
       setTemplates(data || []);
     } catch (error) {
       console.error('Error fetching templates:', error);
+    }
+  };
+
+  const handleTemplateSelect = (template) => {
+    setSelectedTemplate(template);
+    setShowCreateForm(false);
+  };
+
+  const handleSave = async () => {
+    if (!selectedTemplate) return;
+
+    setIsSaving(true);
+    try {
+      const { error } = await supabase
+        .from('page_templates')
+        .update({
+          name: selectedTemplate.name,
+          title: selectedTemplate.title,
+          content: selectedTemplate.content,
+          meta_description: selectedTemplate.meta_description,
+          meta_title: selectedTemplate.meta_title,
+          og_title: selectedTemplate.og_title,
+          og_description: selectedTemplate.og_description,
+          og_image: selectedTemplate.og_image,
+          canonical_url: selectedTemplate.canonical_url,
+          robots_meta: selectedTemplate.robots_meta,
+          is_active: selectedTemplate.is_active,
+          security: selectedTemplate.security,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', selectedTemplate.id);
+
+      if (error) {
+        console.error('Database error:', error);
+        throw error;
+      }
+
+      // Update the templates list
+      const updatedTemplates = templates.map(t => t.id === selectedTemplate.id ? selectedTemplate : t);
+      setTemplates(updatedTemplates);
+      
+      // Also refresh the templates to make sure we have the latest data
+      await fetchTemplates();
+      
+      alert('Template updated successfully!');
+    } catch (error) {
+      console.error('Error updating template:', error);
+      
+      if (error.code === '23505' && error.message.includes('name')) {
+        alert('Template name must be unique. Please choose a different name.');
+      } else {
+        alert(`Error updating template: ${error.message}`);
+      }
     } finally {
-      setIsLoading(false);
+      setIsSaving(false);
     }
   };
 
   const handleCreateTemplate = async () => {
-    if (!newTemplate.name || !newTemplate.title || !newTemplate.slug) {
+    if (!newTemplate.name || !newTemplate.title) {
       alert('Please fill in all required fields.');
       return;
     }
@@ -74,13 +133,15 @@ export default function TemplateManagement() {
         .from('page_templates')
         .insert([newTemplate]);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Database error:', error);
+        throw error;
+      }
 
       alert('Template created successfully!');
       setNewTemplate({
         name: '',
         title: '',
-        slug: '',
         content: '',
         meta_description: '',
         meta_title: '',
@@ -89,61 +150,18 @@ export default function TemplateManagement() {
         og_image: '',
         canonical_url: '',
         robots_meta: 'index, follow',
-        priority: 1,
-        security: 'open',
-        is_active: true
+        is_active: true,
+        security: 'open'
       });
       setShowCreateForm(false);
       fetchTemplates();
     } catch (error) {
       console.error('Error creating template:', error);
+      
       if (error.code === '23505' && error.message.includes('name')) {
         alert('Template name must be unique. Please choose a different name.');
       } else {
-        alert('Error creating template. Please try again.');
-      }
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleUpdateTemplate = async () => {
-    if (!editingTemplate) return;
-
-    setIsSaving(true);
-    try {
-      const { error } = await supabase
-        .from('page_templates')
-        .update({
-          name: editingTemplate.name,
-          title: editingTemplate.title,
-          slug: editingTemplate.slug,
-          content: editingTemplate.content,
-          meta_description: editingTemplate.meta_description,
-          meta_title: editingTemplate.meta_title,
-          og_title: editingTemplate.og_title,
-          og_description: editingTemplate.og_description,
-          og_image: editingTemplate.og_image,
-          canonical_url: editingTemplate.canonical_url,
-          robots_meta: editingTemplate.robots_meta,
-          priority: editingTemplate.priority,
-          security: editingTemplate.security,
-          is_active: editingTemplate.is_active,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', editingTemplate.id);
-
-      if (error) throw error;
-
-      alert('Template updated successfully!');
-      setEditingTemplate(null);
-      fetchTemplates();
-    } catch (error) {
-      console.error('Error updating template:', error);
-      if (error.code === '23505' && error.message.includes('name')) {
-        alert('Template name must be unique. Please choose a different name.');
-      } else {
-        alert('Error updating template. Please try again.');
+        alert(`Error creating template: ${error.message}`);
       }
     } finally {
       setIsSaving(false);
@@ -161,22 +179,24 @@ export default function TemplateManagement() {
         .delete()
         .eq('id', templateId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Database error:', error);
+        throw error;
+      }
 
       alert('Template deleted successfully!');
       fetchTemplates();
+      
+      if (selectedTemplate && selectedTemplate.id === templateId) {
+        setSelectedTemplate(null);
+      }
     } catch (error) {
       console.error('Error deleting template:', error);
-      alert('Error deleting template. Please try again.');
+      alert(`Error deleting template: ${error.message}`);
     }
   };
 
-  const handleEditTemplate = (template) => {
-    setEditingTemplate(template);
-    setShowCreateForm(false);
-  };
-
-  if (isLoading) {
+  if (authLoading || isLoading) {
     return (
       <Layout>
         <div className="flex justify-center items-center min-h-screen">
@@ -215,7 +235,6 @@ export default function TemplateManagement() {
                     <div className="flex-1">
                       <h3 className="text-lg font-medium text-gray-900 dark:text-white">{template.title}</h3>
                       <p className="text-sm text-gray-600 dark:text-gray-400">Name: {template.name}</p>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">Slug: {template.slug}</p>
                       <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">{template.meta_description}</p>
                       <div className="flex gap-2 mt-2">
                         <span className={`inline-block px-2 py-1 text-xs rounded-full ${
@@ -225,14 +244,11 @@ export default function TemplateManagement() {
                         }`}>
                           {template.is_active ? 'Active' : 'Inactive'}
                         </span>
-                        <span className="inline-block px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                          Priority: {template.priority}
-                        </span>
                       </div>
                     </div>
                     <div className="flex gap-2 ml-4">
                       <button
-                        onClick={() => handleEditTemplate(template)}
+                        onClick={() => handleTemplateSelect(template)}
                         className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
                       >
                         Edit
@@ -278,31 +294,6 @@ export default function TemplateManagement() {
                       onChange={(e) => setNewTemplate({ ...newTemplate, title: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       placeholder="Page title"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Slug *
-                    </label>
-                    <input
-                      type="text"
-                      value={newTemplate.slug}
-                      onChange={(e) => setNewTemplate({ ...newTemplate, slug: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                      placeholder="page-slug"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Priority
-                    </label>
-                    <input
-                      type="number"
-                      value={newTemplate.priority}
-                      onChange={(e) => setNewTemplate({ ...newTemplate, priority: parseInt(e.target.value) || 1 })}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                      min="1"
-                      max="10"
                     />
                   </div>
                 </div>
@@ -362,9 +353,9 @@ export default function TemplateManagement() {
           )}
 
           {/* Edit Template Form */}
-          {editingTemplate && (
+          {selectedTemplate && (
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Edit Template: {editingTemplate.title}</h2>
+              <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Edit Template: {selectedTemplate.title}</h2>
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -373,8 +364,8 @@ export default function TemplateManagement() {
                     </label>
                     <input
                       type="text"
-                      value={editingTemplate.name}
-                      onChange={(e) => setEditingTemplate({ ...editingTemplate, name: e.target.value })}
+                      value={selectedTemplate.name}
+                      onChange={(e) => setSelectedTemplate({ ...selectedTemplate, name: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     />
                   </div>
@@ -384,33 +375,9 @@ export default function TemplateManagement() {
                     </label>
                     <input
                       type="text"
-                      value={editingTemplate.title}
-                      onChange={(e) => setEditingTemplate({ ...editingTemplate, title: e.target.value })}
+                      value={selectedTemplate.title}
+                      onChange={(e) => setSelectedTemplate({ ...selectedTemplate, title: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Slug *
-                    </label>
-                    <input
-                      type="text"
-                      value={editingTemplate.slug}
-                      onChange={(e) => setEditingTemplate({ ...editingTemplate, slug: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Priority
-                    </label>
-                    <input
-                      type="number"
-                      value={editingTemplate.priority}
-                      onChange={(e) => setEditingTemplate({ ...editingTemplate, priority: parseInt(e.target.value) || 1 })}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                      min="1"
-                      max="10"
                     />
                   </div>
                 </div>
@@ -420,8 +387,8 @@ export default function TemplateManagement() {
                     Meta Description
                   </label>
                   <textarea
-                    value={editingTemplate.meta_description}
-                    onChange={(e) => setEditingTemplate({ ...editingTemplate, meta_description: e.target.value })}
+                    value={selectedTemplate.meta_description}
+                    onChange={(e) => setSelectedTemplate({ ...selectedTemplate, meta_description: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     rows="3"
                   />
@@ -432,16 +399,16 @@ export default function TemplateManagement() {
                     Content *
                   </label>
                   <TinyMCE
-                    value={editingTemplate.content}
-                    onChange={(content) => setEditingTemplate({ ...editingTemplate, content })}
+                    value={selectedTemplate.content}
+                    onChange={(content) => setSelectedTemplate({ ...selectedTemplate, content })}
                   />
                 </div>
 
                 <div className="flex items-center">
                   <input
                     type="checkbox"
-                    checked={editingTemplate.is_active}
-                    onChange={(e) => setEditingTemplate({ ...editingTemplate, is_active: e.target.checked })}
+                    checked={selectedTemplate.is_active}
+                    onChange={(e) => setSelectedTemplate({ ...selectedTemplate, is_active: e.target.checked })}
                     className="mr-2"
                   />
                   <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -451,14 +418,14 @@ export default function TemplateManagement() {
 
                 <div className="flex gap-2">
                   <button
-                    onClick={handleUpdateTemplate}
+                    onClick={handleSave}
                     disabled={isSaving}
                     className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
                   >
                     {isSaving ? 'Updating...' : 'Update Template'}
                   </button>
                   <button
-                    onClick={() => setEditingTemplate(null)}
+                    onClick={() => setSelectedTemplate(null)}
                     className="bg-gray-400 text-white px-6 py-2 rounded-md hover:bg-gray-500 transition-colors"
                   >
                     Cancel

@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabaseClient';
 
 export default function MediaPicker({ onSelect, onClose }) {
   const [images, setImages] = useState([]);
@@ -14,25 +13,22 @@ export default function MediaPicker({ onSelect, onClose }) {
   const fetchImages = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase.storage
-        .from('images')
-        .list('', {
-          limit: 100,
-          offset: 0,
-        });
+      const res = await fetch('/api/media/list');
+      const result = await res.json();
+      
+      if (!res.ok) {
+        throw new Error(result.error || 'Failed to fetch images');
+      }
 
-      if (error) throw error;
-
-      if (data) {
+      if (result.files) {
         const imageUrls = await Promise.all(
-          data.map(async (file) => {
-            const { data: urlData } = supabase.storage
-              .from('images')
-              .getPublicUrl(file.name);
+          result.files.map(async (file) => {
+            const urlRes = await fetch(`/api/media/signed-url?fileName=${encodeURIComponent(file.name)}`);
+            const urlResult = await urlRes.json();
             
             return {
               name: file.name,
-              url: urlData.publicUrl,
+              url: urlResult.url || '',
               size: file.metadata?.size || 0,
               created_at: file.created_at
             };

@@ -224,6 +224,32 @@ export default function VolunteerInduction() {
         throw new Error(error.message);
       }
 
+      // Send admin notification for new inductions (not updates)
+      if (!existingApplication) {
+        try {
+          const adminResponse = await fetch('/api/notify-admin-induction', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              inductionData: {
+                id: applicationData.id || 'new',
+                full_name: `${form.firstName} ${form.lastName}`,
+                email: form.email,
+                created_at: new Date().toISOString()
+              }
+            })
+          });
+
+          if (!adminResponse.ok) {
+            console.error('Failed to send admin notification');
+          }
+        } catch (adminError) {
+          console.error('Error sending admin notification:', adminError);
+        }
+      }
+
       setMessage('Application saved successfully!');
       setPassportFile(null);
       loadExistingApplication();

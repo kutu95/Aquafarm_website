@@ -2,7 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import { Editor } from '@tinymce/tinymce-react';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase } from '@/pages/_app';
 import { Dialog } from '@headlessui/react';
 import MediaPicker from './MediaPicker';
 
@@ -28,34 +28,31 @@ const TinyMCEWithScripts = ({ value, onChange, placeholder = 'Start writing your
   // Load media files when modal opens
   const loadMediaFiles = async () => {
     try {
-      const { data: files, error } = await supabase.storage
-        .from('page-images')
-        .list('', {
-          limit: 100,
-          offset: 0,
-        });
-
-      if (error) {
-        console.error('Error loading media files:', error);
+      const res = await fetch('/api/media/list');
+      const result = await res.json();
+      
+      if (!res.ok) {
+        console.error('Error loading media files:', result.error || 'Failed to fetch images');
         return;
       }
 
-      const filesWithUrls = await Promise.all(
-        files.map(async (file) => {
-          const { data: urlData } = await supabase.storage
-            .from('page-images')
-            .createSignedUrl(file.name, 3600 * 24 * 365);
+      if (result.files) {
+        const filesWithUrls = await Promise.all(
+          result.files.map(async (file) => {
+            const urlRes = await fetch(`/api/media/signed-url?fileName=${encodeURIComponent(file.name)}`);
+            const urlResult = await urlRes.json();
+            
+            return {
+              name: file.name,
+              url: urlResult.url || '',
+              size: file.metadata?.size || 0,
+              created_at: file.created_at
+            };
+          })
+        );
 
-          return {
-            name: file.name,
-            url: urlData?.signedUrl || '',
-            size: file.metadata?.size || 0,
-            created_at: file.created_at
-          };
-        })
-      );
-
-      setMediaFiles(filesWithUrls);
+        setMediaFiles(filesWithUrls);
+      }
     } catch (error) {
       console.error('Error loading media files:', error);
     }
@@ -143,29 +140,26 @@ const TinyMCEWithScripts = ({ value, onChange, placeholder = 'Start writing your
 
     setIsUploading(true);
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const formData = new FormData();
+      formData.append('file', file);
 
-      const { error: uploadError } = await supabase
-        .storage
-        .from('page-images')
-        .upload(fileName, file, {
-          contentType: file.type,
-          upsert: true
-        });
+      const uploadRes = await fetch('/api/media/upload', {
+        method: 'POST',
+        body: formData,
+      });
 
-      if (uploadError) {
-        throw new Error(`Upload failed: ${uploadError.message}`);
+      const uploadResult = await uploadRes.json();
+      
+      if (!uploadRes.ok) {
+        throw new Error(`Upload failed: ${uploadResult.error || 'Unknown error'}`);
       }
 
-      // Get the signed URL
-      const { data: urlData } = await supabase
-        .storage
-        .from('page-images')
-        .createSignedUrl(fileName, 3600 * 24 * 365);
+      // Get the signed URL for the uploaded file
+      const urlRes = await fetch(`/api/media/signed-url?fileName=${encodeURIComponent(file.name)}`);
+      const urlResult = await urlRes.json();
 
       if (editorRef.current) {
-        editorRef.current.insertContent(`<img src="${urlData?.signedUrl}" alt="${fileName}" />`);
+        editorRef.current.insertContent(`<img src="${urlResult.url}" alt="${file.name}" />`);
       }
 
       setShowMediaSelector(false);
@@ -385,13 +379,11 @@ const TinyMCEWithScripts = ({ value, onChange, placeholder = 'Start writing your
           plugins: [
             'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
             'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-            'insertdatetime', 'media', 'table', 'code', 'help', 'wordcount',
-            'fontsize', 'fontsizeselect'
+            'insertdatetime', 'media', 'table', 'code', 'help', 'wordcount'
           ],
           toolbar: 'undo redo | blocks | ' +
             'bold italic forecolor | alignleft aligncenter ' +
             'alignright alignjustify | bullist numlist outdent indent | ' +
-            'fontsize fontsizeselect | ' +
             'table tabledelete | tableprops tablerowprops tablecellprops | tableinsertrowbefore tableinsertrowafter tabledeleterow | tableinsertcolbefore tableinsertcolafter tabledeletecol | ' +
             'removeformat | image | help',
           // Allow script tags and other HTML elements
