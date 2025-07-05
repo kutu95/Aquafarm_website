@@ -15,6 +15,7 @@ export default function NavBar() {
   const [isMobileProductsMenuOpen, setIsMobileProductsMenuOpen] = useState(false);
   const [isVolunteeringMenuOpen, setIsVolunteeringMenuOpen] = useState(false);
   const [isMobileVolunteeringMenuOpen, setIsMobileVolunteeringMenuOpen] = useState(false);
+  const [isMobileAdminMenuOpen, setIsMobileAdminMenuOpen] = useState(false);
   const [openSubmenu, setOpenSubmenu] = useState(null);
   const router = useRouter();
 
@@ -303,15 +304,33 @@ export default function NavBar() {
                   title: product.title,
                   href: `/${product.slug}`
                 }))
+              }] : []),
+              // Add Admin submenu for admin users
+              ...(user && role === 'admin' ? [{
+                id: 'admin',
+                title: 'Admin',
+                priority: 9,
+                type: 'submenu',
+                items: [
+                  { title: 'Dashboard', href: '/dashboard' },
+                  { title: 'Publishing', href: '/publishing' },
+                  { title: 'Media Library', href: '/media-library' },
+                  { title: 'Volunteer Inductions', href: '/volunteer-inductions' },
+                  { title: 'Volunteer Applications', href: '/volunteer-applications' },
+                  { title: 'Manage Users', href: '/admin/users' },
+                  { title: 'Template Management', href: '/template-management' }
+                ]
               }] : [])
             ].sort((a, b) => (a.priority || 0) - (b.priority || 0));
 
             return combinedMenu.map((item) => {
               if (item.type === 'submenu') {
                 const isOpen = item.id === 'volunteering' ? isMobileVolunteeringMenuOpen : 
-                               item.id === 'products' ? isMobileProductsMenuOpen : false;
+                               item.id === 'products' ? isMobileProductsMenuOpen :
+                               item.id === 'admin' ? isMobileAdminMenuOpen : false;
                 const setIsOpen = item.id === 'volunteering' ? setIsMobileVolunteeringMenuOpen : 
-                                 item.id === 'products' ? setIsMobileProductsMenuOpen : () => {};
+                                 item.id === 'products' ? setIsMobileProductsMenuOpen :
+                                 item.id === 'admin' ? setIsMobileAdminMenuOpen : () => {};
                 
                 return (
                   <div key={item.id} className="border-t border-gray-700 pt-2">
@@ -360,59 +379,6 @@ export default function NavBar() {
           })()}
           {user ? (
             <>
-              {role === 'admin' && (
-                <>
-                  <Link
-                    href="/dashboard"
-                    className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    Dashboard
-                  </Link>
-                  <Link
-                    href="/publishing"
-                    className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    Publishing
-                  </Link>
-                  <Link
-                    href="/media-library"
-                    className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    Media Library
-                  </Link>
-                  <Link
-                    href="/volunteer-inductions"
-                    className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    Volunteer Inductions
-                  </Link>
-                  <Link
-                    href="/volunteer-applications"
-                    className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    Volunteer Applications
-                  </Link>
-                  <Link
-                    href="/admin/users"
-                    className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    Manage Users
-                  </Link>
-                  <Link
-                    href="/template-management"
-                    className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    Template Management
-                  </Link>
-                </>
-              )}
               <button
                 onClick={() => {
                   handleLogout();
