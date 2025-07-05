@@ -52,17 +52,17 @@ export default async function handler(req, res) {
 
     console.log('Fetching role for user:', session.user.id);
     
-    // First, let's check if the user exists in profiles table
-    const { data: allProfiles, error: listError } = await supabase
-      .from('profiles')
-      .select('id, role')
-      .limit(10);
+    // Primary method: Get role from user metadata (most reliable)
+    const userRole = session.user.user_metadata?.role;
+    console.log('User metadata role:', userRole);
     
-    console.log('All profiles in table:', allProfiles);
-    console.log('List error:', listError);
+    if (userRole) {
+      console.log('Returning role from metadata:', userRole);
+      return res.status(200).json({ role: userRole });
+    }
     
-    // Fetch role from profiles table
-    console.log('Attempting to fetch profile for user ID:', session.user.id);
+    // Fallback: Try to fetch from profiles table
+    console.log('No role in metadata, trying profiles table...');
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('role')
@@ -70,18 +70,13 @@ export default async function handler(req, res) {
       .single();
 
     console.log('Profile fetch result:', { profile, profileError });
-    console.log('Profile data type:', typeof profile);
-    console.log('Profile role value:', profile?.role);
 
     if (profileError) {
       console.error('Profile fetch error:', profileError);
-      // Fallback: check user metadata for role
-      const userRole = session.user.user_metadata?.role;
-      console.log('Fallback to user metadata role:', userRole);
-      return res.status(200).json({ role: userRole || null });
+      return res.status(200).json({ role: null });
     }
 
-    console.log('Returning role:', profile?.role);
+    console.log('Returning role from profiles:', profile?.role);
     return res.status(200).json({ role: profile?.role || null });
   } catch (error) {
     console.error('Server error:', error);
