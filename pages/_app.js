@@ -50,21 +50,32 @@ export default function App({ Component, pageProps }) {
           console.log('Setting user:', session?.user?.id || 'null');
           setUser(session?.user ?? null);
           
-          // Fetch role from server-side API if user is authenticated
+          // Fetch role from client-side Supabase if user is authenticated
           if (session?.user) {
             console.log('Fetching role for user:', session.user.id);
             try {
-              const response = await fetch('/api/auth/user-role');
-              const result = await response.json();
-              
-              console.log('Role fetch result:', result);
-              
-              if (response.ok && result.role) {
-                console.log('Setting role:', result.role);
-                setRole(result.role);
+              // Try user metadata first (most reliable)
+              const userRole = session.user.user_metadata?.role;
+              if (userRole) {
+                console.log('Setting role from metadata:', userRole);
+                setRole(userRole);
               } else {
-                console.log('No role found or error:', result);
-                setRole(null);
+                // Fallback to profiles table
+                const { data: profile, error: profileError } = await supabase
+                  .from('profiles')
+                  .select('role')
+                  .eq('id', session.user.id)
+                  .single();
+                
+                console.log('Profile fetch result:', { profile, profileError });
+                
+                if (profileError) {
+                  console.error('Profile fetch error:', profileError);
+                  setRole(null);
+                } else {
+                  console.log('Setting role from profiles:', profile?.role);
+                  setRole(profile?.role || null);
+                }
               }
             } catch (roleError) {
               console.error('Role fetch error:', roleError);
@@ -92,21 +103,32 @@ export default function App({ Component, pageProps }) {
       console.log('Session details:', session);
       setUser(session?.user ?? null);
       
-      // Fetch role from server-side API if user is authenticated
+      // Fetch role from client-side Supabase if user is authenticated
       if (session?.user) {
         console.log('Auth state change: Fetching role for user:', session.user.id);
         try {
-          const response = await fetch('/api/auth/user-role');
-          const result = await response.json();
-          
-          console.log('Auth state change: Role fetch result:', result);
-          
-          if (response.ok && result.role) {
-            console.log('Auth state change: Setting role:', result.role);
-            setRole(result.role);
+          // Try user metadata first (most reliable)
+          const userRole = session.user.user_metadata?.role;
+          if (userRole) {
+            console.log('Auth state change: Setting role from metadata:', userRole);
+            setRole(userRole);
           } else {
-            console.log('Auth state change: No role found or error:', result);
-            setRole(null);
+            // Fallback to profiles table
+            const { data: profile, error: profileError } = await supabase
+              .from('profiles')
+              .select('role')
+              .eq('id', session.user.id)
+              .single();
+            
+            console.log('Auth state change: Profile fetch result:', { profile, profileError });
+            
+            if (profileError) {
+              console.error('Auth state change: Profile fetch error:', profileError);
+              setRole(null);
+            } else {
+              console.log('Auth state change: Setting role from profiles:', profile?.role);
+              setRole(profile?.role || null);
+            }
           }
         } catch (roleError) {
           console.error('Auth state change: Role fetch error:', roleError);
