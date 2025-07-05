@@ -200,6 +200,8 @@ export default function NavBar() {
             <DarkModeToggle />
             {user ? (
               <>
+                {/* Debug logging for production */}
+                {console.log('Desktop menu debug:', { user: !!user, role, isAdmin: role === 'admin', loading })}
                 {/* Admin submenu, always before Logout, only for admin users */}
                 {!loading && role === 'admin' && (
                   <div
@@ -280,6 +282,9 @@ export default function NavBar() {
       <div className={`${isMobileMenuOpen ? 'block' : 'hidden'} md:hidden`}>
         <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
           {(() => {
+            // Debug logging for production
+            console.log('Mobile menu debug:', { user: !!user, role, isAdmin: role === 'admin', loading });
+            
             // Create a combined menu array with regular pages and submenus
             const combinedMenu = [
               ...menuPages.map(page => ({ ...page, type: 'page' })),
