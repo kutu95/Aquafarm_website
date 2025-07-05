@@ -8,13 +8,22 @@ export default async function handler(req, res) {
   console.log('user-role API called');
 
   try {
+    console.log('Creating Supabase client with URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
+    console.log('Environment check:', { 
+      nodeEnv: process.env.NODE_ENV,
+      hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+      hasKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY 
+    });
+    
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
       {
         cookies: {
           get(name) {
-            return req.cookies[name];
+            const cookie = req.cookies[name];
+            console.log(`Getting cookie ${name}:`, cookie ? 'present' : 'missing');
+            return cookie;
           },
           set(name, value, options) {
             res.setHeader('Set-Cookie', `${name}=${value}; Path=/; HttpOnly`);
@@ -53,6 +62,7 @@ export default async function handler(req, res) {
     console.log('List error:', listError);
     
     // Fetch role from profiles table
+    console.log('Attempting to fetch profile for user ID:', session.user.id);
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('role')
@@ -60,6 +70,8 @@ export default async function handler(req, res) {
       .single();
 
     console.log('Profile fetch result:', { profile, profileError });
+    console.log('Profile data type:', typeof profile);
+    console.log('Profile role value:', profile?.role);
 
     if (profileError) {
       console.error('Profile fetch error:', profileError);
