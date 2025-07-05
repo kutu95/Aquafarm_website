@@ -63,7 +63,10 @@ export default async function handler(req, res) {
 
     if (profileError) {
       console.error('Profile fetch error:', profileError);
-      return res.status(200).json({ role: null });
+      // Fallback: check user metadata for role
+      const userRole = session.user.user_metadata?.role;
+      console.log('Fallback to user metadata role:', userRole);
+      return res.status(200).json({ role: userRole || null });
     }
 
     console.log('Returning role:', profile?.role);
