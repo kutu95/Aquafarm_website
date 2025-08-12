@@ -298,6 +298,13 @@ export default function Seeding() {
     return grouped[0].totalPots;
   };
 
+  const calculateTotalRequiredTrays = () => {
+    if (seedings.length === 0) return 0;
+    
+    const totalPots = calculateTotalPots();
+    return Math.ceil(totalPots / 30);
+  };
+
   const groupSeedingsByDate = () => {
     const grouped = {};
     
@@ -312,6 +319,11 @@ export default function Seeding() {
       }
       grouped[date].seedings.push(seeding);
       grouped[date].totalPots += (seeding.pots || 0);
+    });
+
+    // Calculate required trays for each date group (30 pots per tray, rounded up)
+    Object.values(grouped).forEach(group => {
+      group.requiredTrays = Math.ceil(group.totalPots / 30);
     });
 
     // Convert to array and sort by date (descending)
@@ -609,8 +621,13 @@ export default function Seeding() {
           <div className="bg-white rounded-lg shadow-sm border border-gray-200">
             <div className="px-4 sm:px-6 py-4 border-b border-gray-200 flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-3 sm:space-y-0">
               <h2 className="text-lg font-semibold text-gray-900">Seeding Records</h2>
-              <div className="text-sm text-gray-600">
-                Most Recent Date Pots: <span className="font-semibold text-blue-600">{calculateMostRecentDatePots()}</span>
+              <div className="text-sm text-gray-600 space-y-1">
+                <div>
+                  Most Recent Date Pots: <span className="font-semibold text-blue-600">{calculateMostRecentDatePots()}</span>
+                </div>
+                <div>
+                  Total Required Trays: <span className="font-semibold text-green-600">{calculateTotalRequiredTrays()}</span>
+                </div>
               </div>
             </div>
             {dataLoading ? (
@@ -680,6 +697,9 @@ export default function Seeding() {
                               <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-4">
                                 <span className="text-sm font-semibold text-blue-700">
                                   Total Pots: {dateGroup.totalPots}
+                                </span>
+                                <span className="text-sm font-semibold text-green-700">
+                                  Required Trays: {dateGroup.requiredTrays}
                                 </span>
                                 <span className="text-xs text-blue-600 font-medium">
                                   {dateGroup.seedings.length} record{dateGroup.seedings.length !== 1 ? 's' : ''}
@@ -759,9 +779,14 @@ export default function Seeding() {
                   {seedings.length} seeding record{seedings.length !== 1 ? 's' : ''} found
                   {dateFilters.startDate || dateFilters.endDate ? ' in date range' : ''}
                 </span>
-                <span className="font-semibold">
-                  Total Pots: <span className="text-blue-600">{calculateTotalPots()}</span>
-                </span>
+                <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-4">
+                  <span className="font-semibold">
+                    Total Pots: <span className="text-blue-600">{calculateTotalPots()}</span>
+                  </span>
+                  <span className="font-semibold">
+                    Total Required Trays: <span className="text-green-600">{calculateTotalRequiredTrays()}</span>
+                  </span>
+                </div>
               </div>
             </div>
           </div>
