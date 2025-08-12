@@ -30,16 +30,16 @@ export default function Seeding() {
   const [dateFiltersCollapsed, setDateFiltersCollapsed] = useState(true);
 
   useEffect(() => {
-    if (!loading && (!user || role !== 'admin')) {
+    if (!loading && !user) {
       router.push('/login');
     }
-  }, [user, role, loading, router]);
+  }, [user, loading, router]);
 
   useEffect(() => {
-    if (user && role === 'admin') {
+    if (user) {
       fetchData();
     }
-  }, [user, role, dateFilters]);
+  }, [user, dateFilters]);
 
   // Set initial collapsed state when seedings change
   useEffect(() => {
@@ -396,25 +396,35 @@ export default function Seeding() {
               <Link href="/greenhouse" className="text-blue-600 hover:text-blue-800 mb-2 inline-block">
                 ← Back to Greenhouse
               </Link>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Seeding Management</h1>
-              <p className="text-gray-600">Track planting dates and crop seeding activities</p>
+                                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                    Seeding Plan
+                    {role !== 'admin' && <span className="text-sm text-gray-500 ml-2">(Read Only)</span>}
+                  </h1>
+                  <p className="text-gray-600">
+                    {role === 'admin' 
+                      ? 'Track planting dates and crop seeding activities'
+                      : 'View planting dates and crop seeding activities'
+                    }
+                  </p>
             </div>
-            <button
-              onClick={() => {
-                setShowForm(true);
-                // Pre-fill the form with remembered values
-                setFormData({
-                  seeding_date: getRememberedSeedingDate(),
-                  crop_id: '',
-                  seeds_per_pot: '',
-                  pots: '',
-                  notes: ''
-                });
-              }}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 w-full sm:w-auto"
-            >
-              Add Seeding
-            </button>
+            {role === 'admin' && (
+              <button
+                onClick={() => {
+                  setShowForm(true);
+                  // Pre-fill the form with remembered values
+                  setFormData({
+                    seeding_date: getRememberedSeedingDate(),
+                    crop_id: '',
+                    seeds_per_pot: '',
+                    pots: '',
+                    notes: ''
+                  });
+                }}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 w-full sm:w-auto"
+              >
+                Add Seeding
+              </button>
+            )}
           </div>
 
           {/* Form */}
@@ -545,10 +555,7 @@ export default function Seeding() {
                 </button>
                 <h3 className="text-lg font-semibold text-gray-900">Date Filters</h3>
               </div>
-              <div className="text-sm text-gray-600">
-                {/* Shows pots for most recent seeding date only */}
-                Most Recent Date Pots: <span className="font-semibold text-blue-600">{calculateMostRecentDatePots()}</span>
-              </div>
+
             </div>
             
             {!dateFiltersCollapsed && (
@@ -716,18 +723,22 @@ export default function Seeding() {
                                     >
                                       View
                                     </button>
-                                    <button
-                                      onClick={() => handleEdit(seeding)}
-                                      className="text-blue-600 hover:text-blue-900 text-left"
-                                    >
-                                      Edit
-                                    </button>
-                                    <button
-                                      onClick={() => handleDelete(seeding.id)}
-                                      className="text-red-600 hover:text-red-900 text-left"
-                                    >
-                                      Delete
-                                    </button>
+                                    {role === 'admin' && (
+                                      <>
+                                        <button
+                                          onClick={() => handleEdit(seeding)}
+                                          className="text-blue-600 hover:text-blue-900 text-left"
+                                        >
+                                          Edit
+                                        </button>
+                                        <button
+                                          onClick={() => handleDelete(seeding.id)}
+                                          className="text-red-600 hover:text-red-900 text-left"
+                                        >
+                                          Delete
+                                        </button>
+                                      </>
+                                    )}
                                   </div>
                                 </td>
                               </tr>

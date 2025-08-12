@@ -79,17 +79,17 @@ export default function Crops() {
   const [uploadingImage, setUploadingImage] = useState(false);
 
   useEffect(() => {
-    if (!loading && (!user || role !== 'admin')) {
+    if (!loading && !user) {
       router.push('/login');
     }
-  }, [user, role, loading, router]);
+  }, [user, loading, router]);
 
   useEffect(() => {
-    if (user && role === 'admin') {
+    if (user) {
       fetchCropTypes();
       fetchCrops();
     }
-  }, [user, role]);
+  }, [user]);
 
   const fetchCropTypes = async () => {
     try {
@@ -363,15 +363,25 @@ export default function Crops() {
               <Link href="/greenhouse" className="text-blue-600 hover:text-blue-800 mb-2 inline-block">
                 ← Back to Greenhouse
               </Link>
-              <h1 className="text-3xl font-bold text-gray-900">Crops Management</h1>
-              <p className="text-gray-600">Manage your crop types, seeds per pot, and harvest times</p>
+              <h1 className="text-3xl font-bold text-gray-900">
+                Crops Management
+                {role !== 'admin' && <span className="text-sm text-gray-500 ml-2">(Read Only)</span>}
+              </h1>
+              <p className="text-gray-600">
+                {role === 'admin' 
+                  ? 'Manage your crop types, seeds per pot, and harvest times'
+                  : 'View crop types, seeds per pot, and harvest times'
+                }
+              </p>
             </div>
-            <button
-              onClick={() => setShowForm(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
-            >
-              Add Crop
-            </button>
+            {role === 'admin' && (
+              <button
+                onClick={() => setShowForm(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
+              >
+                Add Crop
+              </button>
+            )}
           </div>
 
           {/* Form */}
@@ -611,18 +621,24 @@ export default function Crops() {
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <button
-                            onClick={() => handleEdit(crop)}
-                            className="text-blue-600 hover:text-blue-900 mr-3"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDelete(crop.id)}
-                            className="text-red-600 hover:text-red-900"
-                          >
-                            Delete
-                          </button>
+                          {role === 'admin' ? (
+                            <>
+                              <button
+                                onClick={() => handleEdit(crop)}
+                                className="text-blue-600 hover:text-blue-900 mr-3"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => handleDelete(crop.id)}
+                                className="text-red-600 hover:text-red-900"
+                              >
+                                Delete
+                              </button>
+                            </>
+                          ) : (
+                            <span className="text-gray-400">Read Only</span>
+                          )}
                         </td>
                       </tr>
                     ))}

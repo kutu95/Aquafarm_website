@@ -241,8 +241,8 @@ export default function NavBar() {
               }
             })()}
             <DarkModeToggle />
-            {/* Admin-only Greenhouse Mode Toggle */}
-            {!loading && role === 'admin' && (
+            {/* Greenhouse Mode Toggle - Available to all logged-in users */}
+            {!loading && user && (
               <button
                 onClick={toggleGreenhouseMode}
                 className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
@@ -257,7 +257,7 @@ export default function NavBar() {
             )}
             
             {/* Greenhouse Menu Items - shown when in greenhouse mode */}
-            {isGreenhouseMode && role === 'admin' && (
+            {isGreenhouseMode && user && (
               <>
                 <Link
                   href="/greenhouse"
@@ -288,6 +288,16 @@ export default function NavBar() {
                   }`}
                 >
                   Seeding
+                </Link>
+                <Link
+                  href="/greenhouse/sops"
+                  className={`px-3 py-2 rounded-md text-sm font-medium ${
+                    router.asPath === '/greenhouse/sops'
+                      ? 'bg-gray-900 text-white'
+                      : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                  }`}
+                >
+                  SOP's
                 </Link>
               </>
             )}
@@ -378,8 +388,8 @@ export default function NavBar() {
       {/* Mobile menu */}
       <div className={`${isMobileMenuOpen ? 'block' : 'hidden'} md:hidden`}>
         <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-          {/* Admin-only Greenhouse Mode Toggle - Mobile */}
-          {!loading && role === 'admin' && (
+          {/* Greenhouse Mode Toggle - Mobile - Available to all logged-in users */}
+          {!loading && user && (
             <div className="border-b border-gray-700 pb-2 mb-2">
               <button
                 onClick={() => {
@@ -400,7 +410,7 @@ export default function NavBar() {
           
           {(() => {
             // Show different menus based on mode
-            if (isGreenhouseMode && role === 'admin') {
+            if (isGreenhouseMode && user) {
               // Greenhouse mode - show greenhouse menu items
               return (
                 <>
@@ -429,6 +439,13 @@ export default function NavBar() {
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     Seeding
+                  </Link>
+                  <Link
+                    href="/greenhouse/sops"
+                    className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    SOP's
                   </Link>
                 </>
               );

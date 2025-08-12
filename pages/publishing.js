@@ -45,6 +45,113 @@ export default function Publishing() {
   const [previewData, setPreviewData] = useState(null);
   const [pageTemplates, setPageTemplates] = useState({});
 
+  // SOP Template Content
+  const sopTemplate = `
+<h2>Standard Operating Procedure</h2>
+
+<h3>1. Purpose</h3>
+<p>This document outlines the standard operating procedure for [PROCEDURE NAME].</p>
+
+<h3>2. Scope</h3>
+<p>This procedure applies to [WHO/WHAT THIS APPLIES TO].</p>
+
+<h3>3. Definitions</h3>
+<ul>
+  <li><strong>Term 1:</strong> Definition of term 1</li>
+  <li><strong>Term 2:</strong> Definition of term 2</li>
+</ul>
+
+<h3>4. Responsibilities</h3>
+<ul>
+  <li><strong>Role 1:</strong> Description of responsibilities</li>
+  <li><strong>Role 2:</strong> Description of responsibilities</li>
+</ul>
+
+<h3>5. Equipment and Materials</h3>
+<ul>
+  <li>Equipment item 1</li>
+  <li>Equipment item 2</li>
+  <li>Materials needed</li>
+</ul>
+
+<h3>6. Safety Precautions</h3>
+<ul>
+  <li>Safety measure 1</li>
+  <li>Safety measure 2</li>
+  <li>Personal protective equipment requirements</li>
+</ul>
+
+<h3>7. Procedure Steps</h3>
+<ol>
+  <li><strong>Step 1:</strong> Detailed description of first step</li>
+  <li><strong>Step 2:</strong> Detailed description of second step</li>
+  <li><strong>Step 3:</strong> Detailed description of third step</li>
+</ol>
+
+<h3>8. Quality Control</h3>
+<p>Describe how to verify the procedure was completed correctly and any quality checks required.</p>
+
+<h3>9. Troubleshooting</h3>
+<table border="1" cellpadding="5" cellspacing="0">
+  <tr>
+    <th>Problem</th>
+    <th>Possible Cause</th>
+    <th>Solution</th>
+  </tr>
+  <tr>
+    <td>Common problem 1</td>
+    <td>Likely cause</td>
+    <td>Recommended solution</td>
+  </tr>
+  <tr>
+    <td>Common problem 2</td>
+    <td>Likely cause</td>
+    <td>Recommended solution</td>
+  </tr>
+</table>
+
+<h3>10. References</h3>
+<ul>
+  <li>Reference document 1</li>
+  <li>Reference document 2</li>
+  <li>Regulatory requirements</li>
+</ul>
+
+<h3>11. Document Control</h3>
+<p><strong>Version:</strong> 1.0<br>
+<strong>Last Updated:</strong> [DATE]<br>
+<strong>Next Review:</strong> [DATE]<br>
+<strong>Approved By:</strong> [NAME]</p>
+`;
+
+  // Function to handle page type changes and apply templates
+  const handlePageTypeChange = (pageType, isEdit = false) => {
+    if (pageType === 'sop') {
+      if (isEdit) {
+        // For edit form, only apply template if content is empty or just whitespace
+        if (!selectedPage.content || selectedPage.content.trim() === '') {
+          setSelectedPage({ ...selectedPage, page_type: pageType, content: sopTemplate });
+        } else {
+          setSelectedPage({ ...selectedPage, page_type: pageType });
+        }
+      } else {
+        // For create form, only apply template if content is empty or just whitespace
+        if (!newPage.content || newPage.content.trim() === '') {
+          setNewPage({ ...newPage, page_type: pageType, content: sopTemplate });
+        } else {
+          setNewPage({ ...newPage, page_type: pageType });
+        }
+      }
+    } else {
+      // For other page types, just update the page type
+      if (isEdit) {
+        setSelectedPage({ ...selectedPage, page_type: pageType });
+      } else {
+        setNewPage({ ...newPage, page_type: pageType });
+      }
+    }
+  };
+
   useEffect(() => {
     checkUser();
     fetchPages();
@@ -413,7 +520,9 @@ export default function Publishing() {
                       <div className="flex justify-between items-start">
                         <div>
                           <h3 className="font-medium text-gray-900 dark:text-white">{page.title}</h3>
-                          <p className="text-sm text-gray-500 dark:text-gray-400">/{page.slug}</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            {page.page_type === 'sop' ? `/sops/${page.slug}` : `/${page.slug}`}
+                          </p>
                           <div className="flex gap-2 mt-1">
                             <span className={`inline-block px-2 py-1 text-xs rounded-full ${
                               page.is_published
@@ -435,7 +544,7 @@ export default function Publishing() {
                           </div>
                           <div className="mt-2">
                             <a
-                              href={`/${page.slug}`}
+                              href={page.page_type === 'sop' ? `/sops/${page.slug}` : `/${page.slug}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-blue-600 hover:text-blue-800 text-sm underline"
@@ -575,13 +684,19 @@ export default function Publishing() {
                           </label>
                           <select
                             value={newPage.page_type}
-                            onChange={e => setNewPage({ ...newPage, page_type: e.target.value })}
+                            onChange={e => handlePageTypeChange(e.target.value, false)}
                             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                           >
                             <option value="page">Page</option>
                             <option value="document">Document</option>
                             <option value="product">Product</option>
+                            <option value="sop">SOP</option>
                           </select>
+                          {newPage.page_type === 'sop' && (
+                            <p className="mt-1 text-sm text-blue-600 dark:text-blue-400">
+                              ✓ SOP template will be applied only if content field is empty
+                            </p>
+                          )}
                         </div>
                       </div>
                     )}
@@ -966,13 +1081,19 @@ export default function Publishing() {
                     </label>
                     <select
                       value={selectedPage.page_type}
-                      onChange={e => setSelectedPage({ ...selectedPage, page_type: e.target.value })}
+                      onChange={e => handlePageTypeChange(e.target.value, true)}
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     >
                       <option value="page">Page</option>
                       <option value="document">Document</option>
                       <option value="product">Product</option>
+                      <option value="sop">SOP</option>
                     </select>
+                    {selectedPage.page_type === 'sop' && (
+                      <p className="mt-1 text-sm text-blue-600 dark:text-blue-400">
+                        ✓ SOP template applied. Edit content as needed.
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">

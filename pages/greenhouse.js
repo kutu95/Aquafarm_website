@@ -19,16 +19,16 @@ export default function Greenhouse() {
   const [statsLoading, setStatsLoading] = useState(true);
 
   useEffect(() => {
-    if (!loading && (!user || role !== 'admin')) {
+    if (!loading && !user) {
       router.push('/login');
     }
-  }, [user, role, loading, router]);
+  }, [user, loading, router]);
 
   useEffect(() => {
-    if (user && role === 'admin') {
+    if (user) {
       fetchStats();
     }
-  }, [user, role]);
+  }, [user]);
 
   const fetchStats = async () => {
     try {
@@ -91,9 +91,7 @@ export default function Greenhouse() {
     );
   }
 
-  if (!user || role !== 'admin') {
-    return null;
-  }
+
 
   const managementSections = [
     {
@@ -153,9 +151,15 @@ export default function Greenhouse() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Greenhouse Management</h1>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              Greenhouse Management
+              {role !== 'admin' && <span className="text-sm text-gray-500 ml-2">(Read Only)</span>}
+            </h1>
             <p className="text-gray-600">
-              Manage your aquaponics system, crops, fish, and growing operations
+              {role === 'admin' 
+                ? 'Manage your aquaponics system, crops, fish, and growing operations'
+                : 'View your aquaponics system, crops, fish, and growing operations'
+              }
             </p>
           </div>
 
