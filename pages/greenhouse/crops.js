@@ -868,11 +868,11 @@ export default function Crops() {
                 <p>{t('crops.noCropsFound', currentLanguage)}</p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto relative">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="sticky left-0 z-10 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
                         {t('crops.vegetableName', currentLanguage)}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -932,7 +932,7 @@ export default function Crops() {
                   <tbody className="bg-white divide-y divide-gray-200">
                     {crops.map((crop) => (
                       <tr key={crop.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="sticky left-0 z-10 px-6 py-4 whitespace-nowrap bg-white hover:bg-gray-50 border-r border-gray-200">
                           <div className="text-sm font-medium text-gray-900">
                             <button
                               onClick={() => handleCropClick(crop)}
