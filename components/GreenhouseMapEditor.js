@@ -65,7 +65,8 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
   };
 
   const handleMouseDown = (e, component) => {
-    if (e.target.tagName === 'rect' || e.target.tagName === 'circle') {
+    // If component is provided, we're dragging a component
+    if (component && (e.target.tagName === 'rect' || e.target.tagName === 'circle')) {
       setIsEditing(true);
       setDraggedComponent(component);
       const rect = svgRef.current.getBoundingClientRect();
@@ -78,7 +79,9 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
         x: transformedPoint.x - component.x_position,
         y: transformedPoint.y - component.y_position
       });
-    } else if (e.target.tagName === 'svg') {
+    } 
+    // If no component and clicking on SVG or container, we're panning
+    else if (!component && (e.target.tagName === 'svg' || e.target.tagName === 'rect' || e.target.classList.contains('bg-gray-50'))) {
       setIsDragging(true);
       setDragStart({ x: e.clientX - panOffset.x, y: e.clientY - panOffset.y });
     }
