@@ -11,7 +11,6 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
   const [newComponent, setNewComponent] = useState({
     name: '',
     component_type: 'growbed',
-    growbed_id: null,
     x_position: 0,
     y_position: 0,
     width: 1,
@@ -203,7 +202,6 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
       setNewComponent({
         name: '',
         component_type: 'growbed',
-        growbed_id: null,
         x_position: 0,
         y_position: 0,
         width: 1,
@@ -252,9 +250,18 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
   const handleGrowbedSelection = (growbedId) => {
     const selectedGrowbed = existingGrowbeds.find(g => g.id === growbedId);
     if (selectedGrowbed) {
+      // Check if this growbed is already on the map
+      const isAlreadyPlaced = layoutComponents.some(comp => 
+        comp.metadata?.growbed_id === growbedId
+      );
+      
+      if (isAlreadyPlaced) {
+        alert('This growbed is already placed on the map!');
+        return;
+      }
+      
       setNewComponent(prev => ({
         ...prev,
-        growbed_id: growbedId,
         name: selectedGrowbed.name,
         color: getGrowbedColor(selectedGrowbed.type),
         metadata: { 
@@ -681,7 +688,7 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Select Existing Growbed</label>
                 <select
-                  value={newComponent.growbed_id || ''}
+                  value={newComponent.metadata.growbed_id || ''}
                   onChange={(e) => handleGrowbedSelection(parseInt(e.target.value))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
