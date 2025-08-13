@@ -245,17 +245,19 @@ export default function NavBar() {
             })()}
             <DarkModeToggle />
             
-            {/* Language Selector */}
-            <div className="relative">
-              <select
-                value={currentLanguage}
-                onChange={(e) => changeLanguage(e.target.value)}
-                className="px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white bg-transparent border border-gray-600 cursor-pointer"
-              >
-                <option value="en">🇺🇸 EN</option>
-                <option value="de">🇩🇪 DE</option>
-              </select>
-            </div>
+            {/* Language Selector - Only visible to logged-in users */}
+            {!loading && user && (
+              <div className="relative">
+                <select
+                  value={currentLanguage}
+                  onChange={(e) => changeLanguage(e.target.value)}
+                  className="px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white bg-transparent border border-gray-600 cursor-pointer"
+                >
+                  <option value="en">🇺🇸 EN</option>
+                  <option value="de">🇩🇪 DE</option>
+                </select>
+              </div>
+            )}
             
             {/* Greenhouse Mode Toggle - Available to all logged-in users */}
             {!loading && user && (
