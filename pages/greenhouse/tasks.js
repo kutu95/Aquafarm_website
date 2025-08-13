@@ -40,6 +40,179 @@ export default function Tasks() {
     selected_sops: []
   });
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    try {
+      if (editingTask) {
+        // Update existing task
+        const { error: taskError } = await supabase
+          .from('tasks')
+          .update({
+            title: formData.title,
+            description: formData.description,
+            task_type: formData.task_type,
+            priority: formData.priority,
+            estimated_duration_minutes: formData.estimated_duration_minutes,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', editingTask.id);
+
+        if (taskError) throw taskError;
+
+        // Update or create schedule
+        const scheduleData = {
+          schedule_type: formData.schedule_type,
+          start_time: formData.start_time,
+          end_time: formData.end_time,
+          repeat_every: formData.repeat_every,
+          max_occurrences: formData.max_occurrences || null,
+          start_date: formData.start_date,
+          end_date: formData.end_date || null
+        };
+
+        // Add schedule-specific fields
+        switch (formData.schedule_type) {
+          case 'daily':
+            break;
+          case 'weekly':
+            scheduleData.day_of_week = formData.day_of_week;
+            break;
+          case 'monthly':
+            scheduleData.day_of_month = formData.day_of_month;
+            break;
+          case 'yearly':
+            scheduleData.month_of_year = formData.month_of_year;
+            break;
+          case 'one_off':
+            scheduleData.specific_date = formData.specific_date;
+            break;
+          case 'seasonal':
+            scheduleData.season_start_month = formData.season_start_month;
+            scheduleData.season_end_month = formData.season_end_month;
+            break;
+        }
+
+        // Check if schedule exists
+        const { data: existingSchedule } = await supabase
+          .from('task_schedules')
+          .select('id')
+          .eq('task_id', editingTask.id)
+          .single();
+
+        if (existingSchedule) {
+          // Update existing schedule
+          const { error: scheduleError } = await supabase
+            .from('task_schedules')
+            .update(scheduleData)
+            .eq('id', existingSchedule.id);
+
+          if (scheduleError) throw scheduleError;
+        } else {
+          // Create new schedule
+          const { error: scheduleError } = await supabase
+            .from('task_schedules')
+            .insert({
+              ...scheduleData,
+              task_id: editingTask.id
+            });
+
+          if (scheduleError) throw scheduleError;
+        }
+
+        console.log('✅ Task updated successfully');
+      } else {
+        // Create new task
+        const { data: newTask, error: taskError } = await supabase
+          .from('tasks')
+          .insert({
+            title: formData.title,
+            description: formData.description,
+            task_type: formData.task_type,
+            priority: formData.priority,
+            estimated_duration_minutes: formData.estimated_duration_minutes,
+            is_active: true
+          })
+          .select()
+          .single();
+
+        if (taskError) throw taskError;
+
+        // Create schedule
+        const scheduleData = {
+          task_id: newTask.id,
+          schedule_type: formData.schedule_type,
+          start_time: formData.start_time,
+          end_time: formData.end_time,
+          repeat_every: formData.repeat_every,
+          max_occurrences: formData.max_occurrences || null,
+          start_date: formData.start_date,
+          end_date: formData.end_date || null
+        };
+
+        // Add schedule-specific fields
+        switch (formData.schedule_type) {
+          case 'daily':
+            break;
+          case 'weekly':
+            scheduleData.day_of_week = formData.day_of_week;
+            break;
+          case 'monthly':
+            scheduleData.day_of_month = formData.day_of_month;
+            break;
+          case 'yearly':
+            scheduleData.month_of_year = formData.month_of_year;
+            break;
+          case 'one_off':
+            scheduleData.specific_date = formData.specific_date;
+            break;
+          case 'seasonal':
+            scheduleData.season_start_month = formData.season_start_month;
+            scheduleData.season_end_month = formData.season_end_month;
+            break;
+        }
+
+        const { error: scheduleError } = await supabase
+          .from('task_schedules')
+          .insert(scheduleData);
+
+        if (scheduleError) throw scheduleError;
+
+        console.log('✅ Task created successfully');
+      }
+
+      // Refresh tasks and close form
+      await fetchTasks();
+      setShowForm(false);
+      setEditingTask(null);
+      setFormData({
+        title: '',
+        description: '',
+        task_type: 'recurring',
+        priority: 'medium',
+        estimated_duration_minutes: 60,
+        schedule_type: 'weekly',
+        day_of_week: 1,
+        day_of_month: 1,
+        month_of_year: 1,
+        week_of_month: 1,
+        specific_date: '',
+        season_start_month: 1,
+        season_end_month: 12,
+        start_time: '09:00',
+        end_time: '17:00',
+        repeat_every: 1,
+        max_occurrences: '',
+        start_date: new Date().toISOString().split('T')[0],
+        end_date: '',
+        selected_sops: []
+      });
+    } catch (error) {
+      console.error('❌ Error saving task:', error);
+      alert('Error saving task: ' + error.message);
+    }
+  };
+
   useEffect(() => {
     if (!loading && !user) {
       router.push('/login');
@@ -499,7 +672,7 @@ export default function Tasks() {
               </button>
             </div>
             
-            <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
