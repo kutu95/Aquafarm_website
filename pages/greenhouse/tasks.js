@@ -41,8 +41,6 @@ export default function Tasks() {
   });
 
   const [availableSops, setAvailableSops] = useState([]);
-  const [sopSearchTerm, setSopSearchTerm] = useState('');
-  const [showSopSelector, setShowSopSelector] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -1005,12 +1003,40 @@ export default function Tasks() {
                 <h3 className="text-lg font-medium text-gray-900 mb-3">Related SOPs</h3>
                 
                 <div className="space-y-3">
-                  {/* Selected SOPs */}
+                  {/* SOP Selection Dropdown */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Select SOPs to Link:
+                    </label>
+                    <select
+                      multiple
+                      value={formData.selected_sops}
+                      onChange={(e) => {
+                        const selectedOptions = Array.from(e.target.selectedOptions, option => parseInt(option.value));
+                        setFormData({
+                          ...formData,
+                          selected_sops: selectedOptions
+                        });
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[120px]"
+                    >
+                      {availableSops.map(sop => (
+                        <option key={sop.id} value={sop.id}>
+                          {sop.title} (/{sop.slug})
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Hold Ctrl/Cmd to select multiple SOPs
+                    </p>
+                  </div>
+
+                  {/* Selected SOPs Display */}
                   {formData.selected_sops.length > 0 && (
-                    <div className="space-y-2">
-                      <label className="block text-sm font-medium text-gray-700">Selected SOPs:</label>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Selected SOPs:</label>
                       <div className="space-y-2">
-                        {formData.selected_sops.map((sopId, index) => {
+                        {formData.selected_sops.map((sopId) => {
                           const sop = availableSops.find(s => s.id === sopId);
                           return sop ? (
                             <div key={sopId} className="flex items-center justify-between bg-blue-50 p-2 rounded">
@@ -1031,15 +1057,6 @@ export default function Tasks() {
                       </div>
                     </div>
                   )}
-
-                  {/* Add SOP Button */}
-                  <button
-                    type="button"
-                    onClick={() => setShowSopSelector(true)}
-                    className="px-3 py-2 text-sm bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors duration-200"
-                  >
-                    + Add SOP Link
-                  </button>
                 </div>
               </div>
 
@@ -1175,82 +1192,7 @@ export default function Tasks() {
         </div>
       )}
 
-      {/* SOP Selector Modal */}
-      {showSopSelector && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Select SOPs to Link</h2>
-              <button
-                onClick={() => setShowSopSelector(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                ✕
-              </button>
-            </div>
 
-            {/* Search */}
-            <div className="mb-4">
-              <input
-                type="text"
-                placeholder="Search SOPs..."
-                value={sopSearchTerm}
-                onChange={(e) => setSopSearchTerm(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            {/* SOP List */}
-            <div className="space-y-2 max-h-96 overflow-y-auto">
-              {availableSops
-                .filter(sop => sop.title.toLowerCase().includes(sopSearchTerm.toLowerCase()))
-                .map(sop => (
-                  <div
-                    key={sop.id}
-                    className={`p-3 border rounded-lg cursor-pointer transition-colors duration-200 ${
-                      formData.selected_sops.includes(sop.id)
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                    onClick={() => {
-                      if (formData.selected_sops.includes(sop.id)) {
-                        setFormData({
-                          ...formData,
-                          selected_sops: formData.selected_sops.filter(id => id !== sop.id)
-                        });
-                      } else {
-                        setFormData({
-                          ...formData,
-                          selected_sops: [...formData.selected_sops, sop.id]
-                        });
-                      }
-                    }}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="font-medium text-gray-900">{sop.title}</h3>
-                        <p className="text-sm text-gray-500">/{sop.slug}</p>
-                      </div>
-                      <div className="text-blue-600">
-                        {formData.selected_sops.includes(sop.id) ? '✓' : '+'}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-            </div>
-
-            <div className="flex justify-end space-x-3 pt-4 border-t">
-              <button
-                type="button"
-                onClick={() => setShowSopSelector(false)}
-                className="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors duration-200"
-              >
-                Done
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </Layout>
   );
 }
