@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useRouter } from 'next/router';
 import { AuthContext } from '../_app';
 import Layout from '@/components/Layout';
@@ -382,7 +382,7 @@ export default function Tasks() {
           
           {/* Calendar weeks */}
           {calendar.map((week, weekIndex) => (
-            <React.Fragment key={weekIndex}>
+            <div key={weekIndex} className="contents">
               {week.map(({ date, tasks, isCurrentMonth, isToday }, dayIndex) => {
                 // Check if this is the first week of the current month
                 const isFirstWeekOfMonth = date.getDate() <= 7 && isCurrentMonth;
@@ -427,7 +427,7 @@ export default function Tasks() {
                   </div>
                 );
               })}
-            </React.Fragment>
+            </div>
           ))}
         </div>
       </div>
