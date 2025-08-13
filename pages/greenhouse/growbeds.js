@@ -569,9 +569,6 @@ export default function Growbeds() {
                         Type
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Actions
                       </th>
                     </tr>
@@ -580,9 +577,15 @@ export default function Growbeds() {
                     {filteredGrowbeds.map((growbed) => (
                       <tr key={growbed.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">{growbed.name}</div>
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                            growbed.status === 'active' ? 'bg-green-100 text-green-800' :
+                            growbed.status === 'maintenance' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-red-100 text-red-800'
+                          }`}>
+                            {growbed.name}
+                          </span>
                           {growbed.notes && (
-                            <div className="text-sm text-gray-500 truncate max-w-xs">{growbed.notes}</div>
+                            <div className="text-sm text-gray-500 truncate max-w-xs mt-1">{growbed.notes}</div>
                           )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -618,15 +621,6 @@ export default function Growbeds() {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
                             {growbed.type}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                            growbed.status === 'active' ? 'bg-green-100 text-green-800' :
-                            growbed.status === 'maintenance' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-red-100 text-red-800'
-                          }`}>
-                            {growbed.status}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
