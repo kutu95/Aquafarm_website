@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabaseClient';
 export default function GreenhouseMapEditor({ onSave, onCancel }) {
   const [layoutComponents, setLayoutComponents] = useState([]);
   const [existingGrowbeds, setExistingGrowbeds] = useState([]);
+  const [existingFishtanks, setExistingFishtanks] = useState([]);
   const [selectedComponent, setSelectedComponent] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editingComponent, setEditingComponent] = useState(null);
@@ -34,6 +35,7 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
   useEffect(() => {
     fetchLayoutData();
     fetchExistingGrowbeds();
+    fetchExistingFishtanks();
   }, []);
 
   const fetchExistingGrowbeds = async () => {
@@ -47,6 +49,20 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
       setExistingGrowbeds(data || []);
     } catch (err) {
       console.error('Error fetching existing growbeds:', err);
+    }
+  };
+
+  const fetchExistingFishtanks = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('fishtanks')
+        .select('id, name, type, status')
+        .order('name');
+
+      if (error) throw error;
+      setExistingFishtanks(data || []);
+    } catch (err) {
+      console.error('Error fetching existing fishtanks:', err);
     }
   };
 
@@ -271,6 +287,32 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
           ...prev.metadata, 
           growbed_type: selectedGrowbed.type,
           growbed_id: selectedGrowbed.id
+        }
+      }));
+    }
+  };
+
+  const handleFishtankSelection = (fishtankId) => {
+    const selectedFishtank = existingFishtanks.find(f => f.id === fishtankId);
+    if (selectedFishtank) {
+      // Check if this fishtank is already on the map
+      const isAlreadyPlaced = layoutComponents.some(comp => 
+        comp.metadata?.fishtank_id === fishtankId
+      );
+      
+      if (isAlreadyPlaced) {
+        alert('This fishtank is already placed on the map!');
+        return;
+      }
+      
+      setNewComponent(prev => ({
+        ...prev,
+        name: selectedFishtank.name,
+        color: '#2196F3', // Blue for fishtanks
+        metadata: { 
+          ...prev.metadata, 
+          fishtank_type: selectedFishtank.type,
+          fishtank_id: selectedFishtank.id
         }
       }));
     }
@@ -675,8 +717,14 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
                   ...prev, 
                   component_type: e.target.value,
                   color: componentTypes.find(t => t.value === e.target.value)?.color || '#4CAF50',
-                  growbed_id: null,
-                  name: ''
+                  name: '',
+                  metadata: { 
+                    ...prev.metadata, 
+                    growbed_id: null, 
+                    growbed_type: null,
+                    fishtank_id: null,
+                    fishtank_type: null
+                  }
                 }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
@@ -689,11 +737,12 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
             {/* Growbed selection - only show if growbed type is selected */}
             {newComponent.component_type === 'growbed' && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Select Existing Growbed</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Select Existing Growbed *</label>
                 <select
                   value={newComponent.metadata.growbed_id || ''}
                   onChange={(e) => handleGrowbedSelection(parseInt(e.target.value))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
                 >
                   <option value="">Choose a growbed...</option>
                   {existingGrowbeds.map(growbed => (
@@ -704,6 +753,29 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
                 </select>
                 <p className="text-xs text-gray-500 mt-1">
                   A growbed can only exist once on the map
+                </p>
+              </div>
+            )}
+
+            {/* Fishtank selection - only show if fishtank type is selected */}
+            {newComponent.component_type === 'fishtank' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Select Existing Fishtank *</label>
+                <select
+                  value={newComponent.metadata.fishtank_id || ''}
+                  onChange={(e) => handleFishtankSelection(parseInt(e.target.value))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                >
+                  <option value="">Choose a fishtank...</option>
+                  {existingFishtanks.map(fishtank => (
+                    <option key={fishtank.id} value={fishtank.id}>
+                      {fishtank.name} ({fishtank.type})
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  A fishtank can only exist once on the map
                 </p>
               </div>
             )}
@@ -768,7 +840,10 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
           <div className="flex space-x-2 mt-6">
             <button
               onClick={handleAddComponent}
-              disabled={!newComponent.name}
+              disabled={!newComponent.name || 
+                (newComponent.component_type === 'growbed' && !newComponent.metadata.growbed_id) ||
+                (newComponent.component_type === 'fishtank' && !newComponent.metadata.fishtank_id)
+              }
               className="flex-1 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
               Add Component
