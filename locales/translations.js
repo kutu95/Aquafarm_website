@@ -43,7 +43,8 @@ export const translations = {
       pelletedSeeds: 'Pelleted Seeds',
       pelletedSeedsDesc: 'Crops marked with * use pelleted seeds',
       pelletedSeedsInfo: 'Pelleted seeds are coated for easier handling and planting',
-      language: 'Language'
+      language: 'Language',
+      created: 'Created'
     },
 
     // Navigation
@@ -332,7 +333,8 @@ export const translations = {
       pelletedSeeds: 'Pillierte Samen',
       pelletedSeedsDesc: 'Kulturen mit * verwenden pillierte Samen',
       pelletedSeedsInfo: 'Pillierte Samen sind beschichtet für einfachere Handhabung und Pflanzung',
-      language: 'Sprache'
+      language: 'Sprache',
+      created: 'Erstellt'
     },
 
     // Navigation

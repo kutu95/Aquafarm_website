@@ -81,6 +81,8 @@ export default function Crops() {
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [showCropModal, setShowCropModal] = useState(false);
+  const [selectedCropForModal, setSelectedCropForModal] = useState(null);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -88,6 +90,11 @@ export default function Crops() {
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
+  };
+
+  const handleCropClick = (crop) => {
+    setSelectedCropForModal(crop);
+    setShowCropModal(true);
   };
 
   useEffect(() => {
@@ -670,7 +677,12 @@ export default function Crops() {
                       <tr key={crop.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">
-                            {crop.vegetable_name}{crop.pelleted ? ' *' : ''}
+                            <button
+                              onClick={() => handleCropClick(crop)}
+                              className="hover:text-blue-600 hover:underline cursor-pointer text-left"
+                            >
+                              {crop.vegetable_name}{crop.pelleted ? ' *' : ''}
+                            </button>
                           </div>
                           {crop.notes && (
                             <div className="text-sm text-gray-500 truncate max-w-xs">{crop.notes}</div>
@@ -679,7 +691,12 @@ export default function Crops() {
                         <td className="px-6 py-4 whitespace-nowrap">
                           {crop.image_data && crop.image_data.length > 0 ? (
                             <div className="flex items-center space-x-2">
-                              <CropImageDisplay cropId={crop.id} cropName={crop.vegetable_name} hasImageData={crop.image_data && crop.image_data.length > 0} />
+                              <button
+                                onClick={() => handleCropClick(crop)}
+                                className="hover:opacity-80 transition-opacity cursor-pointer"
+                              >
+                                <CropImageDisplay cropId={crop.id} cropName={crop.vegetable_name} hasImageData={crop.image_data && crop.image_data.length > 0} />
+                              </button>
                             </div>
                           ) : (
                             <span className="text-xs text-gray-400">{t('common.noImage', currentLanguage)}</span>
@@ -744,6 +761,152 @@ export default function Crops() {
             </div>
           </div>
         </div>
+
+        {/* Crop Detail Modal */}
+        {showCropModal && selectedCropForModal && (
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+            <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+              <div className="mt-3">
+                {/* Header */}
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-medium text-gray-900">
+                    {selectedCropForModal.vegetable_name}
+                    {selectedCropForModal.pelleted ? ' *' : ''}
+                  </h3>
+                  <button
+                    onClick={() => setShowCropModal(false)}
+                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* Content */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Left Column - Image */}
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">
+                      {t('crops.image', currentLanguage)}
+                    </h4>
+                    {selectedCropForModal.image_data && selectedCropForModal.image_data.length > 0 ? (
+                      <div className="relative">
+                        <img
+                          src={`/api/greenhouse/crop-image/${selectedCropForModal.id}?t=${Date.now()}`}
+                          alt={selectedCropForModal.vegetable_name}
+                          className="w-full h-64 object-cover rounded-lg border border-gray-200"
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                            e.target.nextSibling.style.display = 'block';
+                          }}
+                        />
+                        <div className="hidden w-full h-64 bg-gray-100 rounded-lg border border-gray-200 flex items-center justify-center">
+                          <span className="text-gray-500">{t('common.imageNotAvailable', currentLanguage)}</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="w-full h-64 bg-gray-100 rounded-lg border border-gray-200 flex items-center justify-center">
+                        <span className="text-gray-500">{t('common.noImage', currentLanguage)}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Right Column - Details */}
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-700 mb-1">
+                        {t('crops.cropType', currentLanguage)}
+                      </h4>
+                      <p className="text-sm text-gray-900">
+                        {selectedCropForModal.crop_types?.name || t('common.unknown', currentLanguage)}
+                      </p>
+                    </div>
+
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-700 mb-1">
+                        {t('crops.seedsPerPot', currentLanguage)}
+                      </h4>
+                      <p className="text-sm text-gray-900">
+                        {selectedCropForModal.seeds_per_pot}
+                      </p>
+                    </div>
+
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-700 mb-1">
+                        {t('crops.harvestTime', currentLanguage)}
+                      </h4>
+                      <p className="text-sm text-gray-900">
+                        {selectedCropForModal.time_to_harvest} {t('crops.harvestTime', currentLanguage).includes('weeks') ? 'weeks' : 'Wochen'}
+                      </p>
+                    </div>
+
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-700 mb-1">
+                        {t('common.status', currentLanguage)}
+                      </h4>
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        selectedCropForModal.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      }`}>
+                        {selectedCropForModal.status}
+                      </span>
+                    </div>
+
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-700 mb-1">
+                        {t('crops.pelletedSeeds', currentLanguage)}
+                      </h4>
+                      <p className="text-sm text-gray-900">
+                        {selectedCropForModal.pelleted ? t('common.yes', currentLanguage) : t('common.no', currentLanguage)}
+                      </p>
+                    </div>
+
+                    {selectedCropForModal.notes && (
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-700 mb-1">
+                          {t('common.notes', currentLanguage)}
+                        </h4>
+                        <p className="text-sm text-gray-900">
+                          {selectedCropForModal.notes}
+                        </p>
+                      </div>
+                    )}
+
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-700 mb-1">
+                        {t('common.created', currentLanguage)}
+                      </h4>
+                      <p className="text-sm text-gray-900">
+                        {new Date(selectedCropForModal.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer */}
+                <div className="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-200">
+                  {role === 'admin' && (
+                    <button
+                      onClick={() => {
+                        setShowCropModal(false);
+                        handleEdit(selectedCropForModal);
+                      }}
+                      className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    >
+                      {t('common.edit', currentLanguage)}
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setShowCropModal(false)}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                  >
+                    {t('common.close', currentLanguage)}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </Layout>
   );
