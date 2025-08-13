@@ -372,43 +372,62 @@ export default function Tasks() {
           </div>
         </div>
 
-        <div className="grid grid-cols-7 gap-1">
+        <div className="grid grid-cols-7 gap-0 border border-gray-300 rounded-lg overflow-hidden">
+          {/* Header row */}
           {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-            <div key={day} className="p-2 text-center text-sm font-medium text-gray-500 bg-gray-50">
+            <div key={day} className="p-3 text-center text-sm font-medium text-gray-700 bg-gray-100 border-b border-gray-300">
               {day}
             </div>
           ))}
           
+          {/* Calendar weeks */}
           {calendar.map((week, weekIndex) => (
-            week.map(({ date, tasks, isCurrentMonth, isToday }) => (
-              <div
-                key={`${weekIndex}-${date.getDate()}`}
-                className={`p-2 min-h-[100px] border border-gray-100 ${
-                  isCurrentMonth ? 'bg-white' : 'bg-gray-50'
-                } ${isToday ? 'ring-2 ring-blue-500' : ''}`}
-              >
-                <div className="text-sm text-gray-900 mb-1">
-                  {date.getDate()}
-                </div>
-                <div className="space-y-1">
-                  {tasks.map(task => (
-                    <div
-                      key={task.id}
-                      onClick={() => handleTaskClick(task)}
-                      className={`text-xs p-1 rounded cursor-pointer ${
-                        task.priority === 'critical' ? 'bg-red-100 text-red-800' :
-                        task.priority === 'high' ? 'bg-orange-100 text-orange-800' :
-                        task.priority === 'medium' ? 'bg-blue-100 text-blue-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}
-                      title={`${task.title} - ${task.description}`}
-                    >
-                      {task.title}
+            <React.Fragment key={weekIndex}>
+              {week.map(({ date, tasks, isCurrentMonth, isToday }, dayIndex) => {
+                // Check if this is the first week of the current month
+                const isFirstWeekOfMonth = date.getDate() <= 7 && isCurrentMonth;
+                // Check if this is the last week of the previous month
+                const isLastWeekOfPrevMonth = !isCurrentMonth && date.getDate() >= 25;
+                
+                return (
+                  <div
+                    key={`${weekIndex}-${dayIndex}`}
+                    className={`p-3 min-h-[100px] border-r border-gray-300 ${
+                      isCurrentMonth ? 'bg-white' : 'bg-gray-50'
+                    } ${isToday ? 'ring-2 ring-blue-500 ring-inset' : ''} ${
+                      isFirstWeekOfMonth ? 'border-t-2 border-t-blue-400' : ''
+                    } ${
+                      isLastWeekOfPrevMonth ? 'border-b-2 border-b-gray-400' : ''
+                    } ${
+                      dayIndex === 6 ? 'border-r-0' : ''
+                    }`}
+                  >
+                    <div className={`text-sm mb-2 ${
+                      isCurrentMonth ? 'text-gray-900 font-semibold' : 'text-gray-400'
+                    }`}>
+                      {date.getDate()}
                     </div>
-                  ))}
-                </div>
-              </div>
-            ))
+                    <div className="space-y-1">
+                      {tasks.map(task => (
+                        <div
+                          key={task.id}
+                          onClick={() => handleTaskClick(task)}
+                          className={`text-xs p-1 rounded cursor-pointer hover:opacity-80 transition-opacity ${
+                            task.priority === 'critical' ? 'bg-red-100 text-red-800 border border-red-200' :
+                            task.priority === 'high' ? 'bg-orange-100 text-orange-800 border border-orange-200' :
+                            task.priority === 'medium' ? 'bg-blue-100 text-blue-800 border border-blue-200' :
+                            'bg-gray-100 text-gray-800 border border-gray-200'
+                          }`}
+                          title={`${task.title} - ${task.description}`}
+                        >
+                          {task.title}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </React.Fragment>
           ))}
         </div>
       </div>
