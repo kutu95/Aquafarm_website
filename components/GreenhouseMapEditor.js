@@ -22,7 +22,15 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
   });
   const [draggedComponent, setDraggedComponent] = useState(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [scale, setScale] = useState(1);
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const svgRef = useRef(null);
+
+  // Greenhouse dimensions in metres
+  const GREENHOUSE_WIDTH = 20;
+  const GREENHOUSE_HEIGHT = 20;
 
   useEffect(() => {
     fetchLayoutData();
@@ -58,7 +66,7 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
   };
 
   const handleMouseDown = (e, component) => {
-    if (e.target.tagName === 'rect') {
+    if (e.target.tagName === 'rect' || e.target.tagName === 'circle') {
       setIsEditing(true);
       setDraggedComponent(component);
       const rect = svgRef.current.getBoundingClientRect();
@@ -71,6 +79,9 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
         x: transformedPoint.x - component.x_position,
         y: transformedPoint.y - component.y_position
       });
+    } else if (e.target.tagName === 'svg') {
+      setIsDragging(true);
+      setDragStart({ x: e.clientX - panOffset.x, y: e.clientY - panOffset.y });
     }
   };
 
@@ -82,8 +93,8 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
       svgPoint.y = e.clientY - rect.top;
       const transformedPoint = svgPoint.matrixTransform(svgRef.current.getScreenCTM().inverse());
       
-      const newX = Math.max(0, transformedPoint.x - dragOffset.x);
-      const newY = Math.max(0, transformedPoint.y - dragOffset.y);
+      const newX = Math.max(0, Math.min(GREENHOUSE_WIDTH - draggedComponent.width, transformedPoint.x - dragOffset.x));
+      const newY = Math.max(0, Math.min(GREENHOUSE_HEIGHT - draggedComponent.height, transformedPoint.y - dragOffset.y));
       
       setLayoutComponents(prev => 
         prev.map(comp => 
@@ -92,16 +103,45 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
             : comp
         )
       );
+    } else if (isDragging) {
+      setPanOffset({
+        x: e.clientX - dragStart.x,
+        y: e.clientY - dragStart.y
+      });
     }
   };
 
   const handleMouseUp = () => {
     setIsEditing(false);
     setDraggedComponent(null);
+    setIsDragging(false);
+  };
+
+  const handleWheel = (e) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    setScale(prevScale => Math.max(0.1, Math.min(5, prevScale * delta)));
+  };
+
+  const resetView = () => {
+    setScale(1);
+    setPanOffset({ x: 0, y: 0 });
+  };
+
+  const fitToView = () => {
+    // Calculate scale to fit the entire greenhouse in view
+    const containerWidth = 800; // Approximate container width
+    const containerHeight = 600; // Approximate container height
+    const scaleX = containerWidth / GREENHOUSE_WIDTH;
+    const scaleY = containerHeight / GREENHOUSE_HEIGHT;
+    const newScale = Math.min(scaleX, scaleY) * 0.9; // 90% to add some padding
+    
+    setScale(newScale);
+    setPanOffset({ x: 0, y: 0 });
   };
 
   const handleComponentClick = (component) => {
-    if (!isEditing) {
+    if (!isEditing && !isDragging) {
       setSelectedComponent(component);
     }
   };
@@ -163,10 +203,11 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
       setNewComponent({
         name: '',
         component_type: 'growbed',
+        growbed_id: null,
         x_position: 0,
         y_position: 0,
-        width: 100,
-        height: 100,
+        width: 1,
+        height: 1,
         color: '#4CAF50',
         status: 'active',
         metadata: {}
@@ -259,24 +300,64 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
         </button>
       </div>
 
+      {/* Zoom Controls */}
+      <div className="absolute top-4 right-4 z-20 flex space-x-2">
+        <button
+          onClick={fitToView}
+          className="px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 text-sm"
+        >
+          🔍 Fit to View
+        </button>
+        <button
+          onClick={resetView}
+          className="px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 text-sm"
+        >
+          Reset View
+        </button>
+        <div className="flex items-center space-x-2 bg-white border border-gray-300 rounded-md px-3 py-2">
+          <span className="text-sm text-gray-600">Zoom:</span>
+          <span className="text-sm font-medium">{Math.round(scale * 100)}%</span>
+        </div>
+      </div>
+
       {/* Map Container */}
-      <div className="w-full h-full border border-gray-300 rounded-lg overflow-hidden bg-gray-50">
+      <div 
+        className="w-full h-full border border-gray-300 rounded-lg overflow-hidden bg-gray-50"
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onWheel={handleWheel}
+        style={{ cursor: isDragging ? 'grabbing' : (isEditing ? 'grabbing' : 'grab') }}
+      >
         <svg
           ref={svgRef}
           width="100%"
           height="100%"
-          viewBox="0 0 1200 900"
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          style={{ cursor: isEditing ? 'grabbing' : 'default' }}
+          viewBox={`0 0 ${GREENHOUSE_WIDTH} ${GREENHOUSE_HEIGHT}`}
+          style={{
+            transform: `scale(${scale}) translate(${panOffset.x / scale}px, ${panOffset.y / scale}px)`,
+            transformOrigin: '0 0'
+          }}
         >
-          {/* Background grid */}
+          {/* Background grid (1m x 1m) */}
           <defs>
-            <pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse">
-              <path d="M 50 0 L 0 0 0 50" fill="none" stroke="#E5E7EB" strokeWidth="1"/>
+            <pattern id="grid" width="1" height="1" patternUnits="userSpaceOnUse">
+              <path d="M 1 0 L 0 0 0 1" fill="none" stroke="#E5E7EB" strokeWidth="0.05"/>
             </pattern>
           </defs>
           <rect width="100%" height="100%" fill="url(#grid)" />
+
+          {/* Greenhouse outline */}
+          <rect
+            x="0"
+            y="0"
+            width={GREENHOUSE_WIDTH}
+            height={GREENHOUSE_HEIGHT}
+            fill="none"
+            stroke="#9CA3AF"
+            strokeWidth="0.1"
+            strokeDasharray="0.2,0.2"
+          />
 
           {/* Render components */}
           {layoutComponents.map((component) => (
@@ -289,7 +370,7 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
                   r={Math.min(component.width, component.height) / 2}
                   fill={component.color}
                   stroke={getStatusColor(component.status)}
-                  strokeWidth="2"
+                  strokeWidth="0.05"
                   className="cursor-pointer hover:opacity-80 transition-opacity"
                   onMouseDown={(e) => handleMouseDown(e, component)}
                   onClick={() => handleComponentClick(component)}
@@ -302,9 +383,9 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
                   height={component.height}
                   fill={component.color}
                   stroke={getStatusColor(component.status)}
-                  strokeWidth="2"
-                  rx="4"
-                  ry="4"
+                  strokeWidth="0.05"
+                  rx="0.1"
+                  ry="0.1"
                   className="cursor-pointer hover:opacity-80 transition-opacity"
                   onMouseDown={(e) => handleMouseDown(e, component)}
                   onClick={() => handleComponentClick(component)}
@@ -317,7 +398,7 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
                 y={component.y_position + component.height / 2}
                 textAnchor="middle"
                 dominantBaseline="middle"
-                fontSize="20"
+                fontSize="0.8"
                 fill="white"
               >
                 {getComponentIcon(component.component_type)}
@@ -326,9 +407,9 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
               {/* Component name */}
               <text
                 x={component.x_position + component.width / 2}
-                y={component.y_position + component.height + 20}
+                y={component.y_position + component.height + 0.5}
                 textAnchor="middle"
-                fontSize="12"
+                fontSize="0.4"
                 fill="#374151"
                 fontWeight="500"
               >
@@ -337,25 +418,25 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
 
               {/* Status indicator */}
               <circle
-                cx={component.x_position + component.width - 8}
-                cy={component.y_position + 8}
-                r="4"
+                cx={component.x_position + component.width - 0.2}
+                cy={component.y_position + 0.2}
+                r="0.15"
                 fill={getStatusColor(component.status)}
                 stroke="white"
-                strokeWidth="1"
+                strokeWidth="0.02"
               />
 
               {/* Resize handles */}
               {selectedComponent?.id === component.id && (
                 <>
                   <rect
-                    x={component.x_position + component.width - 5}
-                    y={component.y_position + component.height - 5}
-                    width="10"
-                    height="10"
+                    x={component.x_position + component.width - 0.15}
+                    y={component.y_position + component.height - 0.15}
+                    width="0.3"
+                    height="0.3"
                     fill="#3B82F6"
                     stroke="white"
-                    strokeWidth="1"
+                    strokeWidth="0.02"
                     className="cursor-nw-resize"
                     onMouseDown={(e) => {
                       e.stopPropagation();
@@ -406,7 +487,7 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
             <div className="flex justify-between">
               <span className="text-gray-600">Position:</span>
               <span className="font-medium">
-                ({Math.round(selectedComponent.x_position)}, {Math.round(selectedComponent.y_position)})
+                ({selectedComponent.x_position.toFixed(1)}m, {selectedComponent.y_position.toFixed(1)}m)
               </span>
             </div>
             
@@ -473,18 +554,20 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">X Position</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">X Position (m)</label>
                 <input
                   type="number"
+                  step="0.1"
                   value={editingComponent.x_position}
                   onChange={(e) => setEditingComponent(prev => ({ ...prev, x_position: parseFloat(e.target.value) || 0 }))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Y Position</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Y Position (m)</label>
                 <input
                   type="number"
+                  step="0.1"
                   value={editingComponent.y_position}
                   onChange={(e) => setEditingComponent(prev => ({ ...prev, y_position: parseFloat(e.target.value) || 0 }))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -615,20 +698,22 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
               </div>
             )}
 
-                        <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">X Position</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">X Position (m)</label>
                 <input
                   type="number"
+                  step="0.1"
                   value={newComponent.x_position}
                   onChange={(e) => setNewComponent(prev => ({ ...prev, x_position: parseFloat(e.target.value) || 0 }))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Y Position</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Y Position (m)</label>
                 <input
                   type="number"
+                  step="0.1"
                   value={newComponent.y_position}
                   onChange={(e) => setNewComponent(prev => ({ ...prev, y_position: parseFloat(e.target.value) || 0 }))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -691,7 +776,7 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
       {/* Instructions */}
       <div className="absolute bottom-4 left-4 z-10 bg-white border border-gray-300 rounded-lg shadow-lg p-3 text-sm text-gray-600">
         <div className="flex items-center space-x-4">
-          <span>🖱️ Drag to move • 👆 Click to select • ✏️ Edit properties • ➕ Add new components</span>
+          <span>🖱️ Drag to move • 🔍 Scroll to zoom • 👆 Click components for details • 📏 20m × 20m greenhouse</span>
         </div>
       </div>
     </div>

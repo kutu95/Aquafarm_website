@@ -11,6 +11,10 @@ export default function GreenhouseMap() {
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
+  // Greenhouse dimensions in metres
+  const GREENHOUSE_WIDTH = 20;
+  const GREENHOUSE_HEIGHT = 20;
+
   useEffect(() => {
     fetchLayoutData();
   }, []);
@@ -65,6 +69,18 @@ export default function GreenhouseMap() {
 
   const resetView = () => {
     setScale(1);
+    setPanOffset({ x: 0, y: 0 });
+  };
+
+  const fitToView = () => {
+    // Calculate scale to fit the entire greenhouse in view
+    const containerWidth = 800; // Approximate container width
+    const containerHeight = 600; // Approximate container height
+    const scaleX = containerWidth / GREENHOUSE_WIDTH;
+    const scaleY = containerHeight / GREENHOUSE_HEIGHT;
+    const newScale = Math.min(scaleX, scaleY) * 0.9; // 90% to add some padding
+    
+    setScale(newScale);
     setPanOffset({ x: 0, y: 0 });
   };
 
@@ -125,6 +141,12 @@ export default function GreenhouseMap() {
       {/* Controls */}
       <div className="absolute top-4 right-4 z-10 flex space-x-2">
         <button
+          onClick={fitToView}
+          className="px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 text-sm"
+        >
+          🔍 Fit to View
+        </button>
+        <button
           onClick={resetView}
           className="px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 text-sm"
         >
@@ -148,19 +170,31 @@ export default function GreenhouseMap() {
         <svg
           width="100%"
           height="100%"
-          viewBox="0 0 1200 900"
+          viewBox={`0 0 ${GREENHOUSE_WIDTH} ${GREENHOUSE_HEIGHT}`}
           style={{
             transform: `scale(${scale}) translate(${panOffset.x / scale}px, ${panOffset.y / scale}px)`,
             transformOrigin: '0 0'
           }}
         >
-          {/* Background grid */}
+          {/* Background grid (1m x 1m) */}
           <defs>
-            <pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse">
-              <path d="M 50 0 L 0 0 0 50" fill="none" stroke="#E5E7EB" strokeWidth="1"/>
+            <pattern id="grid" width="1" height="1" patternUnits="userSpaceOnUse">
+              <path d="M 1 0 L 0 0 0 1" fill="none" stroke="#E5E7EB" strokeWidth="0.05"/>
             </pattern>
           </defs>
           <rect width="100%" height="100%" fill="url(#grid)" />
+
+          {/* Greenhouse outline */}
+          <rect
+            x="0"
+            y="0"
+            width={GREENHOUSE_WIDTH}
+            height={GREENHOUSE_HEIGHT}
+            fill="none"
+            stroke="#9CA3AF"
+            strokeWidth="0.1"
+            strokeDasharray="0.2,0.2"
+          />
 
           {/* Render components */}
           {layoutComponents.map((component) => (
@@ -318,7 +352,7 @@ export default function GreenhouseMap() {
       {/* Instructions */}
       <div className="absolute bottom-4 left-4 z-10 bg-white border border-gray-300 rounded-lg shadow-lg p-3 text-sm text-gray-600">
         <div className="flex items-center space-x-4">
-          <span>🖱️ Drag to pan • 🔍 Scroll to zoom • 👆 Click components for details</span>
+          <span>🖱️ Drag to pan • 🔍 Scroll to zoom • 👆 Click components for details • 📏 20m × 20m greenhouse</span>
         </div>
       </div>
     </div>
