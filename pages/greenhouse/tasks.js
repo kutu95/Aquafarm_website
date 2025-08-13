@@ -55,7 +55,7 @@ export default function Tasks() {
           task_schedules (*),
           task_sop_links (
             sop_id,
-            sops (id, title)
+            pages!task_sop_links_sop_id_fkey (id, title)
           )
         `)
         .eq('is_active', true)
@@ -73,8 +73,9 @@ export default function Tasks() {
   const fetchSOPs = async () => {
     try {
       const { data, error } = await supabase
-        .from('sops')
+        .from('pages')
         .select('id, title')
+        .eq('page_type', 'sop')
         .order('title');
 
       if (error) throw error;

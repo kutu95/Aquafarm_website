@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS task_schedules (
 CREATE TABLE IF NOT EXISTS task_sop_links (
     id SERIAL PRIMARY KEY,
     task_id INTEGER REFERENCES tasks(id) ON DELETE CASCADE,
-    sop_id INTEGER REFERENCES sops(id) ON DELETE CASCADE,
+    sop_id INTEGER REFERENCES pages(id) ON DELETE CASCADE, -- References pages table where page_type = 'sop'
     display_order INTEGER DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     UNIQUE(task_id, sop_id)
