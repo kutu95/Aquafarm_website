@@ -19,14 +19,19 @@ export default function Tasks() {
   }, [user, loading, router]);
 
   useEffect(() => {
+    console.log('👤 User context changed:', { user: !!user, loading, role });
     if (user) {
+      console.log('🚀 User authenticated, fetching tasks...');
       fetchTasks();
+    } else {
+      console.log('⏳ No user yet, waiting...');
     }
-  }, [user]);
+  }, [user, loading, role]);
 
   const fetchTasks = async () => {
     try {
       setDataLoading(true);
+      console.log('🔍 Fetching tasks...');
       
       // Check if tasks table exists first
       const { data: tableCheck, error: tableError } = await supabase
@@ -36,12 +41,17 @@ export default function Tasks() {
       
       if (tableError && tableError.code === '42P01') {
         // Table doesn't exist yet - show setup message
-        console.log('Tasks table not found - migration needed');
-        setTasks([]);
+        console.log('❌ Tasks table not found - migration needed');
+        setTasks(null);
         return;
       }
       
-      if (tableError) throw tableError;
+      if (tableError) {
+        console.error('❌ Table check error:', tableError);
+        throw tableError;
+      }
+      
+      console.log('✅ Table exists, fetching tasks...');
       
       // Table exists, fetch tasks
       const { data, error } = await supabase
@@ -50,10 +60,15 @@ export default function Tasks() {
         .eq('is_active', true)
         .order('title');
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Tasks fetch error:', error);
+        throw error;
+      }
+      
+      console.log('✅ Tasks fetched successfully:', data?.length || 0, 'tasks');
       setTasks(data || []);
     } catch (error) {
-      console.error('Error fetching tasks:', error);
+      console.error('❌ Error in fetchTasks:', error);
       setTasks([]);
     } finally {
       setDataLoading(false);
