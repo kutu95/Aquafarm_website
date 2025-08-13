@@ -165,24 +165,41 @@ export default function GreenhouseMap() {
           {/* Render components */}
           {layoutComponents.map((component) => (
             <g key={component.id}>
-              {/* Component shape */}
-              <rect
-                x={component.x_position}
-                y={component.y_position}
-                width={component.width}
-                height={component.height}
-                fill={component.color}
-                stroke={getStatusColor(component.status)}
-                strokeWidth="2"
-                rx="4"
-                ry="4"
-                style={{
-                  transform: `rotate(${component.rotation}deg)`,
-                  transformOrigin: `${component.x_position + component.width / 2}px ${component.y_position + component.height / 2}px`
-                }}
-                className="cursor-pointer hover:opacity-80 transition-opacity"
-                onClick={() => handleComponentClick(component)}
-              />
+              {/* Component shape - Fish tanks are circles, others are rectangles */}
+              {component.component_type === 'fishtank' ? (
+                <circle
+                  cx={component.x_position + component.width / 2}
+                  cy={component.y_position + component.height / 2}
+                  r={Math.min(component.width, component.height) / 2}
+                  fill={component.color}
+                  stroke={getStatusColor(component.status)}
+                  strokeWidth="2"
+                  style={{
+                    transform: `rotate(${component.rotation}deg)`,
+                    transformOrigin: `${component.x_position + component.width / 2}px ${component.y_position + component.height / 2}px`
+                  }}
+                  className="cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={() => handleComponentClick(component)}
+                />
+              ) : (
+                <rect
+                  x={component.x_position}
+                  y={component.y_position}
+                  width={component.width}
+                  height={component.height}
+                  fill={component.color}
+                  stroke={getStatusColor(component.status)}
+                  strokeWidth="2"
+                  rx="4"
+                  ry="4"
+                  style={{
+                    transform: `rotate(${component.rotation}deg)`,
+                    transformOrigin: `${component.x_position + component.width / 2}px ${component.y_position + component.height / 2}px`
+                  }}
+                  className="cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={() => handleComponentClick(component)}
+                />
+              )}
               
               {/* Component icon */}
               <text
@@ -274,7 +291,10 @@ export default function GreenhouseMap() {
             <div className="flex justify-between">
               <span className="text-gray-600">Size:</span>
               <span className="font-medium">
-                {selectedComponent.width} × {selectedComponent.height}
+                {selectedComponent.component_type === 'fishtank' 
+                  ? `${(selectedComponent.width).toFixed(1)}m diameter`
+                  : `${(selectedComponent.width).toFixed(1)}m × ${(selectedComponent.height).toFixed(1)}m`
+                }
               </span>
             </div>
             

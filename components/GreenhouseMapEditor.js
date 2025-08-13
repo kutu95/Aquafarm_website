@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabaseClient';
 
 export default function GreenhouseMapEditor({ onSave, onCancel }) {
   const [layoutComponents, setLayoutComponents] = useState([]);
+  const [existingGrowbeds, setExistingGrowbeds] = useState([]);
   const [selectedComponent, setSelectedComponent] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editingComponent, setEditingComponent] = useState(null);
@@ -10,10 +11,11 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
   const [newComponent, setNewComponent] = useState({
     name: '',
     component_type: 'growbed',
+    growbed_id: null,
     x_position: 0,
     y_position: 0,
-    width: 100,
-    height: 100,
+    width: 1,
+    height: 1,
     color: '#4CAF50',
     status: 'active',
     metadata: {}
@@ -24,7 +26,22 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
 
   useEffect(() => {
     fetchLayoutData();
+    fetchExistingGrowbeds();
   }, []);
+
+  const fetchExistingGrowbeds = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('growbeds')
+        .select('id, name, type, status')
+        .order('name');
+
+      if (error) throw error;
+      setExistingGrowbeds(data || []);
+    } catch (err) {
+      console.error('Error fetching existing growbeds:', err);
+    }
+  };
 
   const fetchLayoutData = async () => {
     try {
@@ -182,6 +199,32 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
     }
   };
 
+  const getGrowbedColor = (type) => {
+    switch (type) {
+      case 'DWC': return '#2196F3'; // Blue
+      case 'Media bed': return '#9E9E9E'; // Grey
+      case 'Wicking bed': return '#4CAF50'; // Green
+      default: return '#4CAF50'; // Default green
+    }
+  };
+
+  const handleGrowbedSelection = (growbedId) => {
+    const selectedGrowbed = existingGrowbeds.find(g => g.id === growbedId);
+    if (selectedGrowbed) {
+      setNewComponent(prev => ({
+        ...prev,
+        growbed_id: growbedId,
+        name: selectedGrowbed.name,
+        color: getGrowbedColor(selectedGrowbed.type),
+        metadata: { 
+          ...prev.metadata, 
+          growbed_type: selectedGrowbed.type,
+          growbed_id: selectedGrowbed.id
+        }
+      }));
+    }
+  };
+
   const componentTypes = [
     { value: 'growbed', label: 'Growbed', color: '#4CAF50' },
     { value: 'fishtank', label: 'Fish Tank', color: '#2196F3' },
@@ -238,20 +281,35 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
           {/* Render components */}
           {layoutComponents.map((component) => (
             <g key={component.id}>
-              <rect
-                x={component.x_position}
-                y={component.y_position}
-                width={component.width}
-                height={component.height}
-                fill={component.color}
-                stroke={getStatusColor(component.status)}
-                strokeWidth="2"
-                rx="4"
-                ry="4"
-                className="cursor-pointer hover:opacity-80 transition-opacity"
-                onMouseDown={(e) => handleMouseDown(e, component)}
-                onClick={() => handleComponentClick(component)}
-              />
+              {/* Component shape - Fish tanks are circles, others are rectangles */}
+              {component.component_type === 'fishtank' ? (
+                <circle
+                  cx={component.x_position + component.width / 2}
+                  cy={component.y_position + component.height / 2}
+                  r={Math.min(component.width, component.height) / 2}
+                  fill={component.color}
+                  stroke={getStatusColor(component.status)}
+                  strokeWidth="2"
+                  className="cursor-pointer hover:opacity-80 transition-opacity"
+                  onMouseDown={(e) => handleMouseDown(e, component)}
+                  onClick={() => handleComponentClick(component)}
+                />
+              ) : (
+                <rect
+                  x={component.x_position}
+                  y={component.y_position}
+                  width={component.width}
+                  height={component.height}
+                  fill={component.color}
+                  stroke={getStatusColor(component.status)}
+                  strokeWidth="2"
+                  rx="4"
+                  ry="4"
+                  className="cursor-pointer hover:opacity-80 transition-opacity"
+                  onMouseDown={(e) => handleMouseDown(e, component)}
+                  onClick={() => handleComponentClick(component)}
+                />
+              )}
               
               {/* Component icon */}
               <text
@@ -355,7 +413,10 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
             <div className="flex justify-between">
               <span className="text-gray-600">Size:</span>
               <span className="font-medium">
-                {Math.round(selectedComponent.width)} × {Math.round(selectedComponent.height)}
+                {selectedComponent.component_type === 'fishtank' 
+                  ? `${(selectedComponent.width).toFixed(1)}m diameter`
+                  : `${(selectedComponent.width).toFixed(1)}m × ${(selectedComponent.height).toFixed(1)}m`
+                }
               </span>
             </div>
           </div>
@@ -433,20 +494,22 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Width</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Length (m)</label>
                 <input
                   type="number"
+                  step="0.1"
                   value={editingComponent.width}
-                  onChange={(e) => setEditingComponent(prev => ({ ...prev, width: parseFloat(e.target.value) || 100 }))}
+                  onChange={(e) => setEditingComponent(prev => ({ ...prev, width: parseFloat(e.target.value) || 1 }))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Height</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Width (m)</label>
                 <input
                   type="number"
+                  step="0.1"
                   value={editingComponent.height}
-                  onChange={(e) => setEditingComponent(prev => ({ ...prev, height: parseFloat(e.target.value) || 100 }))}
+                  onChange={(e) => setEditingComponent(prev => ({ ...prev, height: parseFloat(e.target.value) || 1 }))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -518,7 +581,9 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
                 onChange={(e) => setNewComponent(prev => ({ 
                   ...prev, 
                   component_type: e.target.value,
-                  color: componentTypes.find(t => t.value === e.target.value)?.color || '#4CAF50'
+                  color: componentTypes.find(t => t.value === e.target.value)?.color || '#4CAF50',
+                  growbed_id: null,
+                  name: ''
                 }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
@@ -528,7 +593,29 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
               </select>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            {/* Growbed selection - only show if growbed type is selected */}
+            {newComponent.component_type === 'growbed' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Select Existing Growbed</label>
+                <select
+                  value={newComponent.growbed_id || ''}
+                  onChange={(e) => handleGrowbedSelection(parseInt(e.target.value))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Choose a growbed...</option>
+                  {existingGrowbeds.map(growbed => (
+                    <option key={growbed.id} value={growbed.id}>
+                      {growbed.name} ({growbed.type})
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  A growbed can only exist once on the map
+                </p>
+              </div>
+            )}
+
+                        <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">X Position</label>
                 <input
@@ -551,23 +638,25 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Width</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Length (m)</label>
                 <input
                   type="number"
+                  step="0.1"
                   value={newComponent.width}
-                  onChange={(e) => setNewComponent(prev => ({ ...prev, width: parseFloat(e.target.value) || 100 }))}
+                  onChange={(e) => setNewComponent(prev => ({ ...prev, width: parseFloat(e.target.value) || 1 }))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
-                             <div>
-                 <label className="block text-sm font-medium text-gray-700 mb-1">Height</label>
-                 <input
-                   type="number"
-                   value={newComponent.height}
-                   onChange={(e) => setNewComponent(prev => ({ ...prev, height: parseFloat(e.target.value) || 100 }))}
-                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                 />
-               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Width (m)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={newComponent.height}
+                  onChange={(e) => setNewComponent(prev => ({ ...prev, height: parseFloat(e.target.value) || 1 }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
             </div>
 
             <div>
