@@ -73,7 +73,6 @@ export default function Crops() {
     crop_type_id: '',
     seeds_per_pot: '',
     time_to_harvest: '',
-    status: 'active',
     pelleted: false,
     plant_jan: false,
     plant_feb: false,
@@ -242,7 +241,6 @@ export default function Crops() {
       crop_type_id: crop.crop_type_id.toString(),
       seeds_per_pot: crop.seeds_per_pot.toString(),
       time_to_harvest: crop.time_to_harvest.toString(),
-      status: crop.status,
       pelleted: crop.pelleted,
       plant_jan: crop.plant_jan,
       plant_feb: crop.plant_feb,
@@ -300,7 +298,6 @@ export default function Crops() {
       crop_type_id: '',
       seeds_per_pot: '',
       time_to_harvest: '',
-      status: 'active',
       pelleted: false,
       plant_jan: false,
       plant_feb: false,
@@ -562,19 +559,7 @@ export default function Crops() {
                       min="1"
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Status
-                    </label>
-                    <select
-                      value={formData.status}
-                      onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="active">Active</option>
-                      <option value="inactive">Inactive</option>
-                    </select>
-                  </div>
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Pelleted Seeds
@@ -603,6 +588,39 @@ export default function Crops() {
                   <label className="block text-sm font-medium text-gray-700 mb-3">
                     {t('crops.plantingMonths', currentLanguage) || 'Planting Months'}
                   </label>
+                  
+                  {/* Select All / Deselect All Buttons */}
+                  <div className="flex space-x-2 mb-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormData(prev => ({
+                          ...prev,
+                          plant_jan: true, plant_feb: true, plant_mar: true, plant_apr: true,
+                          plant_may: true, plant_jun: true, plant_jul: true, plant_aug: true,
+                          plant_sep: true, plant_oct: true, plant_nov: true, plant_dec: true
+                        }));
+                      }}
+                      className="px-3 py-1 text-xs font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                    >
+                      Select All Months
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormData(prev => ({
+                          ...prev,
+                          plant_jan: false, plant_feb: false, plant_mar: false, plant_apr: false,
+                          plant_may: false, plant_jun: false, plant_jul: false, plant_aug: false,
+                          plant_sep: false, plant_oct: false, plant_nov: false, plant_dec: false
+                        }));
+                      }}
+                      className="px-3 py-1 text-xs font-medium text-white bg-gray-600 border border-transparent rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                    >
+                      Deselect All Months
+                    </button>
+                  </div>
+                  
                   <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
                     <div className="flex items-center">
                       <input
@@ -905,9 +923,7 @@ export default function Crops() {
                       <th className="px-1 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                         D
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {t('common.status', currentLanguage)}
-                      </th>
+
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         {t('common.actions', currentLanguage)}
                       </th>
@@ -990,13 +1006,7 @@ export default function Crops() {
                          <td className="px-1 py-4 whitespace-nowrap text-center">
                            <div className={`w-6 h-6 mx-auto rounded ${crop.plant_dec ? 'bg-green-500' : 'bg-gray-200'}`}></div>
                          </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                            crop.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                          }`}>
-                            {crop.status}
-                          </span>
-                        </td>
+
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           {role === 'admin' ? (
                             <>
@@ -1138,16 +1148,7 @@ export default function Crops() {
                       </div>
                     </div>
 
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-700 mb-1">
-                        {t('common.status', currentLanguage)}
-                      </h4>
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        selectedCropForModal.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                      }`}>
-                        {selectedCropForModal.status}
-                      </span>
-                    </div>
+
 
                     <div>
                       <h4 className="text-sm font-medium text-gray-700 mb-1">
