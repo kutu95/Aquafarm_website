@@ -242,6 +242,115 @@ export default function Tasks() {
     );
   };
 
+  const renderListView = () => {
+    return (
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Task List View</h2>
+        
+        <div className="space-y-3">
+          {tasks.map(task => {
+            const schedule = task.task_schedules?.[0];
+            let scheduleText = 'No schedule';
+            
+            if (schedule) {
+              switch (schedule.schedule_type) {
+                case 'daily':
+                  scheduleText = 'Daily';
+                  break;
+                case 'weekly':
+                  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                  scheduleText = `Every ${days[schedule.day_of_week]}`;
+                  break;
+                case 'monthly':
+                  scheduleText = `Monthly on day ${schedule.day_of_month}`;
+                  break;
+                case 'yearly':
+                  const months = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+                  scheduleText = `Yearly in ${months[schedule.month_of_year]}`;
+                  break;
+                case 'one_off':
+                  scheduleText = `One-off on ${schedule.specific_date}`;
+                  break;
+                case 'seasonal':
+                  scheduleText = `Seasonal (${schedule.season_start_month}-${schedule.season_end_month})`;
+                  break;
+                default:
+                  scheduleText = 'Custom schedule';
+              }
+            }
+            
+            return (
+              <div
+                key={task.id}
+                className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 cursor-pointer"
+                onClick={() => handleTaskClick(task)}
+              >
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-3">
+                      <h3 className="text-lg font-medium text-gray-900">{task.title}</h3>
+                      <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${
+                        task.priority === 'critical' ? 'bg-red-100 text-red-800' :
+                        task.priority === 'high' ? 'bg-orange-100 text-orange-800' :
+                        task.priority === 'medium' ? 'bg-blue-100 text-blue-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {task.priority}
+                      </span>
+                    </div>
+                    <p className="text-gray-600 mt-1">{task.description}</p>
+                    <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500">
+                      <span>📅 {scheduleText}</span>
+                      <span>⏱️ {task.estimated_duration_minutes} min</span>
+                      {task.task_schedules?.[0]?.start_time && (
+                        <span>🕐 {task.task_schedules[0].start_time}</span>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {role === 'admin' && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingTask(task);
+                        setFormData({
+                          title: task.title,
+                          description: task.description,
+                          task_type: task.task_type,
+                          priority: task.priority,
+                          estimated_duration_minutes: task.estimated_duration_minutes,
+                          schedule_type: task.task_schedules?.[0]?.schedule_type || 'weekly',
+                          day_of_week: task.task_schedules?.[0]?.day_of_week || 1,
+                          day_of_month: task.task_schedules?.[0]?.day_of_month || 1,
+                          month_of_year: task.task_schedules?.[0]?.month_of_year || 1,
+                          week_of_month: task.task_schedules?.[0]?.week_of_month || 1,
+                          specific_date: task.task_schedules?.[0]?.specific_date || '',
+                          season_start_month: task.task_schedules?.[0]?.season_start_month || 1,
+                          season_end_month: task.task_schedules?.[0]?.season_end_month || 12,
+                          start_time: task.task_schedules?.[0]?.start_time || '09:00',
+                          end_time: task.task_schedules?.[0]?.end_time || '17:00',
+                          repeat_every: task.task_schedules?.[0]?.repeat_every || 1,
+                          max_occurrences: task.task_schedules?.[0]?.max_occurrences || '',
+                          start_date: task.task_schedules?.[0]?.start_date || new Date().toISOString().split('T')[0],
+                          end_date: task.task_schedules?.[0]?.end_date || '',
+                          selected_sops: []
+                        });
+                        setShowForm(true);
+                      }}
+                      className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors duration-200"
+                    >
+                      Edit
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <Layout>
@@ -272,8 +381,8 @@ export default function Tasks() {
             <p className="text-gray-600">Manage recurring tasks, schedules, and link to SOPs</p>
           </div>
 
-          {/* View Toggle */}
-          <div className="mb-6">
+          {/* View Toggle and Add Task Button */}
+          <div className="mb-6 flex justify-between items-center">
             <div className="flex space-x-2">
               <button
                 onClick={() => setViewMode('calendar')}
@@ -296,6 +405,40 @@ export default function Tasks() {
                 List View
               </button>
             </div>
+            
+            {role === 'admin' && (
+              <button
+                onClick={() => {
+                  setEditingTask(null);
+                  setFormData({
+                    title: '',
+                    description: '',
+                    task_type: 'recurring',
+                    priority: 'medium',
+                    estimated_duration_minutes: 60,
+                    schedule_type: 'weekly',
+                    day_of_week: 1,
+                    day_of_month: 1,
+                    month_of_year: 1,
+                    week_of_month: 1,
+                    specific_date: '',
+                    season_start_month: 1,
+                    season_end_month: 12,
+                    start_time: '09:00',
+                    end_time: '17:00',
+                    repeat_every: 1,
+                    max_occurrences: '',
+                    start_date: new Date().toISOString().split('T')[0],
+                    end_date: '',
+                    selected_sops: []
+                  });
+                  setShowForm(true);
+                }}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200"
+              >
+                + Add Task
+              </button>
+            )}
           </div>
 
           {/* Content */}
@@ -335,20 +478,373 @@ export default function Tasks() {
               </div>
             </div>
           ) : (
-            viewMode === 'calendar' ? renderCalendar() : (
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Task List View</h2>
-                <p className="text-gray-600">List view coming soon...</p>
-                <div className="mt-4">
-                  <p className="text-sm text-gray-500">
-                    Found {tasks.length} active tasks in the system.
-                  </p>
-                </div>
-              </div>
-            )
+            viewMode === 'calendar' ? renderCalendar() : renderListView()
           )}
         </div>
       </div>
+
+      {/* Task Form Modal */}
+      {showForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">
+                {editingTask ? 'Edit Task' : 'Add New Task'}
+              </h2>
+              <button
+                onClick={() => setShowForm(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Task Title *
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.title}
+                    onChange={(e) => setFormData({...formData, title: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Priority
+                  </label>
+                  <select
+                    value={formData.priority}
+                    onChange={(e) => setFormData({...formData, priority: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                    <option value="critical">Critical</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Description
+                </label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({...formData, description: e.target.value})}
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Task Type
+                  </label>
+                  <select
+                    value={formData.task_type}
+                    onChange={(e) => setFormData({...formData, task_type: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="recurring">Recurring</option>
+                    <option value="one_off">One-off</option>
+                    <option value="seasonal">Seasonal</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Schedule Type
+                  </label>
+                  <select
+                    value={formData.schedule_type}
+                    onChange={(e) => setFormData({...formData, schedule_type: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                    <option value="yearly">Yearly</option>
+                    <option value="one_off">One-off</option>
+                    <option value="seasonal">Seasonal</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Duration (minutes)
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.estimated_duration_minutes}
+                    onChange={(e) => setFormData({...formData, estimated_duration_minutes: parseInt(e.target.value) || 0})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    min="1"
+                  />
+                </div>
+              </div>
+              
+              {/* Schedule-specific fields */}
+              {formData.schedule_type === 'weekly' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Day of Week
+                  </label>
+                  <select
+                    value={formData.day_of_week}
+                    onChange={(e) => setFormData({...formData, day_of_week: parseInt(e.target.value)})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value={0}>Sunday</option>
+                    <option value={1}>Monday</option>
+                    <option value={2}>Tuesday</option>
+                    <option value={3}>Wednesday</option>
+                    <option value={4}>Thursday</option>
+                    <option value={5}>Friday</option>
+                    <option value={6}>Saturday</option>
+                  </select>
+                </div>
+              )}
+              
+              {formData.schedule_type === 'monthly' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Day of Month
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.day_of_month}
+                    onChange={(e) => setFormData({...formData, day_of_month: parseInt(e.target.value)})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    min="1"
+                    max="31"
+                  />
+                </div>
+              )}
+              
+              {formData.schedule_type === 'yearly' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Month of Year
+                  </label>
+                  <select
+                    value={formData.month_of_year}
+                    onChange={(e) => setFormData({...formData, month_of_year: parseInt(e.target.value)})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value={1}>January</option>
+                    <option value={2}>February</option>
+                    <option value={3}>March</option>
+                    <option value={4}>April</option>
+                    <option value={5}>May</option>
+                    <option value={6}>June</option>
+                    <option value={7}>July</option>
+                    <option value={8}>August</option>
+                    <option value={9}>September</option>
+                    <option value={10}>October</option>
+                    <option value={11}>November</option>
+                    <option value={12}>December</option>
+                  </select>
+                </div>
+              )}
+              
+              {formData.schedule_type === 'one_off' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Specific Date
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.specific_date}
+                    onChange={(e) => setFormData({...formData, specific_date: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              )}
+              
+              {formData.schedule_type === 'seasonal' && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Season Start Month
+                    </label>
+                    <select
+                      value={formData.season_start_month}
+                      onChange={(e) => setFormData({...formData, season_start_month: parseInt(e.target.value)})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value={1}>January</option>
+                      <option value={2}>February</option>
+                      <option value={3}>March</option>
+                      <option value={4}>April</option>
+                      <option value={5}>May</option>
+                      <option value={6}>June</option>
+                      <option value={7}>July</option>
+                      <option value={8}>August</option>
+                      <option value={9}>September</option>
+                      <option value={10}>October</option>
+                      <option value={11}>November</option>
+                      <option value={12}>December</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Season End Month
+                    </label>
+                    <select
+                      value={formData.season_end_month}
+                      onChange={(e) => setFormData({...formData, season_end_month: parseInt(e.target.value)})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value={1}>January</option>
+                      <option value={2}>February</option>
+                      <option value={3}>March</option>
+                      <option value={4}>April</option>
+                      <option value={5}>May</option>
+                      <option value={6}>June</option>
+                      <option value={7}>July</option>
+                      <option value={8}>August</option>
+                      <option value={9}>September</option>
+                      <option value={10}>October</option>
+                      <option value={11}>November</option>
+                      <option value={12}>December</option>
+                    </select>
+                  </div>
+                </div>
+              )}
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Start Date
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.start_date}
+                    onChange={(e) => setFormData({...formData, start_date: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    End Date (optional)
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.end_date}
+                    onChange={(e) => setFormData({...formData, end_date: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+              
+              <div className="flex justify-end space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowForm(false)}
+                  className="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors duration-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                >
+                  {editingTask ? 'Update Task' : 'Create Task'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Task Detail Modal */}
+      {showTaskModal && selectedTask && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">{selectedTask.title}</h2>
+              <button
+                onClick={() => setShowTaskModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <p className="text-gray-900">{selectedTask.description}</p>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                  <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${
+                    selectedTask.priority === 'critical' ? 'bg-red-100 text-red-800' :
+                    selectedTask.priority === 'high' ? 'bg-orange-100 text-orange-800' :
+                    selectedTask.priority === 'medium' ? 'bg-blue-100 text-blue-800' :
+                    'bg-gray-100 text-gray-800'
+                  }`}>
+                    {selectedTask.priority}
+                  </span>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Duration</label>
+                  <p className="text-gray-900">{selectedTask.estimated_duration_minutes} minutes</p>
+                </div>
+              </div>
+              
+              {role === 'admin' && (
+                <div className="pt-4 border-t">
+                  <button
+                    onClick={() => {
+                      setEditingTask(selectedTask);
+                      setFormData({
+                        title: selectedTask.title,
+                        description: selectedTask.description,
+                        task_type: selectedTask.task_type,
+                        priority: selectedTask.priority,
+                        estimated_duration_minutes: selectedTask.estimated_duration_minutes,
+                        schedule_type: selectedTask.task_schedules?.[0]?.schedule_type || 'weekly',
+                        day_of_week: selectedTask.task_schedules?.[0]?.day_of_week || 1,
+                        day_of_month: selectedTask.task_schedules?.[0]?.day_of_month || 1,
+                        month_of_year: selectedTask.task_schedules?.[0]?.month_of_year || 1,
+                        week_of_month: selectedTask.task_schedules?.[0]?.week_of_month || 1,
+                        specific_date: selectedTask.task_schedules?.[0]?.specific_date || '',
+                        season_start_month: selectedTask.task_schedules?.[0]?.season_start_month || 1,
+                        season_end_month: selectedTask.task_schedules?.[0]?.season_end_month || 12,
+                        start_time: selectedTask.task_schedules?.[0]?.start_time || '09:00',
+                        end_time: selectedTask.task_schedules?.[0]?.end_time || '17:00',
+                        repeat_every: selectedTask.task_schedules?.[0]?.repeat_every || 1,
+                        max_occurrences: selectedTask.task_schedules?.[0]?.max_occurrences || '',
+                        start_date: selectedTask.task_schedules?.[0]?.start_date || new Date().toISOString().split('T')[0],
+                        end_date: selectedTask.task_schedules?.[0]?.end_date || '',
+                        selected_sops: []
+                      });
+                      setShowTaskModal(false);
+                      setShowForm(true);
+                    }}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                  >
+                    Edit Task
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 }
