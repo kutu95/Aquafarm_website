@@ -626,7 +626,7 @@ export default function Growbeds() {
                             
                             {/* Tooltip for Media bed */}
                             {growbed.type === 'Media bed' && (
-                              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10 w-80">
+                              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 w-80">
                                 <div className="text-center">
                                   <div className="font-semibold mb-1">Media bed</div>
                                   <div className="text-gray-200 leading-relaxed text-left whitespace-normal break-words">
@@ -640,7 +640,7 @@ export default function Growbeds() {
                             
                             {/* Tooltip for DWC */}
                             {growbed.type === 'DWC' && (
-                              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10 w-80">
+                              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 w-80">
                                 <div className="text-center">
                                   <div className="font-semibold mb-1">DWC</div>
                                   <div className="text-gray-200 leading-relaxed text-left whitespace-normal break-words">
