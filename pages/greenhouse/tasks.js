@@ -40,6 +40,10 @@ export default function Tasks() {
     selected_sops: []
   });
 
+  const [availableSops, setAvailableSops] = useState([]);
+  const [sopSearchTerm, setSopSearchTerm] = useState('');
+  const [showSopSelector, setShowSopSelector] = useState(false);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -181,6 +185,34 @@ export default function Tasks() {
         console.log('✅ Task created successfully');
       }
 
+      // Handle SOP links for both create and update
+      const taskId = editingTask ? editingTask.id : newTask.id;
+      
+      if (formData.selected_sops.length > 0) {
+        // First, remove existing SOP links
+        if (editingTask) {
+          await supabase
+            .from('task_sop_links')
+            .delete()
+            .eq('task_id', taskId);
+        }
+
+        // Create new SOP links
+        const sopLinks = formData.selected_sops.map((sopId, index) => ({
+          task_id: taskId,
+          sop_id: sopId,
+          display_order: index
+        }));
+
+        const { error: sopLinksError } = await supabase
+          .from('task_sop_links')
+          .insert(sopLinks);
+
+        if (sopLinksError) {
+          console.error('❌ Error creating SOP links:', sopLinksError);
+        }
+      }
+
       // Refresh tasks and close form
       await fetchTasks();
       setShowForm(false);
@@ -224,6 +256,7 @@ export default function Tasks() {
     if (user) {
       console.log('🚀 User authenticated, fetching tasks...');
       fetchTasks();
+      fetchAvailableSops();
     } else {
       console.log('⏳ No user yet, waiting...');
     }
@@ -254,12 +287,22 @@ export default function Tasks() {
       
       console.log('✅ Table exists, fetching tasks...');
       
-      // Table exists, fetch tasks with schedules
+      // Table exists, fetch tasks with schedules and SOPs
       const { data, error } = await supabase
         .from('tasks')
         .select(`
           *,
-          task_schedules (*)
+          task_schedules (*),
+          task_sop_links (
+            sop_id,
+            display_order,
+            pages (
+              id,
+              title,
+              slug,
+              page_type
+            )
+          )
         `)
         .eq('is_active', true)
         .order('title');
@@ -276,6 +319,26 @@ export default function Tasks() {
       setTasks([]);
     } finally {
       setDataLoading(false);
+    }
+  };
+
+  const fetchAvailableSops = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('pages')
+        .select('id, title, slug, page_type')
+        .eq('page_type', 'sop')
+        .eq('is_active', true)
+        .order('title');
+
+      if (error) {
+        console.error('❌ Error fetching SOPs:', error);
+        return;
+      }
+
+      setAvailableSops(data || []);
+    } catch (error) {
+      console.error('❌ Error in fetchAvailableSops:', error);
     }
   };
 
@@ -938,6 +1001,49 @@ export default function Tasks() {
                 </div>
               </div>
               
+              {/* SOP Links Section */}
+              <div className="border-t pt-4">
+                <h3 className="text-lg font-medium text-gray-900 mb-3">Related SOPs</h3>
+                
+                <div className="space-y-3">
+                  {/* Selected SOPs */}
+                  {formData.selected_sops.length > 0 && (
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700">Selected SOPs:</label>
+                      <div className="space-y-2">
+                        {formData.selected_sops.map((sopId, index) => {
+                          const sop = availableSops.find(s => s.id === sopId);
+                          return sop ? (
+                            <div key={sopId} className="flex items-center justify-between bg-blue-50 p-2 rounded">
+                              <span className="text-sm text-blue-800">{sop.title}</span>
+                              <button
+                                type="button"
+                                onClick={() => setFormData({
+                                  ...formData,
+                                  selected_sops: formData.selected_sops.filter(id => id !== sopId)
+                                })}
+                                className="text-red-600 hover:text-red-800 text-sm"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          ) : null;
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Add SOP Button */}
+                  <button
+                    type="button"
+                    onClick={() => setShowSopSelector(true)}
+                    className="px-3 py-2 text-sm bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors duration-200"
+                  >
+                    + Add SOP Link
+                  </button>
+                </div>
+              </div>
+
               <div className="flex justify-end space-x-3 pt-4">
                 <button
                   type="button"
@@ -996,6 +1102,38 @@ export default function Tasks() {
                   <p className="text-gray-900">{selectedTask.estimated_duration_minutes} minutes</p>
                 </div>
               </div>
+
+              {/* Related SOPs Section */}
+              {selectedTask.task_sop_links && selectedTask.task_sop_links.length > 0 && (
+                <div className="border-t pt-4">
+                  <h3 className="text-lg font-medium text-gray-900 mb-3">Related SOPs</h3>
+                  <div className="space-y-2">
+                    {selectedTask.task_sop_links
+                      .sort((a, b) => a.display_order - b.display_order)
+                      .map((link) => {
+                        const sop = link.pages;
+                        if (!sop) return null;
+                        
+                        return (
+                          <div key={link.sop_id} className="flex items-center justify-between bg-blue-50 p-3 rounded">
+                            <div className="flex-1">
+                              <h4 className="font-medium text-blue-900">{sop.title}</h4>
+                              <p className="text-sm text-blue-700">SOP Document</p>
+                            </div>
+                            <a
+                              href={`/sops/${sop.slug}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors duration-200"
+                            >
+                              Open SOP ↗
+                            </a>
+                          </div>
+                        );
+                      })}
+                  </div>
+                </div>
+              )}
               
               {role === 'admin' && (
                 <div className="pt-4 border-t">
@@ -1022,7 +1160,7 @@ export default function Tasks() {
                         max_occurrences: selectedTask.task_schedules?.[0]?.max_occurrences || '',
                         start_date: selectedTask.task_schedules?.[0]?.start_date || new Date().toISOString().split('T')[0],
                         end_date: selectedTask.task_schedules?.[0]?.end_date || '',
-                        selected_sops: []
+                        selected_sops: selectedTask.task_sop_links?.map(link => link.sop_id) || []
                       });
                       setShowTaskModal(false);
                       setShowForm(true);
@@ -1033,6 +1171,83 @@ export default function Tasks() {
                   </button>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SOP Selector Modal */}
+      {showSopSelector && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">Select SOPs to Link</h2>
+              <button
+                onClick={() => setShowSopSelector(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Search */}
+            <div className="mb-4">
+              <input
+                type="text"
+                placeholder="Search SOPs..."
+                value={sopSearchTerm}
+                onChange={(e) => setSopSearchTerm(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            {/* SOP List */}
+            <div className="space-y-2 max-h-96 overflow-y-auto">
+              {availableSops
+                .filter(sop => sop.title.toLowerCase().includes(sopSearchTerm.toLowerCase()))
+                .map(sop => (
+                  <div
+                    key={sop.id}
+                    className={`p-3 border rounded-lg cursor-pointer transition-colors duration-200 ${
+                      formData.selected_sops.includes(sop.id)
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                    onClick={() => {
+                      if (formData.selected_sops.includes(sop.id)) {
+                        setFormData({
+                          ...formData,
+                          selected_sops: formData.selected_sops.filter(id => id !== sop.id)
+                        });
+                      } else {
+                        setFormData({
+                          ...formData,
+                          selected_sops: [...formData.selected_sops, sop.id]
+                        });
+                      }
+                    }}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="font-medium text-gray-900">{sop.title}</h3>
+                        <p className="text-sm text-gray-500">/{sop.slug}</p>
+                      </div>
+                      <div className="text-blue-600">
+                        {formData.selected_sops.includes(sop.id) ? '✓' : '+'}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+            </div>
+
+            <div className="flex justify-end space-x-3 pt-4 border-t">
+              <button
+                type="button"
+                onClick={() => setShowSopSelector(false)}
+                className="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors duration-200"
+              >
+                Done
+              </button>
             </div>
           </div>
         </div>
