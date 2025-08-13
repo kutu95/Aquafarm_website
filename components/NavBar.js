@@ -4,9 +4,12 @@ import { supabase } from '@/lib/supabaseClient';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import DarkModeToggle from './DarkModeToggle';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { t } from '@/locales/translations';
 
 export default function NavBar() {
   const { user, role, setUser, setRole, loading } = useContext(AuthContext);
+  const { currentLanguage, changeLanguage, isEnglish, isGerman } = useLanguage();
   const [menuPages, setMenuPages] = useState([]);
   const [productPages, setProductPages] = useState([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -241,6 +244,19 @@ export default function NavBar() {
               }
             })()}
             <DarkModeToggle />
+            
+            {/* Language Selector */}
+            <div className="relative">
+              <select
+                value={currentLanguage}
+                onChange={(e) => changeLanguage(e.target.value)}
+                className="px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white bg-transparent border border-gray-600 cursor-pointer"
+              >
+                <option value="en">🇺🇸 EN</option>
+                <option value="de">🇩🇪 DE</option>
+              </select>
+            </div>
+            
             {/* Greenhouse Mode Toggle - Available to all logged-in users */}
             {!loading && user && (
               <button
@@ -549,7 +565,23 @@ export default function NavBar() {
             });
           }
         })()}
-          {user ? (
+        
+        {/* Language Selector - Mobile */}
+        <div className="border-t border-gray-700 pt-2">
+          <div className="px-3 py-2 text-sm font-medium text-gray-400">
+            Language / Sprache
+          </div>
+          <select
+            value={currentLanguage}
+            onChange={(e) => changeLanguage(e.target.value)}
+            className="mx-3 mb-2 px-3 py-2 rounded-md text-sm font-medium text-gray-300 bg-gray-800 border border-gray-600 cursor-pointer w-full"
+          >
+            <option value="en">🇺🇸 English</option>
+            <option value="de">🇩🇪 Deutsch</option>
+          </select>
+        </div>
+        
+        {user ? (
             <>
               <button
                 onClick={() => {

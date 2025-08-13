@@ -1,9 +1,11 @@
-import { useContext, useEffect, useState } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { useRouter } from 'next/router';
 import { AuthContext } from '../_app';
 import Layout from '@/components/Layout';
 import { supabase } from '@/lib/supabaseClient';
 import Link from 'next/link';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { t } from '@/locales/translations';
 
 // Component to handle image display with data URL fetching
 function CropImageDisplay({ cropId, cropName, hasImageData }) {
@@ -59,6 +61,7 @@ function CropImageDisplay({ cropId, cropName, hasImageData }) {
 
 export default function Crops() {
   const { user, role, loading } = useContext(AuthContext);
+  const { currentLanguage } = useLanguage();
   const router = useRouter();
   const [crops, setCrops] = useState([]);
   const [cropTypes, setCropTypes] = useState([]);
@@ -71,12 +74,21 @@ export default function Crops() {
     seeds_per_pot: '',
     time_to_harvest: '',
     status: 'active',
+    pelleted: false,
     notes: ''
   });
 
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
+
+  const handleInputChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
 
   useEffect(() => {
     if (!loading && !user) {
@@ -90,6 +102,16 @@ export default function Crops() {
       fetchCrops();
     }
   }, [user]);
+
+  // Cleanup effect for object URLs
+  useEffect(() => {
+    return () => {
+      // Clean up any created object URLs when component unmounts
+      if (imagePreview && imagePreview.startsWith('blob:')) {
+        URL.revokeObjectURL(imagePreview);
+      }
+    };
+  }, [imagePreview]);
 
   const fetchCropTypes = async () => {
     try {
@@ -126,7 +148,7 @@ export default function Crops() {
       setCrops(data || []);
     } catch (error) {
       console.error('Error fetching crops:', error);
-      alert('Error fetching crops');
+      alert(t('crops.errorFetchingCrops', currentLanguage));
     } finally {
       setDataLoading(false);
     }
@@ -135,12 +157,20 @@ export default function Crops() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    console.log('Form submitted:', {
+      editingCrop: editingCrop,
+      hasSelectedImage: !!selectedImage,
+      selectedImageSize: selectedImage ? selectedImage.size : 'N/A',
+      selectedImageSizeMB: selectedImage ? (selectedImage.size / (1024 * 1024)).toFixed(2) : 'N/A'
+    });
+    
     try {
       const cropData = {
         ...formData,
         seeds_per_pot: parseInt(formData.seeds_per_pot),
         time_to_harvest: parseInt(formData.time_to_harvest),
-        crop_type_id: parseInt(formData.crop_type_id)
+        crop_type_id: parseInt(formData.crop_type_id),
+        pelleted: formData.pelleted
       };
 
       let cropId;
@@ -164,9 +194,14 @@ export default function Crops() {
         cropId = newCrop.id;
       }
 
+      console.log('Crop saved/updated, cropId:', cropId);
+
       // If there's a selected image, upload it
       if (selectedImage) {
+        console.log('Starting image upload for cropId:', cropId);
         await uploadImage(cropId);
+      } else {
+        console.log('No image selected, skipping upload');
       }
 
       setShowForm(false);
@@ -177,7 +212,7 @@ export default function Crops() {
       fetchCrops();
     } catch (error) {
       console.error('Error saving crop:', error);
-      alert('Error saving crop');
+      alert(t('crops.errorSavingCrop', currentLanguage));
     }
   };
 
@@ -189,19 +224,16 @@ export default function Crops() {
       seeds_per_pot: crop.seeds_per_pot.toString(),
       time_to_harvest: crop.time_to_harvest.toString(),
       status: crop.status,
+      pelleted: crop.pelleted,
       notes: crop.notes || ''
     });
     
     // Set image preview if crop has an image
     if (crop.image_data && crop.image_data.length > 0) {
-      // Fetch the image data URL for preview
-      fetch(`/api/greenhouse/crop-image/${crop.id}`)
-        .then(response => response.json())
-        .then(data => setImagePreview(data.dataUrl))
-        .catch(err => {
-          console.error('Error fetching image preview:', err);
-          setImagePreview(null);
-        });
+      // Create a data URL from the binary image data
+      const blob = new Blob([crop.image_data], { type: crop.image_content_type || 'image/jpeg' });
+      const dataUrl = URL.createObjectURL(blob);
+      setImagePreview(dataUrl);
     } else {
       setImagePreview(null);
     }
@@ -211,7 +243,7 @@ export default function Crops() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Are you sure you want to delete this crop?')) return;
+    if (!confirm(t('crops.confirmDelete', currentLanguage))) return;
 
     try {
       const { error } = await supabase
@@ -223,20 +255,24 @@ export default function Crops() {
         fetchCrops();
     } catch (error) {
       console.error('Error deleting crop:', error);
-      alert('Error deleting crop');
+      alert(t('crops.errorDeletingCrop', currentLanguage));
     }
   };
 
   const resetForm = () => {
+    // Clean up any created object URLs
+    if (imagePreview && imagePreview.startsWith('blob:')) {
+      URL.revokeObjectURL(imagePreview);
+    }
     setFormData({
       vegetable_name: '',
       crop_type_id: '',
       seeds_per_pot: '',
       time_to_harvest: '',
       status: 'active',
+      pelleted: false,
       notes: ''
     });
-    setSelectedImage(null);
     setImagePreview(null);
   };
 
@@ -245,6 +281,10 @@ export default function Crops() {
     setEditingCrop(null);
     resetForm();
     setSelectedImage(null);
+    // Clean up any created object URLs
+    if (imagePreview && imagePreview.startsWith('blob:')) {
+      URL.revokeObjectURL(imagePreview);
+    }
     setImagePreview(null);
   };
 
@@ -253,13 +293,13 @@ export default function Crops() {
     if (file) {
       // Validate file type
       if (!file.type.startsWith('image/')) {
-        alert('Please select an image file');
+        alert(t('crops.errorInvalidFileType', currentLanguage));
         return;
       }
       
-      // Validate file size (max 5MB for upload, will be compressed to 30KB)
-      if (file.size > 5 * 1024 * 1024) {
-        alert('Image file size must be less than 5MB. It will be automatically resized and compressed.');
+      // Validate file size (max 20MB for upload, will be compressed and resized)
+      if (file.size > 20 * 1024 * 1024) {
+        alert(t('crops.errorImageSizeTooLarge', currentLanguage));
         return;
       }
 
@@ -278,10 +318,23 @@ export default function Crops() {
     try {
       setUploadingImage(true);
       
+      console.log('Starting image upload:', {
+        cropId,
+        fileName: selectedImage.name,
+        fileSize: selectedImage.size,
+        fileSizeMB: (selectedImage.size / (1024 * 1024)).toFixed(2),
+        fileType: selectedImage.type
+      });
+      
       // Convert file to base64
       const reader = new FileReader();
       reader.onload = async (e) => {
         const base64Data = e.target.result.split(',')[1]; // Remove data:image/...;base64, prefix
+        
+        console.log('Base64 conversion complete:', {
+          base64Length: base64Data.length,
+          base64SizeMB: (base64Data.length * 0.75 / (1024 * 1024)).toFixed(2)
+        });
         
         // Get the current session token
         const { data: { session } } = await supabase.auth.getSession();
@@ -295,6 +348,7 @@ export default function Crops() {
           accessToken: session?.access_token ? 'Present' : 'Missing'
         });
 
+        console.log('Sending upload request to API...');
         const response = await fetch('/api/greenhouse/upload-image', {
           method: 'POST',
           headers: {
@@ -308,6 +362,12 @@ export default function Crops() {
             filename: selectedImage.name,
             contentType: selectedImage.type
           }),
+        });
+
+        console.log('API response received:', {
+          status: response.status,
+          statusText: response.statusText,
+          ok: response.ok
         });
 
         if (!response.ok) {
@@ -331,7 +391,7 @@ export default function Crops() {
       reader.readAsDataURL(selectedImage);
     } catch (error) {
       console.error('Error uploading image:', error);
-      alert('Error uploading image');
+      alert(t('crops.errorUploadingImage', currentLanguage));
       setUploadingImage(false);
     }
   };
@@ -361,16 +421,16 @@ export default function Crops() {
           <div className="mb-8 flex items-center justify-between">
             <div>
               <Link href="/greenhouse" className="text-blue-600 hover:text-blue-800 mb-2 inline-block">
-                ← Back to Greenhouse
+                ← {t('common.back', currentLanguage)} {t('navigation.greenhouse', currentLanguage)}
               </Link>
               <h1 className="text-3xl font-bold text-gray-900">
-                Crops Management
-                {role !== 'admin' && <span className="text-sm text-gray-500 ml-2">(Read Only)</span>}
+                {t('crops.title', currentLanguage)}
+                {role !== 'admin' && <span className="text-sm text-gray-500 ml-2">({t('common.readOnly', currentLanguage)})</span>}
               </h1>
               <p className="text-gray-600">
                 {role === 'admin' 
-                  ? 'Manage your crop types, seeds per pot, and harvest times'
-                  : 'View crop types, seeds per pot, and harvest times'
+                  ? t('crops.subtitle', currentLanguage)
+                  : t('crops.subtitleReadOnly', currentLanguage)
                 }
               </p>
             </div>
@@ -379,43 +439,47 @@ export default function Crops() {
                 onClick={() => setShowForm(true)}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
               >
-                Add Crop
+                {t('crops.addCrop', currentLanguage)}
               </button>
             )}
           </div>
 
           {/* Form */}
           {showForm && (
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
+            <div className="bg-white rounded-lg shadow-md p-6 mb-8">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                {editingCrop ? 'Edit Crop' : 'Add New Crop'}
+                {editingCrop ? t('crops.editCrop', currentLanguage) : t('crops.addNewCrop', currentLanguage)}
               </h2>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Vegetable Name *
+                    <label htmlFor="vegetable_name" className="block text-sm font-medium text-gray-700 mb-1">
+                      {t('crops.vegetableName', currentLanguage)}
                     </label>
                     <input
                       type="text"
-                      required
+                      id="vegetable_name"
+                      name="vegetable_name"
                       value={formData.vegetable_name}
-                      onChange={(e) => setFormData({ ...formData, vegetable_name: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="e.g., Lettuce, Basil, Tomatoes"
+                      onChange={handleInputChange}
+                      placeholder={t('crops.vegetableNamePlaceholder', currentLanguage)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      required
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Crop Type *
+                    <label htmlFor="crop_type_id" className="block text-sm font-medium text-gray-700 mb-1">
+                      {t('crops.cropType', currentLanguage)}
                     </label>
                     <select
-                      required
+                      id="crop_type_id"
+                      name="crop_type_id"
                       value={formData.crop_type_id}
-                      onChange={(e) => setFormData({ ...formData, crop_type_id: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      required
                     >
-                      <option value="">Select a crop type</option>
+                      <option value="">{t('crops.selectCropType', currentLanguage)}</option>
                       {cropTypes.map((type) => (
                         <option key={type.id} value={type.id}>
                           {type.name}
@@ -424,31 +488,35 @@ export default function Crops() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Seeds per Pot *
+                    <label htmlFor="seeds_per_pot" className="block text-sm font-medium text-gray-700 mb-1">
+                      {t('crops.seedsPerPot', currentLanguage)}
                     </label>
                     <input
                       type="number"
+                      id="seeds_per_pot"
+                      name="seeds_per_pot"
+                      value={formData.seeds_per_pot}
+                      onChange={handleInputChange}
+                      placeholder={t('crops.seedsPerPotPlaceholder', currentLanguage)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       required
                       min="1"
-                      value={formData.seeds_per_pot}
-                      onChange={(e) => setFormData({ ...formData, seeds_per_pot: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="e.g., 3"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Time to Harvest (weeks) *
+                    <label htmlFor="time_to_harvest" className="block text-sm font-medium text-gray-700 mb-1">
+                      {t('crops.harvestTime', currentLanguage)}
                     </label>
                     <input
                       type="number"
+                      id="time_to_harvest"
+                      name="time_to_harvest"
+                      value={formData.time_to_harvest}
+                      onChange={handleInputChange}
+                      placeholder={t('crops.harvestTimePlaceholder', currentLanguage)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       required
                       min="1"
-                      value={formData.time_to_harvest}
-                      onChange={(e) => setFormData({ ...formData, time_to_harvest: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="e.g., 8"
                     />
                   </div>
                   <div>
@@ -464,78 +532,91 @@ export default function Crops() {
                       <option value="inactive">Inactive</option>
                     </select>
                   </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Pelleted Seeds
+                    </label>
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id="pelleted"
+                        name="pelleted"
+                        checked={formData.pelleted}
+                        onChange={handleInputChange}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      />
+                      <label htmlFor="pelleted" className="ml-2 block text-sm text-gray-700">
+                        {t('crops.pelletedSeedsLabel', currentLanguage)}
+                      </label>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Pelleted seeds are coated for easier handling and planting
+                    </p>
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Crop Image
+                    {t('crops.image', currentLanguage)}
                   </label>
+                  <div className="text-sm text-gray-600 mb-2">
+                    {t('crops.imageUpload', currentLanguage)}
+                  </div>
+                  <div className="text-xs text-gray-500 mb-2">
+                    {t('crops.imageNote', currentLanguage)}
+                  </div>
                   <input
                     type="file"
                     accept="image/*"
                     onChange={handleImageSelect}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Optional: Upload an image of this crop (max 5MB). 
-                    Images will be automatically resized to max 400px width and compressed to under 30KB for optimal performance.
-                  </p>
                   
                   {/* Image Preview */}
                   {imagePreview && (
-                    <div className="mt-3">
-                      <img 
-                        src={imagePreview} 
-                        alt="Preview" 
-                        className="w-24 h-24 object-cover rounded-md border border-gray-200"
-                      />
-                      <p className="text-xs text-gray-500 mt-1">Current image</p>
+                    <div className="mt-2">
+                      <p className="text-sm text-gray-600 mb-2">{t('crops.currentImage', currentLanguage)}:</p>
+                      <img src={imagePreview} alt="Preview" className="w-32 h-32 object-cover rounded border" />
                     </div>
                   )}
-                  
-                  {/* Selected Image Preview */}
                   {selectedImage && (
-                    <div className="mt-3">
-                      <img 
-                        src={URL.createObjectURL(selectedImage)} 
-                        alt="Selected" 
-                        className="w-24 h-24 object-cover rounded-md border border-gray-200"
-                      />
-                      <p className="text-xs text-gray-500 mt-1">New image to upload</p>
+                    <div className="mt-2">
+                      <p className="text-sm text-gray-600 mb-2">{t('crops.newImageToUpload', currentLanguage)}:</p>
+                      <img src={URL.createObjectURL(selectedImage)} alt="New image" className="w-32 h-32 object-cover rounded border" />
                     </div>
                   )}
                   
                   {/* Upload Progress */}
                   {uploadingImage && (
                     <div className="mt-3 text-sm text-blue-600">
-                      Uploading image...
+                      {t('crops.uploadingImage', currentLanguage)}
                     </div>
                   )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Notes
+                    {t('common.notes', currentLanguage)}
                   </label>
                   <textarea
                     value={formData.notes}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                     rows="3"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Additional notes about this crop..."
+                    placeholder={t('crops.notes', currentLanguage)}
                   />
                 </div>
                 <div className="flex justify-end space-x-3">
                   <button
                     type="button"
                     onClick={cancelForm}
-                    className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md font-medium transition-colors duration-200"
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                   >
-                    Cancel
+                    {t('common.cancel', currentLanguage)}
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium transition-colors duration-200"
+                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                   >
-                    {editingCrop ? 'Update' : 'Create'} Crop
+                    {editingCrop ? t('common.update', currentLanguage) : t('common.create', currentLanguage)}
                   </button>
                 </div>
               </form>
@@ -545,16 +626,16 @@ export default function Crops() {
           {/* Crops List */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200">
             <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900">Crops</h2>
+              <h2 className="text-lg font-semibold text-gray-900">{t('navigation.crops', currentLanguage)}</h2>
             </div>
             {dataLoading ? (
               <div className="p-6 text-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                <p className="mt-2 text-gray-600">Loading crops...</p>
+                <p className="mt-2 text-gray-600">{t('crops.loadingCrops', currentLanguage)}</p>
               </div>
             ) : crops.length === 0 ? (
               <div className="p-6 text-center text-gray-500">
-                <p>No crops found. Create your first crop to get started.</p>
+                <p>{t('crops.noCropsFound', currentLanguage)}</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -562,25 +643,25 @@ export default function Crops() {
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Vegetable Name
+                        {t('crops.vegetableName', currentLanguage)}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Image
+                        {t('crops.image', currentLanguage)}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Crop Type
+                        {t('crops.cropType', currentLanguage)}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Seeds per Pot
+                        {t('crops.seedsPerPot', currentLanguage)}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Harvest Time
+                        {t('crops.harvestTime', currentLanguage)}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Status
+                        {t('common.status', currentLanguage)}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
+                        {t('common.actions', currentLanguage)}
                       </th>
                     </tr>
                   </thead>
@@ -588,7 +669,9 @@ export default function Crops() {
                     {crops.map((crop) => (
                       <tr key={crop.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">{crop.vegetable_name}</div>
+                          <div className="text-sm font-medium text-gray-900">
+                            {crop.vegetable_name}{crop.pelleted ? ' *' : ''}
+                          </div>
                           {crop.notes && (
                             <div className="text-sm text-gray-500 truncate max-w-xs">{crop.notes}</div>
                           )}
@@ -599,19 +682,19 @@ export default function Crops() {
                               <CropImageDisplay cropId={crop.id} cropName={crop.vegetable_name} hasImageData={crop.image_data && crop.image_data.length > 0} />
                             </div>
                           ) : (
-                            <span className="text-xs text-gray-400">No image</span>
+                            <span className="text-xs text-gray-400">{t('common.noImage', currentLanguage)}</span>
                           )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                            {crop.crop_types?.name || 'Unknown'}
+                            {crop.crop_types?.name || t('common.unknown', currentLanguage)}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {crop.seeds_per_pot}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {crop.time_to_harvest} weeks
+                          {crop.time_to_harvest} {t('crops.harvestTime', currentLanguage).includes('weeks') ? 'weeks' : 'Wochen'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
@@ -625,19 +708,25 @@ export default function Crops() {
                             <>
                               <button
                                 onClick={() => handleEdit(crop)}
-                                className="text-blue-600 hover:text-blue-900 mr-3"
+                                className="text-blue-600 hover:text-blue-900 mr-3 transition-colors duration-200"
+                                aria-label={t('crops.editCrop', currentLanguage)}
                               >
-                                Edit
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
                               </button>
                               <button
                                 onClick={() => handleDelete(crop.id)}
-                                className="text-red-600 hover:text-red-900"
+                                className="text-red-600 hover:text-red-900 transition-colors duration-200"
+                                aria-label={t('common.delete', currentLanguage)}
                               >
-                                Delete
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
                               </button>
                             </>
                           ) : (
-                            <span className="text-gray-400">Read Only</span>
+                            <span className="text-gray-400">{t('common.readOnly', currentLanguage)}</span>
                           )}
                         </td>
                       </tr>
@@ -646,6 +735,13 @@ export default function Crops() {
                 </table>
               </div>
             )}
+            
+            {/* Legend */}
+            <div className="px-6 py-3 border-t border-gray-200 bg-gray-50">
+              <div className="text-xs text-gray-600">
+                <span className="font-medium">{t('common.legend', currentLanguage)}:</span> {t('common.pelletedSeedsDesc', currentLanguage)}
+              </div>
+            </div>
           </div>
         </div>
       </div>

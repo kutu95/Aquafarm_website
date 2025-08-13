@@ -15,6 +15,8 @@ export default function Seeding() {
   const [editingSeeding, setEditingSeeding] = useState(null);
   const [selectedSeeding, setSelectedSeeding] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
+  const [exportModalData, setExportModalData] = useState(null);
+  const [showExportModal, setShowExportModal] = useState(false);
   const [formData, setFormData] = useState({
     seeding_date: '',
     crop_id: '',
@@ -134,7 +136,7 @@ export default function Seeding() {
       // Fetch crops for dropdown
       const { data: cropsData, error: cropsError } = await supabase
         .from('crops')
-        .select('id, vegetable_name, seeds_per_pot, image_data, image_content_type, image_filename')
+        .select('id, vegetable_name, seeds_per_pot, pelleted, image_data, image_content_type, image_filename')
         .eq('status', 'active')
         .order('vegetable_name');
 
@@ -379,6 +381,31 @@ export default function Seeding() {
       }
       return newState;
     });
+  };
+
+  const handleExportDateGroup = (dateGroup) => {
+    // Sort seedings alphabetically by crop name
+    const sortedSeedings = [...dateGroup.seedings].sort((a, b) => {
+      const cropA = crops.find(c => c.id === a.crop_id)?.vegetable_name || 'Unknown';
+      const cropB = crops.find(c => c.id === b.crop_id)?.vegetable_name || 'Unknown';
+      return cropA.localeCompare(cropB);
+    });
+
+    // Prepare data for the modal
+    const modalData = {
+      date: dateGroup.date,
+      seedings: sortedSeedings.map(seeding => ({
+        cropName: crops.find(c => c.id === seeding.crop_id)?.vegetable_name || 'Unknown',
+        seedsPerPot: seeding.seeds_per_pot || 'N/A',
+        pelleted: crops.find(c => c.id === seeding.crop_id)?.pelleted ? 'Yes' : 'No',
+        pots: seeding.pots || 'N/A'
+      })),
+      totalPots: dateGroup.totalPots,
+      requiredTrays: dateGroup.requiredTrays
+    };
+
+    setExportModalData(modalData);
+    setShowExportModal(true);
   };
 
   if (loading) {
@@ -644,9 +671,7 @@ export default function Seeding() {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Seeding Date
-                      </th>
+                      <th className="w-0 p-0"></th>
                       <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Crop
                       </th>
@@ -666,7 +691,7 @@ export default function Seeding() {
                       <React.Fragment key={dateGroup.date}>
                         {/* Date Group Header */}
                         <tr className="bg-blue-50 border-t-2 border-blue-200">
-                          <td colSpan="4" className="px-3 sm:px-6 py-3">
+                          <td colSpan="5" className="px-3 sm:px-6 py-3">
                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
                               <div className="flex items-center space-x-3">
                                 <button
@@ -704,58 +729,67 @@ export default function Seeding() {
                                 <span className="text-xs text-blue-600 font-medium">
                                   {dateGroup.seedings.length} record{dateGroup.seedings.length !== 1 ? 's' : ''}
                                 </span>
+                                <button
+                                  onClick={() => handleExportDateGroup(dateGroup)}
+                                  className="text-blue-600 hover:text-blue-800 transition-colors duration-200"
+                                  aria-label="Export seeding details for this date"
+                                >
+                                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                  </svg>
+                                </button>
                               </div>
                             </div>
-                          </td>
-                          <td className="px-3 sm:px-6 py-3">
-                            <span className="text-xs text-blue-600 font-medium sm:hidden">
-                              {dateGroup.seedings.length} record{dateGroup.seedings.length !== 1 ? 's' : ''}
-                            </span>
                           </td>
                         </tr>
                         
                         {/* Individual Seeding Records - Only show when not collapsed */}
                         {!isDateCollapsed(dateGroup.date) && (
                           <>
-                            {dateGroup.seedings.map((seeding, seedingIndex) => (
+                            {dateGroup.seedings
+                              .sort((a, b) => {
+                                const cropA = crops.find(c => c.id === a.crop_id)?.vegetable_name || 'Unknown';
+                                const cropB = crops.find(c => c.id === b.crop_id)?.vegetable_name || 'Unknown';
+                                return cropA.localeCompare(cropB);
+                              })
+                              .map((seeding, seedingIndex) => (
                               <tr key={seeding.id} className={`hover:bg-gray-50 ${seedingIndex === dateGroup.seedings.length - 1 ? 'border-b-2 border-blue-200' : ''}`}>
-                                <td className="px-3 sm:px-6 py-4 whitespace-nowrap pl-4 sm:pl-8">
-                                  <div className="text-sm text-gray-500">
-                                    {/* Empty cell for date column - date shown in header */}
-                                  </div>
+                                <td className="w-0 p-0"></td>
+                                <td className="px-3 sm:px-6 py-2 whitespace-nowrap">
+                                  <button
+                                    onClick={() => handleView(seeding)}
+                                    className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 hover:bg-blue-200 transition-colors duration-200 cursor-pointer"
+                                  >
+                                    {crops.find(c => c.id === seeding.crop_id)?.vegetable_name || 'Unknown'}{crops.find(c => c.id === seeding.crop_id)?.pelleted ? ' *' : ''}
+                                  </button>
                                 </td>
-                                <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
-                                  <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                                    {crops.find(c => c.id === seeding.crop_id)?.vegetable_name || 'Unknown'}
-                                  </span>
-                                </td>
-                                <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                <td className="px-3 sm:px-6 py-2 whitespace-nowrap text-sm text-gray-900">
                                   {seeding.seeds_per_pot || 'N/A'}
                                 </td>
-                                <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                <td className="px-3 sm:px-6 py-2 whitespace-nowrap text-sm text-gray-900">
                                   {seeding.pots || 'N/A'}
                                 </td>
-                                <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <td className="px-3 sm:px-6 py-2 whitespace-nowrap text-sm font-medium">
                                   <div className="flex flex-col sm:flex-row space-y-1 sm:space-y-0 sm:space-x-3">
-                                    <button
-                                      onClick={() => handleView(seeding)}
-                                      className="text-green-600 hover:text-green-900 text-left"
-                                    >
-                                      View
-                                    </button>
                                     {role === 'admin' && (
                                       <>
                                         <button
                                           onClick={() => handleEdit(seeding)}
-                                          className="text-blue-600 hover:text-blue-900 text-left"
+                                          className="text-blue-600 hover:text-blue-900 transition-colors duration-200"
+                                          aria-label="Edit seeding"
                                         >
-                                          Edit
+                                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                          </svg>
                                         </button>
                                         <button
                                           onClick={() => handleDelete(seeding.id)}
-                                          className="text-red-600 hover:text-red-900 text-left"
+                                          className="text-red-600 hover:text-red-900 transition-colors duration-200"
+                                          aria-label="Delete seeding"
                                         >
-                                          Delete
+                                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                          </svg>
                                         </button>
                                       </>
                                     )}
@@ -833,7 +867,7 @@ export default function Seeding() {
                       Crop
                     </label>
                     <p className="text-sm text-gray-900">
-                      {crops.find(c => c.id === selectedSeeding.crop_id)?.vegetable_name || 'Unknown'}
+                      {crops.find(c => c.id === selectedSeeding.crop_id)?.vegetable_name || 'Unknown'}{crops.find(c => c.id === selectedSeeding.crop_id)?.pelleted ? ' *' : ''}
                     </p>
                   </div>
                   
@@ -843,6 +877,15 @@ export default function Seeding() {
                     </label>
                     <p className="text-sm text-gray-900">
                       {selectedSeeding.seeds_per_pot || 'N/A'}
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Pelleted Seeds
+                    </label>
+                    <p className="text-sm text-gray-900">
+                      {crops.find(c => c.id === selectedSeeding.crop_id)?.pelleted ? 'Yes' : 'No'}
                     </p>
                   </div>
                   
@@ -932,6 +975,119 @@ export default function Seeding() {
                     </div>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Export Modal */}
+      {showExportModal && exportModalData && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          onClick={() => setShowExportModal(false)}
+        >
+          <div 
+            className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Seeding Details for {new Date(exportModalData.date).toLocaleDateString('en-US', {
+                  weekday: 'long',
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}
+              </h3>
+              <button
+                onClick={() => setShowExportModal(false)}
+                className="text-gray-400 hover:text-gray-600 text-xl font-bold"
+              >
+                ×
+              </button>
+            </div>
+            
+            <div className="p-6">
+              {/* Summary Stats */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div className="bg-blue-50 rounded-lg p-4">
+                  <div className="text-2xl font-bold text-blue-600">{exportModalData.totalPots}</div>
+                  <div className="text-sm text-blue-700">Total Pots</div>
+                </div>
+                <div className="bg-green-50 rounded-lg p-4">
+                  <div className="text-2xl font-bold text-green-600">{exportModalData.requiredTrays}</div>
+                  <div className="text-sm text-green-700">Required Trays</div>
+                </div>
+              </div>
+
+              {/* Crops Table */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h4 className="text-md font-semibold text-gray-900 mb-4">Crops to Seed</h4>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-white">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Crop Name
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Seeds per Pot
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Pelleted
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Total Pots
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {exportModalData.seedings.map((seeding, index) => (
+                        <tr key={index} className="hover:bg-gray-50">
+                          <td className="px-4 py-3 whitespace-nowrap">
+                            <span className="inline-flex px-2 py-1 text-sm font-semibold rounded-full bg-blue-100 text-blue-800">
+                              {seeding.cropName}{seeding.pelleted === 'Yes' ? ' *' : ''}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                            {seeding.seedsPerPot}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                            {seeding.pelleted}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                            {seeding.pots}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Legend */}
+              <div className="mt-4 text-xs text-gray-600 text-center">
+                <span className="font-medium">Legend:</span> Crops marked with * use pelleted seeds
+              </div>
+
+              {/* Close Button */}
+              <div className="mt-6 flex justify-end space-x-3">
+                <button
+                  onClick={() => window.print()}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium transition-colors duration-200 flex items-center space-x-2"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                  </svg>
+                  <span>Print</span>
+                </button>
+                <button
+                  onClick={() => setShowExportModal(false)}
+                  className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-md font-medium transition-colors duration-200"
+                >
+                  Close
+                </button>
               </div>
             </div>
           </div>

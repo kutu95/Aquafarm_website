@@ -1,0 +1,610 @@
+export const translations = {
+  en: {
+    // Common
+    common: {
+      loading: 'Loading...',
+      save: 'Save',
+      cancel: 'Cancel',
+      edit: 'Edit',
+      delete: 'Delete',
+      view: 'View',
+      create: 'Create',
+      update: 'Update',
+      back: 'Back',
+      close: 'Close',
+      actions: 'Actions',
+      status: 'Status',
+      notes: 'Notes',
+      name: 'Name',
+      description: 'Description',
+      type: 'Type',
+      quantity: 'Quantity',
+      volume: 'Volume',
+      area: 'Area',
+      flowRate: 'Flow Rate',
+      holes: 'Holes',
+      active: 'Active',
+      inactive: 'Inactive',
+      maintenance: 'Maintenance',
+      yes: 'Yes',
+      no: 'No',
+      unknown: 'Unknown',
+      noImage: 'No image',
+      noNotes: 'No notes',
+      noDescription: 'No description',
+      required: 'Required',
+      optional: 'Optional',
+      readOnly: 'Read Only',
+      admin: 'Admin',
+      user: 'User',
+      total: 'Total',
+      required: 'Required',
+      legend: 'Legend',
+      pelletedSeeds: 'Pelleted Seeds',
+      pelletedSeedsDesc: 'Crops marked with * use pelleted seeds',
+      pelletedSeedsInfo: 'Pelleted seeds are coated for easier handling and planting',
+      language: 'Language'
+    },
+
+    // Navigation
+    navigation: {
+      greenhouse: 'Greenhouse',
+      crops: 'Crops',
+      cropTypes: 'Crop Types',
+      seeding: 'Seeding',
+      growbeds: 'Growbeds',
+      fishtanks: 'Fish Tanks',
+      fish: 'Fish',
+      fishTypes: 'Fish Types',
+      sops: 'SOPs',
+      dashboard: 'Dashboard',
+      settings: 'Settings'
+    },
+
+    // Crops Page
+    crops: {
+      title: 'Crops Management',
+      subtitle: 'Manage your crop types, seeds per pot, and harvest times',
+      subtitleReadOnly: 'View crop types, seeds per pot, and harvest times',
+      addCrop: 'Add Crop',
+      editCrop: 'Edit Crop',
+      addNewCrop: 'Add New Crop',
+      vegetableName: 'Vegetable Name',
+      vegetableNamePlaceholder: 'e.g., Lettuce, Basil, Tomatoes',
+      cropType: 'Crop Type',
+      selectCropType: 'Select a crop type',
+      seedsPerPot: 'Seeds per Pot',
+      seedsPerPotPlaceholder: 'e.g., 3',
+      harvestTime: 'Time to Harvest (weeks)',
+      harvestTimePlaceholder: 'e.g., 8',
+      pelletedSeeds: 'Pelleted Seeds',
+      pelletedSeedsLabel: 'This crop uses pelleted seeds',
+      image: 'Image',
+      imageUpload: 'Upload an image of this crop (max 20MB). Images will be automatically resized to max 400px width and compressed to under 30KB for optimal performance.',
+      imageNote: 'Note: Image will be uploaded when you submit the form.',
+      currentImage: 'Current image',
+      newImageToUpload: 'New image to upload',
+      uploadingImage: 'Uploading image...',
+      noCropsFound: 'No crops found. Create your first crop to get started.',
+      loadingCrops: 'Loading crops...',
+      confirmDelete: 'Are you sure you want to delete this crop?',
+      errorSavingCrop: 'Error saving crop',
+      errorDeletingCrop: 'Error deleting crop',
+      errorUploadingImage: 'Error uploading image',
+      errorFetchingCrops: 'Error fetching crops',
+      errorInvalidFileType: 'Please select an image file',
+      errorImageSizeTooLarge: 'Image file size must be less than 20MB. It will be automatically resized and compressed.',
+      notes: 'Additional notes about this crop...'
+    },
+
+    // Crop Types Page
+    cropTypes: {
+      title: 'Crop Types',
+      subtitle: 'Manage different categories of crops',
+      addCropType: 'Add Crop Type',
+      editCropType: 'Edit Crop Type',
+      createCropType: 'Create Crop Type',
+      updateCropType: 'Update Crop Type',
+      name: 'Name',
+      namePlaceholder: 'e.g., Leafy Greens, Herbs, Root Vegetables',
+      description: 'Description',
+      descriptionPlaceholder: 'Describe this crop type...',
+      created: 'Created',
+      noCropTypesFound: 'No crop types found. Create your first crop type to get started.',
+      loadingCropTypes: 'Loading crop types...',
+      confirmDelete: 'Are you sure you want to delete this crop type?',
+      errorSavingCropType: 'Error saving crop type',
+      errorDeletingCropType: 'Error deleting crop type'
+    },
+
+    // Seeding Page
+    seeding: {
+      title: 'Seeding Plan',
+      subtitle: 'Track planting dates and crop seeding activities',
+      subtitleReadOnly: 'View planting dates and crop seeding activities',
+      addSeeding: 'Add Seeding',
+      editSeeding: 'Edit Seeding',
+      addNewSeeding: 'Add New Seeding',
+      seedingDate: 'Seeding Date',
+      crop: 'Crop',
+      selectCrop: 'Select a crop',
+      seedsPerPot: 'Seeds per Pot',
+      seedsPerPotPlaceholder: 'e.g., 3',
+      seedsPerPotInfo: 'Pre-filled from selected crop • You can modify this value',
+      pots: 'Number of Pots',
+      potsPlaceholder: 'e.g., 24',
+      notes: 'Additional notes about this seeding...',
+      dateFilters: 'Date Filters',
+      startDate: 'Start Date (Optional)',
+      endDate: 'End Date (Optional)',
+      clearFilters: 'Clear Filters',
+      showingAllSeedings: 'Showing all seedings',
+      showingSeedingsInRange: 'Showing seedings from {startDate} to {endDate}',
+      seedingRecords: 'Seeding Records',
+      mostRecentDatePots: 'Most Recent Date Pots',
+      totalRequiredTrays: 'Total Required Trays',
+      noSeedingsFound: 'No seeding records found. Create your first seeding record to get started.',
+      loadingSeedings: 'Loading seedings...',
+      expandDateGroup: 'Expand date group',
+      collapseDateGroup: 'Collapse date group',
+      totalPots: 'Total Pots',
+      requiredTrays: 'Required Trays',
+      records: 'records',
+      record: 'record',
+      exportSeedingDetails: 'Export seeding details for this date',
+      seedingDetails: 'Seeding Details',
+      createdDate: 'Created Date',
+      cropImage: 'Crop Image',
+      imageNotAvailable: 'Image not available',
+      cropNotFound: 'Crop not found',
+      confirmDelete: 'Are you sure you want to delete this seeding record?',
+      errorSavingSeeding: 'Error saving seeding',
+      errorDeletingSeeding: 'Error deleting seeding',
+      exportModal: {
+        title: 'Seeding Details for {date}',
+        cropsToSeed: 'Crops to Seed',
+        cropName: 'Crop Name',
+        seedsPerPot: 'Seeds per Pot',
+        pelleted: 'Pelleted',
+        totalPots: 'Total Pots',
+        print: 'Print',
+        legend: 'Legend: Crops marked with * use pelleted seeds'
+      }
+    },
+
+    // Growbeds Page
+    growbeds: {
+      title: 'Growbeds Management',
+      subtitle: 'Manage your growbed configurations and settings',
+      addGrowbed: 'Add Growbed',
+      editGrowbed: 'Edit Growbed',
+      addNewGrowbed: 'Add New Growbed',
+      growbedName: 'Growbed Name',
+      namePlaceholder: 'e.g., Bed A, Bed B, North Bed',
+      holes: 'Number of Holes',
+      holesPlaceholder: 'e.g., 24',
+      flowRate: 'Flow Rate (L/hr)',
+      flowRatePlaceholder: 'e.g., 100',
+      type: 'Growbed Type',
+      selectType: 'Select a type',
+      dwc: 'DWC',
+      mediaBed: 'Media bed',
+      wickingBed: 'Wicking bed',
+      notes: 'Additional notes about this growbed...',
+      noGrowbedsFound: 'No growbeds found. Create your first growbed to get started.',
+      loadingGrowbeds: 'Loading growbeds...',
+      confirmDelete: 'Are you sure you want to delete this growbed?',
+      errorSavingGrowbed: 'Error saving growbed',
+      errorDeletingGrowbed: 'Error deleting growbed',
+      summary: 'Summary',
+      totalHoles: 'Total Holes',
+      totalArea: 'Total Area (m²)',
+      totalVolume: 'Total Volume (L)',
+      totalFlowRate: 'Total Flow Rate (L/hr)',
+      showingFiltered: 'Showing {filtered} of {total} growbeds'
+    },
+
+    // Fishtanks Page
+    fishtanks: {
+      title: 'Fish Tanks',
+      subtitle: 'Manage your fish tank configurations',
+      addFishtank: 'Add Fishtank',
+      editFishtank: 'Edit Fishtank',
+      addNewFishtank: 'Add New Fishtank',
+      tankName: 'Tank Name',
+      namePlaceholder: 'e.g., Tank 1, Main Tank, Nursery Tank',
+      volume: 'Volume (L)',
+      volumePlaceholder: 'e.g., 500',
+      flowRate: 'Flow Rate (L/hr)',
+      flowRatePlaceholder: 'e.g., 50',
+      notes: 'Additional notes about this tank...',
+      noFishtanksFound: 'No fishtanks found. Create your first fishtank to get started.',
+      loadingFishtanks: 'Loading fishtanks...',
+      confirmDelete: 'Are you sure you want to delete this fishtank?',
+      errorSavingFishtank: 'Error saving fishtank',
+      errorDeletingFishtank: 'Error deleting fishtank'
+    },
+
+    // Fish Page
+    fish: {
+      title: 'Fish Management',
+      subtitle: 'Manage your fish populations and health',
+      addFish: 'Add Fish',
+      editFish: 'Edit Fish',
+      addNewFish: 'Add New Fish',
+      fishType: 'Fish Type',
+      selectFishType: 'Select a fish type',
+      fishtank: 'Fishtank',
+      selectFishtank: 'Select a fishtank',
+      noTank: 'No tank',
+      quantity: 'Quantity',
+      quantityPlaceholder: 'e.g., 10',
+      notes: 'Additional notes about these fish...',
+      noFishFound: 'No fish records found. Create your first fish record to get started.',
+      loadingFish: 'Loading fish records...',
+      confirmDelete: 'Are you sure you want to delete this fish record?',
+      errorSavingFish: 'Error saving fish record',
+      errorDeletingFish: 'Error deleting fish record'
+    },
+
+    // Fish Types Page
+    fishTypes: {
+      title: 'Fish Types',
+      subtitle: 'Manage different species of fish',
+      addFishType: 'Add Fish Type',
+      editFishType: 'Edit Fish Type',
+      createFishType: 'Create Fish Type',
+      updateFishType: 'Update Fish Type',
+      name: 'Name',
+      namePlaceholder: 'e.g., Tilapia, Catfish, Trout',
+      description: 'Description',
+      descriptionPlaceholder: 'Describe this fish type...',
+      created: 'Created',
+      noFishTypesFound: 'No fish types found. Create your first fish type to get started.',
+      loadingFishTypes: 'Loading fish types...',
+      confirmDelete: 'Are you sure you want to delete this fish type?',
+      errorSavingFishType: 'Error saving fish type',
+      errorDeletingFishType: 'Error deleting fish type'
+    },
+
+    // SOPs Page
+    sops: {
+      title: 'Standard Operating Procedures',
+      subtitle: 'Manage your operational procedures and guidelines',
+      createNewSOP: 'Create New SOP',
+      backToGreenhouse: 'Back to Greenhouse',
+      quickActions: 'Quick Actions',
+      title: 'Title',
+      description: 'Description',
+      priority: 'Priority',
+      status: 'Status',
+      lastUpdated: 'Last Updated',
+      published: 'Published',
+      draft: 'Draft',
+      noSOPsFound: 'No SOPs found. Create your first SOP to get started.',
+      loadingSOPs: 'Loading SOPs...',
+      view: 'View',
+      edit: 'Edit'
+    }
+  },
+
+  de: {
+    // Common
+    common: {
+      loading: 'Lädt...',
+      save: 'Speichern',
+      cancel: 'Abbrechen',
+      edit: 'Bearbeiten',
+      delete: 'Löschen',
+      view: 'Anzeigen',
+      create: 'Erstellen',
+      update: 'Aktualisieren',
+      back: 'Zurück',
+      close: 'Schließen',
+      actions: 'Aktionen',
+      status: 'Status',
+      notes: 'Notizen',
+      name: 'Name',
+      description: 'Beschreibung',
+      type: 'Typ',
+      quantity: 'Menge',
+      volume: 'Volumen',
+      area: 'Fläche',
+      flowRate: 'Durchflussrate',
+      holes: 'Löcher',
+      active: 'Aktiv',
+      inactive: 'Inaktiv',
+      maintenance: 'Wartung',
+      yes: 'Ja',
+      no: 'Nein',
+      unknown: 'Unbekannt',
+      noImage: 'Kein Bild',
+      noNotes: 'Keine Notizen',
+      noDescription: 'Keine Beschreibung',
+      required: 'Erforderlich',
+      optional: 'Optional',
+      readOnly: 'Nur Lesen',
+      admin: 'Administrator',
+      user: 'Benutzer',
+      total: 'Gesamt',
+      required: 'Erforderlich',
+      legend: 'Legende',
+      pelletedSeeds: 'Pillierte Samen',
+      pelletedSeedsDesc: 'Kulturen mit * verwenden pillierte Samen',
+      pelletedSeedsInfo: 'Pillierte Samen sind beschichtet für einfachere Handhabung und Pflanzung',
+      language: 'Sprache'
+    },
+
+    // Navigation
+    navigation: {
+      greenhouse: 'Gewächshaus',
+      crops: 'Kulturen',
+      cropTypes: 'Kulturtypen',
+      seeding: 'Aussaat',
+      growbeds: 'Wachstumsbeete',
+      fishtanks: 'Fischbecken',
+      fish: 'Fische',
+      fishTypes: 'Fischarten',
+      sops: 'Arbeitsanweisungen',
+      dashboard: 'Dashboard',
+      settings: 'Einstellungen'
+    },
+
+    // Crops Page
+    crops: {
+      title: 'Kulturverwaltung',
+      subtitle: 'Verwalten Sie Ihre Kulturtypen, Samen pro Topf und Erntezeiten',
+      subtitleReadOnly: 'Kulturtypen, Samen pro Topf und Erntezeiten anzeigen',
+      addCrop: 'Kultur hinzufügen',
+      editCrop: 'Kultur bearbeiten',
+      addNewCrop: 'Neue Kultur hinzufügen',
+      vegetableName: 'Gemüsename',
+      vegetableNamePlaceholder: 'z.B. Salat, Basilikum, Tomaten',
+      cropType: 'Kulturtyp',
+      selectCropType: 'Kulturtyp auswählen',
+      seedsPerPot: 'Samen pro Topf',
+      seedsPerPotPlaceholder: 'z.B. 3',
+      harvestTime: 'Zeit bis zur Ernte (Wochen)',
+      harvestTimePlaceholder: 'z.B. 8',
+      pelletedSeeds: 'Pillierte Samen',
+      pelletedSeedsLabel: 'Diese Kultur verwendet pillierte Samen',
+      image: 'Bild',
+      imageUpload: 'Laden Sie ein Bild dieser Kultur hoch (max. 20MB). Bilder werden automatisch auf max. 400px Breite verkleinert und auf unter 30KB komprimiert für optimale Leistung.',
+      imageNote: 'Hinweis: Das Bild wird beim Absenden des Formulars hochgeladen.',
+      currentImage: 'Aktuelles Bild',
+      newImageToUpload: 'Neues Bild zum Hochladen',
+      uploadingImage: 'Bild wird hochgeladen...',
+      noCropsFound: 'Keine Kulturen gefunden. Erstellen Sie Ihre erste Kultur, um zu beginnen.',
+      loadingCrops: 'Kulturen werden geladen...',
+      confirmDelete: 'Sind Sie sicher, dass Sie diese Kultur löschen möchten?',
+      errorSavingCrop: 'Fehler beim Speichern der Kultur',
+      errorDeletingCrop: 'Fehler beim Löschen der Kultur',
+      errorUploadingImage: 'Fehler beim Hochladen des Bildes',
+      errorFetchingCrops: 'Fehler beim Abrufen der Kulturen',
+      errorInvalidFileType: 'Bitte wählen Sie eine Bilddatei aus',
+      errorImageSizeTooLarge: 'Die Bilddatei-Größe muss kleiner als 20MB sein. Es wird automatisch verkleinert und komprimiert.',
+      notes: 'Zusätzliche Notizen zu dieser Kultur...'
+    },
+
+    // Crop Types Page
+    cropTypes: {
+      title: 'Kulturtypen',
+      subtitle: 'Verschiedene Kategorien von Kulturen verwalten',
+      addCropType: 'Kulturtyp hinzufügen',
+      editCropType: 'Kulturtyp bearbeiten',
+      createCropType: 'Kulturtyp erstellen',
+      updateCropType: 'Kulturtyp aktualisieren',
+      name: 'Name',
+      namePlaceholder: 'z.B. Blattgemüse, Kräuter, Wurzelgemüse',
+      description: 'Beschreibung',
+      descriptionPlaceholder: 'Beschreiben Sie diesen Kulturtyp...',
+      created: 'Erstellt',
+      noCropTypesFound: 'Keine Kulturtypen gefunden. Erstellen Sie Ihren ersten Kulturtyp, um zu beginnen.',
+      loadingCropTypes: 'Kulturtypen werden geladen...',
+      confirmDelete: 'Sind Sie sicher, dass Sie diesen Kulturtyp löschen möchten?',
+      errorSavingCropType: 'Fehler beim Speichern des Kulturtyps',
+      errorDeletingCropType: 'Fehler beim Löschen des Kulturtyps'
+    },
+
+    // Seeding Page
+    seeding: {
+      title: 'Aussaatplan',
+      subtitle: 'Pflanzdaten und Kultur-Aussaataktivitäten verfolgen',
+      subtitleReadOnly: 'Pflanzdaten und Kultur-Aussaataktivitäten anzeigen',
+      addSeeding: 'Aussaat hinzufügen',
+      editSeeding: 'Aussaat bearbeiten',
+      addNewSeeding: 'Neue Aussaat hinzufügen',
+      seedingDate: 'Aussaattermin',
+      crop: 'Kultur',
+      selectCrop: 'Kultur auswählen',
+      seedsPerPot: 'Samen pro Topf',
+      seedsPerPotPlaceholder: 'z.B. 3',
+      seedsPerPotInfo: 'Vorausgefüllt von der ausgewählten Kultur • Sie können diesen Wert ändern',
+      pots: 'Anzahl der Töpfe',
+      potsPlaceholder: 'z.B. 24',
+      notes: 'Zusätzliche Notizen zu dieser Aussaat...',
+      dateFilters: 'Datumsfilter',
+      startDate: 'Startdatum (Optional)',
+      endDate: 'Enddatum (Optional)',
+      clearFilters: 'Filter löschen',
+      showingAllSeedings: 'Alle Aussaaten werden angezeigt',
+      showingSeedingsInRange: 'Aussaaten werden angezeigt von {startDate} bis {endDate}',
+      seedingRecords: 'Aussaataufzeichnungen',
+      mostRecentDatePots: 'Töpfe des neuesten Datums',
+      totalRequiredTrays: 'Gesamt erforderliche Schalen',
+      noSeedingsFound: 'Keine Aussaataufzeichnungen gefunden. Erstellen Sie Ihre erste Aussaataufzeichnung, um zu beginnen.',
+      loadingSeedings: 'Aussaaten werden geladen...',
+      expandDateGroup: 'Datumsgruppe erweitern',
+      collapseDateGroup: 'Datumsgruppe reduzieren',
+      totalPots: 'Gesamte Töpfe',
+      requiredTrays: 'Erforderliche Schalen',
+      records: 'Aufzeichnungen',
+      record: 'Aufzeichnung',
+      exportSeedingDetails: 'Aussaatsdetails für dieses Datum exportieren',
+      seedingDetails: 'Aussaatsdetails',
+      createdDate: 'Erstellungsdatum',
+      cropImage: 'Kulturbild',
+      imageNotAvailable: 'Bild nicht verfügbar',
+      cropNotFound: 'Kultur nicht gefunden',
+      confirmDelete: 'Sind Sie sicher, dass Sie diese Aussaataufzeichnung löschen möchten?',
+      errorSavingSeeding: 'Fehler beim Speichern der Aussaat',
+      errorDeletingSeeding: 'Fehler beim Löschen der Aussaat',
+      exportModal: {
+        title: 'Aussaatsdetails für {date}',
+        cropsToSeed: 'Zu säende Kulturen',
+        cropName: 'Kulturname',
+        seedsPerPot: 'Samen pro Topf',
+        pelleted: 'Pilliert',
+        totalPots: 'Gesamte Töpfe',
+        print: 'Drucken',
+        legend: 'Legende: Kulturen mit * verwenden pillierte Samen'
+      }
+    },
+
+    // Growbeds Page
+    growbeds: {
+      title: 'Wachstumsbeet-Verwaltung',
+      subtitle: 'Verwalten Sie Ihre Wachstumsbeet-Konfigurationen und -Einstellungen',
+      addGrowbed: 'Wachstumsbeet hinzufügen',
+      editGrowbed: 'Wachstumsbeet bearbeiten',
+      addNewGrowbed: 'Neues Wachstumsbeet hinzufügen',
+      growbedName: 'Wachstumsbeet-Name',
+      namePlaceholder: 'z.B. Beet A, Beet B, Nordbeet',
+      holes: 'Anzahl der Löcher',
+      holesPlaceholder: 'z.B. 24',
+      flowRate: 'Durchflussrate (L/Std)',
+      flowRatePlaceholder: 'z.B. 100',
+      type: 'Wachstumsbeet-Typ',
+      selectType: 'Typ auswählen',
+      dwc: 'DWC',
+      mediaBed: 'Medienbeet',
+      wickingBed: 'Wickelbeet',
+      notes: 'Zusätzliche Notizen zu diesem Wachstumsbeet...',
+      noGrowbedsFound: 'Keine Wachstumsbeete gefunden. Erstellen Sie Ihr erstes Wachstumsbeet, um zu beginnen.',
+      loadingGrowbeds: 'Wachstumsbeete werden geladen...',
+      confirmDelete: 'Sind Sie sicher, dass Sie dieses Wachstumsbeet löschen möchten?',
+      errorSavingGrowbed: 'Fehler beim Speichern des Wachstumsbeets',
+      errorDeletingGrowbed: 'Fehler beim Löschen des Wachstumsbeets',
+      summary: 'Zusammenfassung',
+      totalHoles: 'Gesamte Löcher',
+      totalArea: 'Gesamtfläche (m²)',
+      totalVolume: 'Gesamtvolumen (L)',
+      totalFlowRate: 'Gesamtdurchflussrate (L/Std)',
+      showingFiltered: '{filtered} von {total} Wachstumsbeeten werden angezeigt'
+    },
+
+    // Fishtanks Page
+    fishtanks: {
+      title: 'Fischbecken',
+      subtitle: 'Verwalten Sie Ihre Fischbecken-Konfigurationen',
+      addFishtank: 'Fischbecken hinzufügen',
+      editFishtank: 'Fischbecken bearbeiten',
+      addNewFishtank: 'Neues Fischbecken hinzufügen',
+      tankName: 'Beckenname',
+      namePlaceholder: 'z.B. Becken 1, Hauptbecken, Aufzuchtbecken',
+      volume: 'Volumen (L)',
+      volumePlaceholder: 'z.B. 500',
+      flowRate: 'Durchflussrate (L/Std)',
+      flowRatePlaceholder: 'z.B. 50',
+      notes: 'Zusätzliche Notizen zu diesem Becken...',
+      noFishtanksFound: 'Keine Fischbecken gefunden. Erstellen Sie Ihr erstes Fischbecken, um zu beginnen.',
+      loadingFishtanks: 'Fischbecken werden geladen...',
+      confirmDelete: 'Sind Sie sicher, dass Sie dieses Fischbecken löschen möchten?',
+      errorSavingFishtank: 'Fehler beim Speichern des Fischbeckens',
+      errorDeletingFishtank: 'Fehler beim Löschen des Fischbeckens'
+    },
+
+    // Fish Page
+    fish: {
+      title: 'Fischverwaltung',
+      subtitle: 'Verwalten Sie Ihre Fischbestände und -gesundheit',
+      addFish: 'Fisch hinzufügen',
+      editFish: 'Fisch bearbeiten',
+      addNewFish: 'Neuen Fisch hinzufügen',
+      fishType: 'Fischart',
+      selectFishType: 'Fischart auswählen',
+      fishtank: 'Fischbecken',
+      selectFishtank: 'Fischbecken auswählen',
+      noTank: 'Kein Becken',
+      quantity: 'Menge',
+      quantityPlaceholder: 'z.B. 10',
+      notes: 'Zusätzliche Notizen zu diesen Fischen...',
+      noFishFound: 'Keine Fischaufzeichnungen gefunden. Erstellen Sie Ihre erste Fischaufzeichnung, um zu beginnen.',
+      loadingFish: 'Fische werden geladen...',
+      confirmDelete: 'Sind Sie sicher, dass Sie diese Fischaufzeichnung löschen möchten?',
+      errorSavingFish: 'Fehler beim Speichern der Fischaufzeichnung',
+      errorDeletingFish: 'Fehler beim Löschen der Fischaufzeichnung'
+    },
+
+    // Fish Types Page
+    fishTypes: {
+      title: 'Fischarten',
+      subtitle: 'Verschiedene Fischarten verwalten',
+      addFishType: 'Fischart hinzufügen',
+      editFishType: 'Fischart bearbeiten',
+      createFishType: 'Fischart erstellen',
+      updateFishType: 'Fischart aktualisieren',
+      name: 'Name',
+      namePlaceholder: 'z.B. Tilapia, Wels, Forelle',
+      description: 'Beschreibung',
+      descriptionPlaceholder: 'Beschreiben Sie diese Fischart...',
+      created: 'Erstellt',
+      noFishTypesFound: 'Keine Fischarten gefunden. Erstellen Sie Ihre erste Fischart, um zu beginnen.',
+      loadingFishTypes: 'Fischarten werden geladen...',
+      confirmDelete: 'Sind Sie sicher, dass Sie diese Fischart löschen möchten?',
+      errorSavingFishType: 'Fehler beim Speichern der Fischart',
+      errorDeletingFishType: 'Fehler beim Löschen der Fischart'
+    },
+
+    // SOPs Page
+    sops: {
+      title: 'Standardarbeitsanweisungen',
+      subtitle: 'Verwalten Sie Ihre Arbeitsverfahren und -richtlinien',
+      createNewSOP: 'Neue Arbeitsanweisung erstellen',
+      backToGreenhouse: 'Zurück zum Gewächshaus',
+      quickActions: 'Schnellaktionen',
+      title: 'Titel',
+      description: 'Beschreibung',
+      priority: 'Priorität',
+      status: 'Status',
+      lastUpdated: 'Zuletzt aktualisiert',
+      published: 'Veröffentlicht',
+      draft: 'Entwurf',
+      noSOPsFound: 'Keine Arbeitsanweisungen gefunden. Erstellen Sie Ihre erste Arbeitsanweisung, um zu beginnen.',
+      loadingSOPs: 'Arbeitsanweisungen werden geladen...',
+      view: 'Anzeigen',
+      edit: 'Bearbeiten'
+    }
+  }
+};
+
+// Helper function to get translation
+export const t = (key, language = 'en', params = {}) => {
+  const keys = key.split('.');
+  let value = translations[language];
+  
+  for (const k of keys) {
+    if (value && value[k]) {
+      value = value[k];
+    } else {
+      // Fallback to English if translation not found
+      value = translations.en;
+      for (const fallbackKey of keys) {
+        if (value && value[fallbackKey]) {
+          value = value[fallbackKey];
+        } else {
+          return key; // Return key if no translation found
+        }
+      }
+    }
+  }
+  
+  // Replace parameters in the translation
+  if (typeof value === 'string') {
+    Object.keys(params).forEach(param => {
+      value = value.replace(`{${param}}`, params[param]);
+    });
+  }
+  
+  return value || key;
+};

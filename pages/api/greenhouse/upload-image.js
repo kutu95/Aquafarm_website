@@ -1,6 +1,14 @@
 import { createClient } from '@supabase/supabase-js';
 import sharp from 'sharp';
 
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '25mb', // Allow up to 25MB for image uploads (20MB limit + buffer)
+    },
+  },
+};
+
 // Create a Supabase client with service role key for admin operations
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -10,14 +18,6 @@ if (!supabaseUrl || !supabaseServiceKey) {
 }
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: '10mb', // Allow up to 10MB for image uploads
-    },
-  },
-};
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -98,52 +98,9 @@ export default async function handler(req, res) {
       
       // Resize and compress image
       processedImageBuffer = await sharp(imageBuffer)
-        .resize(newWidth, newHeight, {
-          fit: 'inside',
-          withoutEnlargement: true
-        })
-        .jpeg({ 
-          quality: 80,
-          progressive: true,
-          mozjpeg: true
-        })
+        .resize(newWidth, newHeight)
+        .jpeg({ quality: 80 })
         .toBuffer();
-      
-      // If still too large, compress more aggressively
-      if (processedImageBuffer.length > 30 * 1024) {
-        console.log('Image still too large, compressing more aggressively...');
-        processedImageBuffer = await sharp(imageBuffer)
-          .resize(newWidth, newHeight, {
-            fit: 'inside',
-            withoutEnlargement: true
-          })
-          .jpeg({ 
-            quality: 60,
-            progressive: true,
-            mozjpeg: true
-          })
-          .toBuffer();
-      }
-      
-      // If still too large, reduce dimensions further
-      if (processedImageBuffer.length > 30 * 1024) {
-        console.log('Image still too large, reducing dimensions...');
-        const scaleFactor = Math.sqrt(30 * 1024 / processedImageBuffer.length);
-        newWidth = Math.round(newWidth * scaleFactor);
-        newHeight = Math.round(newHeight * scaleFactor);
-        
-        processedImageBuffer = await sharp(imageBuffer)
-          .resize(newWidth, newHeight, {
-            fit: 'inside',
-            withoutEnlargement: true
-          })
-          .jpeg({ 
-            quality: 70,
-            progressive: true,
-            mozjpeg: true
-          })
-          .toBuffer();
-      }
       
       console.log('Final processed image:', {
         dimensions: `${newWidth}x${newHeight}`,
@@ -151,8 +108,8 @@ export default async function handler(req, res) {
         compression: `${((1 - processedImageBuffer.length / imageBuffer.length) * 100).toFixed(1)}%`
       });
       
-    } catch (processingError) {
-      console.error('Error processing image:', processingError);
+    } catch (sharpError) {
+      console.error('Error processing image with Sharp:', sharpError);
       return res.status(500).json({ error: 'Failed to process image' });
     }
 

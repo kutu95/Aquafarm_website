@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabaseClient';
 export const config = {
   api: {
     bodyParser: {
-      sizeLimit: '10mb', // Allow up to 10MB for image uploads
+      sizeLimit: '25mb', // Allow up to 25MB for image uploads (20MB limit + buffer)
     },
   },
 };
