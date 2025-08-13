@@ -7,6 +7,7 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
   const [existingFishtanks, setExistingFishtanks] = useState([]);
   const [selectedComponent, setSelectedComponent] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [editingComponent, setEditingComponent] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newComponent, setNewComponent] = useState({
@@ -341,6 +342,55 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
     }
   };
 
+  const handleSaveLayout = async () => {
+    try {
+      setIsSaving(true);
+
+      // Save each component that has been modified
+      const savePromises = layoutComponents.map(async (component) => {
+        const { error } = await supabase
+          .from('greenhouse_layout')
+          .upsert({
+            id: component.id,
+            name: component.name,
+            component_type: component.component_type,
+            parent_id: component.parent_id,
+            x_position: component.x_position,
+            y_position: component.y_position,
+            width: component.width,
+            height: component.height,
+            rotation: component.rotation,
+            layer_order: component.layer_order,
+            color: component.color,
+            status: component.status,
+            metadata: component.metadata,
+            updated_at: new Date().toISOString()
+          }, {
+            onConflict: 'id'
+          });
+
+        if (error) {
+          console.error(`Error saving component ${component.name}:`, error);
+          throw error;
+        }
+      });
+
+      await Promise.all(savePromises);
+      
+      // Show success message
+      alert('Layout saved successfully!');
+      
+      // Refresh the layout data to ensure we have the latest from database
+      await fetchLayoutData();
+      
+    } catch (err) {
+      console.error('Error saving layout:', err);
+      alert('Error saving layout. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const componentTypes = [
     { value: 'growbed', label: 'Growbed', color: '#4CAF50' },
     { value: 'fishtank', label: 'Fish Tank', color: '#2196F3' },
@@ -362,10 +412,11 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
           ➕ Add Component
         </button>
         <button
-          onClick={onSave}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
+          onClick={handleSaveLayout}
+          disabled={isSaving}
+          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-sm"
         >
-          💾 Save Layout
+          {isSaving ? '💾 Saving...' : '💾 Save Layout'}
         </button>
         <button
           onClick={onCancel}
