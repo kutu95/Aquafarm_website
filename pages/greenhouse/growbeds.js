@@ -619,9 +619,39 @@ export default function Growbeds() {
                           {growbed.volume || 0} L
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                            {growbed.type}
-                          </span>
+                          <div className="relative group">
+                            <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 cursor-help">
+                              {growbed.type}
+                            </span>
+                            
+                            {/* Tooltip for Media bed */}
+                            {growbed.type === 'Media bed' && (
+                              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10 w-80">
+                                <div className="text-center">
+                                  <div className="font-semibold mb-1">Media bed</div>
+                                  <div className="text-gray-200 leading-relaxed">
+                                    Media beds are also known as 'gravel beds' or 'flood and drain' beds. They are filled with stones that are coated with Nitrosomonas and Nitrobacter bacteria that convert ammonia into nitrate. They have a critical function in the greenhouse in the nitrogen cycle and also act as bio-filters. Crops can also grow in them and they are typically used for plants with larger root systems.
+                                  </div>
+                                </div>
+                                {/* Arrow pointing down */}
+                                <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                              </div>
+                            )}
+                            
+                            {/* Tooltip for DWC */}
+                            {growbed.type === 'DWC' && (
+                              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10 w-80">
+                                <div className="text-center">
+                                  <div className="font-semibold mb-1">DWC</div>
+                                  <div className="text-gray-200 leading-relaxed">
+                                    DWC or 'Deep Water Culture beds' or 'Floating Raft Beds' are about 30cm deep and have 25 holes or plants per square meter. They are typically for quick growing plants especially leafy greens and herbs.
+                                  </div>
+                                </div>
+                                {/* Arrow pointing down */}
+                                <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                              </div>
+                            )}
+                          </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <button
