@@ -328,7 +328,6 @@ export default function Tasks() {
         .from('pages')
         .select('id, title, slug, page_type')
         .eq('page_type', 'sop')
-        .eq('is_active', true)
         .order('title');
 
       if (error) {
