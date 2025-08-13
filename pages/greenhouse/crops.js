@@ -869,41 +869,41 @@ export default function Crops() {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         {t('crops.harvestTime', currentLanguage)}
                       </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Jan
+                      <th className="px-1 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        J
                       </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Feb
+                      <th className="px-1 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        F
                       </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Mar
+                      <th className="px-1 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        M
                       </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Apr
+                      <th className="px-1 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        A
                       </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        May
+                      <th className="px-1 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        M
                       </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Jun
+                      <th className="px-1 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        J
                       </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Jul
+                      <th className="px-1 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        J
                       </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Aug
+                      <th className="px-1 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        A
                       </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Sep
+                      <th className="px-1 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        S
                       </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Oct
+                      <th className="px-1 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        O
                       </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Nov
+                      <th className="px-1 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        N
                       </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Dec
+                      <th className="px-1 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        D
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         {t('common.status', currentLanguage)}
@@ -954,40 +954,40 @@ export default function Crops() {
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {crop.time_to_harvest} {t('crops.harvestTime', currentLanguage).includes('weeks') ? 'weeks' : 'Wochen'}
                         </td>
-                                                 <td className="px-6 py-4 whitespace-nowrap text-center">
+                                                 <td className="px-1 py-4 whitespace-nowrap text-center">
                            <div className={`w-6 h-6 mx-auto rounded ${crop.plant_jan ? 'bg-green-500' : 'bg-gray-200'}`}></div>
                          </td>
-                         <td className="px-6 py-4 whitespace-nowrap text-center">
+                         <td className="px-1 py-4 whitespace-nowrap text-center">
                            <div className={`w-6 h-6 mx-auto rounded ${crop.plant_feb ? 'bg-green-500' : 'bg-gray-200'}`}></div>
                          </td>
-                         <td className="px-6 py-4 whitespace-nowrap text-center">
+                         <td className="px-1 py-4 whitespace-nowrap text-center">
                            <div className={`w-6 h-6 mx-auto rounded ${crop.plant_mar ? 'bg-green-500' : 'bg-gray-200'}`}></div>
                          </td>
-                         <td className="px-6 py-4 whitespace-nowrap text-center">
+                         <td className="px-1 py-4 whitespace-nowrap text-center">
                            <div className={`w-6 h-6 mx-auto rounded ${crop.plant_apr ? 'bg-green-500' : 'bg-gray-200'}`}></div>
                          </td>
-                         <td className="px-6 py-4 whitespace-nowrap text-center">
+                         <td className="px-1 py-4 whitespace-nowrap text-center">
                            <div className={`w-6 h-6 mx-auto rounded ${crop.plant_may ? 'bg-green-500' : 'bg-gray-200'}`}></div>
                          </td>
-                         <td className="px-6 py-4 whitespace-nowrap text-center">
+                         <td className="px-1 py-4 whitespace-nowrap text-center">
                            <div className={`w-6 h-6 mx-auto rounded ${crop.plant_jun ? 'bg-green-500' : 'bg-gray-200'}`}></div>
                          </td>
-                         <td className="px-6 py-4 whitespace-nowrap text-center">
+                         <td className="px-1 py-4 whitespace-nowrap text-center">
                            <div className={`w-6 h-6 mx-auto rounded ${crop.plant_jul ? 'bg-green-500' : 'bg-gray-200'}`}></div>
                          </td>
-                         <td className="px-6 py-4 whitespace-nowrap text-center">
+                         <td className="px-1 py-4 whitespace-nowrap text-center">
                            <div className={`w-6 h-6 mx-auto rounded ${crop.plant_aug ? 'bg-green-500' : 'bg-gray-200'}`}></div>
                          </td>
-                         <td className="px-6 py-4 whitespace-nowrap text-center">
+                         <td className="px-1 py-4 whitespace-nowrap text-center">
                            <div className={`w-6 h-6 mx-auto rounded ${crop.plant_sep ? 'bg-green-500' : 'bg-gray-200'}`}></div>
                          </td>
-                         <td className="px-6 py-4 whitespace-nowrap text-center">
+                         <td className="px-1 py-4 whitespace-nowrap text-center">
                            <div className={`w-6 h-6 mx-auto rounded ${crop.plant_oct ? 'bg-green-500' : 'bg-gray-200'}`}></div>
                          </td>
-                         <td className="px-6 py-4 whitespace-nowrap text-center">
+                         <td className="px-1 py-4 whitespace-nowrap text-center">
                            <div className={`w-6 h-6 mx-auto rounded ${crop.plant_nov ? 'bg-green-500' : 'bg-gray-200'}`}></div>
                          </td>
-                         <td className="px-6 py-4 whitespace-nowrap text-center">
+                         <td className="px-1 py-4 whitespace-nowrap text-center">
                            <div className={`w-6 h-6 mx-auto rounded ${crop.plant_dec ? 'bg-green-500' : 'bg-gray-200'}`}></div>
                          </td>
                         <td className="px-6 py-4 whitespace-nowrap">
