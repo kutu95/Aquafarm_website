@@ -12,6 +12,7 @@
     "@headlessui/react": "^1.7.17",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.39.0",
+    "@tailwindcss/typography": "^0.5.16",
     "@tinymce/tinymce-react": "^6.2.1",
     "dotenv": "^17.2.1",
     "formidable": "^3.5.4",
