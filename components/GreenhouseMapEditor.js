@@ -54,15 +54,38 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
 
   const fetchExistingFishtanks = async () => {
     try {
+      // First, let's check what columns actually exist in the fishtanks table
       const { data, error } = await supabase
         .from('fishtanks')
-        .select('id, name, type, status')
-        .order('name');
+        .select('*')
+        .limit(1);
 
-      if (error) throw error;
-      setExistingFishtanks(data || []);
+      if (error) {
+        console.log('Error checking fishtanks table structure:', error);
+        // If table doesn't exist or has different structure, set empty array
+        setExistingFishtanks([]);
+        return;
+      }
+
+      // If we have data, check what columns exist and fetch accordingly
+      if (data && data.length > 0) {
+        const sampleRecord = data[0];
+        console.log('Fishtanks table structure:', Object.keys(sampleRecord));
+        
+        // Fetch with available columns
+        const { data: fishtanks, error: fetchError } = await supabase
+          .from('fishtanks')
+          .select('id, name, status')
+          .order('name');
+
+        if (fetchError) throw fetchError;
+        setExistingFishtanks(fishtanks || []);
+      } else {
+        setExistingFishtanks([]);
+      }
     } catch (err) {
       console.error('Error fetching existing fishtanks:', err);
+      setExistingFishtanks([]);
     }
   };
 
@@ -311,7 +334,7 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
         color: '#2196F3', // Blue for fishtanks
         metadata: { 
           ...prev.metadata, 
-          fishtank_type: selectedFishtank.type,
+          fishtank_type: selectedFishtank.type || 'standard', // Default if no type
           fishtank_id: selectedFishtank.id
         }
       }));
@@ -770,7 +793,7 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
                   <option value="">Choose a fishtank...</option>
                   {existingFishtanks.map(fishtank => (
                     <option key={fishtank.id} value={fishtank.id}>
-                      {fishtank.name} ({fishtank.type})
+                      {fishtank.name}
                     </option>
                   ))}
                 </select>
