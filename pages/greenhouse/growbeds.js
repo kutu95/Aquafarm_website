@@ -629,7 +629,7 @@ export default function Growbeds() {
                               <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10 w-80">
                                 <div className="text-center">
                                   <div className="font-semibold mb-1">Media bed</div>
-                                  <div className="text-gray-200 leading-relaxed">
+                                  <div className="text-gray-200 leading-relaxed text-left whitespace-normal break-words">
                                     Media beds are also known as 'gravel beds' or 'flood and drain' beds. They are filled with stones that are coated with Nitrosomonas and Nitrobacter bacteria that convert ammonia into nitrate. They have a critical function in the greenhouse in the nitrogen cycle and also act as bio-filters. Crops can also grow in them and they are typically used for plants with larger root systems.
                                   </div>
                                 </div>
@@ -643,7 +643,7 @@ export default function Growbeds() {
                               <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10 w-80">
                                 <div className="text-center">
                                   <div className="font-semibold mb-1">DWC</div>
-                                  <div className="text-gray-200 leading-relaxed">
+                                  <div className="text-gray-200 leading-relaxed text-left whitespace-normal break-words">
                                     DWC or 'Deep Water Culture beds' or 'Floating Raft Beds' are about 30cm deep and have 25 holes or plants per square meter. They are typically for quick growing plants especially leafy greens and herbs.
                                   </div>
                                 </div>
