@@ -207,10 +207,10 @@ export default function GreenhouseMap() {
                   r={Math.min(component.width, component.height) / 2}
                   fill={component.color}
                   stroke={getStatusColor(component.status)}
-                  strokeWidth="2"
+                  strokeWidth="0.05"
                   style={{
                     transform: `rotate(${component.rotation}deg)`,
-                    transformOrigin: `${component.x_position + component.width / 2}px ${component.y_position + component.height / 2}px`
+                    transformOrigin: `${component.x_position + component.width / 2} ${component.y_position + component.height / 2}`
                   }}
                   className="cursor-pointer hover:opacity-80 transition-opacity"
                   onClick={() => handleComponentClick(component)}
@@ -223,12 +223,12 @@ export default function GreenhouseMap() {
                   height={component.height}
                   fill={component.color}
                   stroke={getStatusColor(component.status)}
-                  strokeWidth="2"
-                  rx="4"
-                  ry="4"
+                  strokeWidth="0.05"
+                  rx="0.1"
+                  ry="0.1"
                   style={{
                     transform: `rotate(${component.rotation}deg)`,
-                    transformOrigin: `${component.x_position + component.width / 2}px ${component.y_position + component.height / 2}px`
+                    transformOrigin: `${component.x_position + component.width / 2} ${component.y_position + component.height / 2}`
                   }}
                   className="cursor-pointer hover:opacity-80 transition-opacity"
                   onClick={() => handleComponentClick(component)}
@@ -241,11 +241,11 @@ export default function GreenhouseMap() {
                 y={component.y_position + component.height / 2}
                 textAnchor="middle"
                 dominantBaseline="middle"
-                fontSize="20"
+                fontSize="0.8"
                 fill="white"
                 style={{
                   transform: `rotate(${component.rotation}deg)`,
-                  transformOrigin: `${component.x_position + component.width / 2}px ${component.y_position + component.height / 2}px`
+                  transformOrigin: `${component.x_position + component.width / 2} ${component.y_position + component.height / 2}`
                 }}
               >
                 {getComponentIcon(component.component_type)}
@@ -254,14 +254,14 @@ export default function GreenhouseMap() {
               {/* Component name */}
               <text
                 x={component.x_position + component.width / 2}
-                y={component.y_position + component.height + 20}
+                y={component.y_position + component.height + 0.5}
                 textAnchor="middle"
-                fontSize="12"
+                fontSize="0.4"
                 fill="#374151"
                 fontWeight="500"
                 style={{
                   transform: `rotate(${component.rotation}deg)`,
-                  transformOrigin: `${component.x_position + component.width / 2}px ${component.y_position + component.height / 2}px`
+                  transformOrigin: `${component.x_position + component.width / 2} ${component.y_position + component.height / 2}`
                 }}
               >
                 {component.name}
@@ -269,12 +269,12 @@ export default function GreenhouseMap() {
 
               {/* Status indicator */}
               <circle
-                cx={component.x_position + component.width - 8}
-                cy={component.y_position + 8}
-                r="4"
+                cx={component.x_position + component.width - 0.2}
+                cy={component.y_position + 0.2}
+                r="0.15"
                 fill={getStatusColor(component.status)}
                 stroke="white"
-                strokeWidth="1"
+                strokeWidth="0.02"
               />
             </g>
           ))}
