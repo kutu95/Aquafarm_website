@@ -30,7 +30,8 @@ CREATE TABLE IF NOT EXISTS component_monitoring (
   timestamp TIMESTAMPTZ DEFAULT NOW(),
   alert_threshold_min DECIMAL(10,4),
   alert_threshold_max DECIMAL(10,4),
-  is_alert BOOLEAN DEFAULT FALSE
+  is_alert BOOLEAN DEFAULT FALSE,
+  metadata JSONB DEFAULT '{}'
 );
 
 -- Create indexes for better performance
