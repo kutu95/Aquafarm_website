@@ -156,7 +156,7 @@ export default function Crops() {
             name
           )
         `)
-        .order('created_at', { ascending: false });
+        .order('vegetable_name', { ascending: true });
 
       if (error) throw error;
       
