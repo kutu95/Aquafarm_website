@@ -142,6 +142,13 @@ export default function Greenhouse() {
       href: '/greenhouse/fish-types',
       icon: '🦈',
       color: 'bg-indigo-500'
+    },
+    {
+      title: 'Operations Calendar',
+      description: 'Manage recurring tasks, schedules, and link to SOPs',
+      href: '/greenhouse/tasks',
+      icon: '📅',
+      color: 'bg-purple-500'
     }
   ];
 
