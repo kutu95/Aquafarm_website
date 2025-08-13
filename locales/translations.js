@@ -95,7 +95,20 @@ export const translations = {
       errorFetchingCrops: 'Error fetching crops',
       errorInvalidFileType: 'Please select an image file',
       errorImageSizeTooLarge: 'Image file size must be less than 20MB. It will be automatically resized and compressed.',
-      notes: 'Additional notes about this crop...'
+      notes: 'Additional notes about this crop...',
+      plantingMonths: 'Planting Months',
+      january: 'Jan',
+      february: 'Feb',
+      march: 'Mar',
+      april: 'Apr',
+      may: 'May',
+      june: 'Jun',
+      july: 'Jul',
+      august: 'Aug',
+      september: 'Sep',
+      october: 'Oct',
+      november: 'Nov',
+      december: 'Dec'
     },
 
     // Crop Types Page
@@ -385,7 +398,20 @@ export const translations = {
       errorFetchingCrops: 'Fehler beim Abrufen der Kulturen',
       errorInvalidFileType: 'Bitte wählen Sie eine Bilddatei aus',
       errorImageSizeTooLarge: 'Die Bilddatei-Größe muss kleiner als 20MB sein. Es wird automatisch verkleinert und komprimiert.',
-      notes: 'Zusätzliche Notizen zu dieser Kultur...'
+      notes: 'Zusätzliche Notizen zu dieser Kultur...',
+      plantingMonths: 'Pflanzmonate',
+      january: 'Jan',
+      february: 'Feb',
+      march: 'Mär',
+      april: 'Apr',
+      may: 'Mai',
+      june: 'Jun',
+      july: 'Jul',
+      august: 'Aug',
+      september: 'Sep',
+      october: 'Okt',
+      november: 'Nov',
+      december: 'Dez'
     },
 
     // Crop Types Page

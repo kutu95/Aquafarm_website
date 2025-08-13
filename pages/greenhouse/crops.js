@@ -75,6 +75,18 @@ export default function Crops() {
     time_to_harvest: '',
     status: 'active',
     pelleted: false,
+    plant_jan: false,
+    plant_feb: false,
+    plant_mar: false,
+    plant_apr: false,
+    plant_may: false,
+    plant_jun: false,
+    plant_jul: false,
+    plant_aug: false,
+    plant_sep: false,
+    plant_oct: false,
+    plant_nov: false,
+    plant_dec: false,
     notes: ''
   });
 
@@ -232,6 +244,18 @@ export default function Crops() {
       time_to_harvest: crop.time_to_harvest.toString(),
       status: crop.status,
       pelleted: crop.pelleted,
+      plant_jan: crop.plant_jan,
+      plant_feb: crop.plant_feb,
+      plant_mar: crop.plant_mar,
+      plant_apr: crop.plant_apr,
+      plant_may: crop.plant_may,
+      plant_jun: crop.plant_jun,
+      plant_jul: crop.plant_jul,
+      plant_aug: crop.plant_aug,
+      plant_sep: crop.plant_sep,
+      plant_oct: crop.plant_oct,
+      plant_nov: crop.plant_nov,
+      plant_dec: crop.plant_dec,
       notes: crop.notes || ''
     });
     
@@ -278,6 +302,18 @@ export default function Crops() {
       time_to_harvest: '',
       status: 'active',
       pelleted: false,
+      plant_jan: false,
+      plant_feb: false,
+      plant_mar: false,
+      plant_apr: false,
+      plant_may: false,
+      plant_jun: false,
+      plant_jul: false,
+      plant_aug: false,
+      plant_sep: false,
+      plant_oct: false,
+      plant_nov: false,
+      plant_dec: false,
       notes: ''
     });
     setImagePreview(null);
@@ -561,6 +597,175 @@ export default function Crops() {
                     </p>
                   </div>
                 </div>
+                
+                {/* Planting Months Section */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                    {t('crops.plantingMonths', currentLanguage) || 'Planting Months'}
+                  </label>
+                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id="plant_jan"
+                        name="plant_jan"
+                        checked={formData.plant_jan}
+                        onChange={handleInputChange}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      />
+                      <label htmlFor="plant_jan" className="ml-2 block text-sm text-gray-700">
+                        {t('crops.january', currentLanguage) || 'Jan'}
+                      </label>
+                    </div>
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id="plant_feb"
+                        name="plant_feb"
+                        checked={formData.plant_feb}
+                        onChange={handleInputChange}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      />
+                      <label htmlFor="plant_feb" className="ml-2 block text-sm text-gray-700">
+                        {t('crops.february', currentLanguage) || 'Feb'}
+                      </label>
+                    </div>
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id="plant_mar"
+                        name="plant_mar"
+                        checked={formData.plant_mar}
+                        onChange={handleInputChange}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      />
+                      <label htmlFor="plant_mar" className="ml-2 block text-sm text-gray-700">
+                        {t('crops.march', currentLanguage) || 'Mar'}
+                      </label>
+                    </div>
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id="plant_apr"
+                        name="plant_apr"
+                        checked={formData.plant_apr}
+                        onChange={handleInputChange}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      />
+                      <label htmlFor="plant_apr" className="ml-2 block text-sm text-gray-700">
+                        {t('crops.april', currentLanguage) || 'Apr'}
+                      </label>
+                    </div>
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id="plant_may"
+                        name="plant_may"
+                        checked={formData.plant_may}
+                        onChange={handleInputChange}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      />
+                      <label htmlFor="plant_may" className="ml-2 block text-sm text-gray-700">
+                        {t('crops.may', currentLanguage) || 'May'}
+                      </label>
+                    </div>
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id="plant_jun"
+                        name="plant_jun"
+                        checked={formData.plant_jun}
+                        onChange={handleInputChange}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      />
+                      <label htmlFor="plant_jun" className="ml-2 block text-sm text-gray-700">
+                        {t('crops.june', currentLanguage) || 'Jun'}
+                      </label>
+                    </div>
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id="plant_jul"
+                        name="plant_jul"
+                        checked={formData.plant_jul}
+                        onChange={handleInputChange}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      />
+                      <label htmlFor="plant_jul" className="ml-2 block text-sm text-gray-700">
+                        {t('crops.july', currentLanguage) || 'Jul'}
+                      </label>
+                    </div>
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id="plant_aug"
+                        name="plant_aug"
+                        checked={formData.plant_aug}
+                        onChange={handleInputChange}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      />
+                      <label htmlFor="plant_aug" className="ml-2 block text-sm text-gray-700">
+                        {t('crops.august', currentLanguage) || 'Aug'}
+                      </label>
+                    </div>
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id="plant_sep"
+                        name="plant_sep"
+                        checked={formData.plant_sep}
+                        onChange={handleInputChange}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      />
+                      <label htmlFor="plant_sep" className="ml-2 block text-sm text-gray-700">
+                        {t('crops.september', currentLanguage) || 'Sep'}
+                      </label>
+                    </div>
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id="plant_oct"
+                        name="plant_oct"
+                        checked={formData.plant_oct}
+                        onChange={handleInputChange}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      />
+                      <label htmlFor="plant_oct" className="ml-2 block text-sm text-gray-700">
+                        {t('crops.october', currentLanguage) || 'Oct'}
+                      </label>
+                    </div>
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id="plant_nov"
+                        name="plant_nov"
+                        checked={formData.plant_nov}
+                        onChange={handleInputChange}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      />
+                      <label htmlFor="plant_nov" className="ml-2 block text-sm text-gray-700">
+                        {t('crops.november', currentLanguage) || 'Nov'}
+                      </label>
+                    </div>
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id="plant_dec"
+                        name="plant_dec"
+                        checked={formData.plant_dec}
+                        onChange={handleInputChange}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      />
+                      <label htmlFor="plant_dec" className="ml-2 block text-sm text-gray-700">
+                        {t('crops.december', currentLanguage) || 'Dec'}
+                      </label>
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">
+                    Select the months when this crop can be planted
+                  </p>
+                </div>
+                
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     {t('crops.image', currentLanguage)}
@@ -665,6 +870,9 @@ export default function Crops() {
                         {t('crops.harvestTime', currentLanguage)}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        {t('crops.plantingMonths', currentLanguage) || 'Planting Months'}
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         {t('common.status', currentLanguage)}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -712,6 +920,22 @@ export default function Crops() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {crop.time_to_harvest} {t('crops.harvestTime', currentLanguage).includes('weeks') ? 'weeks' : 'Wochen'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex flex-wrap gap-1">
+                            {crop.plant_jan && <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Jan</span>}
+                            {crop.plant_feb && <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Feb</span>}
+                            {crop.plant_mar && <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Mar</span>}
+                            {crop.plant_apr && <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Apr</span>}
+                            {crop.plant_may && <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">May</span>}
+                            {crop.plant_jun && <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Jun</span>}
+                            {crop.plant_jul && <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Jul</span>}
+                            {crop.plant_aug && <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Aug</span>}
+                            {crop.plant_sep && <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Sep</span>}
+                            {crop.plant_oct && <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Oct</span>}
+                            {crop.plant_nov && <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Nov</span>}
+                            {crop.plant_dec && <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Dec</span>}
+                          </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
@@ -839,6 +1063,26 @@ export default function Crops() {
                       <p className="text-sm text-gray-900">
                         {selectedCropForModal.time_to_harvest} {t('crops.harvestTime', currentLanguage).includes('weeks') ? 'weeks' : 'Wochen'}
                       </p>
+                    </div>
+
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-700 mb-1">
+                        {t('crops.plantingMonths', currentLanguage) || 'Planting Months'}
+                      </h4>
+                      <div className="flex flex-wrap gap-1">
+                        {selectedCropForModal.plant_jan && <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Jan</span>}
+                        {selectedCropForModal.plant_feb && <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Feb</span>}
+                        {selectedCropForModal.plant_mar && <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Mar</span>}
+                        {selectedCropForModal.plant_apr && <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Apr</span>}
+                        {selectedCropForModal.plant_may && <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">May</span>}
+                        {selectedCropForModal.plant_jun && <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Jun</span>}
+                        {selectedCropForModal.plant_jul && <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Jul</span>}
+                        {selectedCropForModal.plant_aug && <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Aug</span>}
+                        {selectedCropForModal.plant_sep && <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Sep</span>}
+                        {selectedCropForModal.plant_oct && <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Oct</span>}
+                        {selectedCropForModal.plant_nov && <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Nov</span>}
+                        {selectedCropForModal.plant_dec && <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Dec</span>}
+                      </div>
                     </div>
 
                     <div>
