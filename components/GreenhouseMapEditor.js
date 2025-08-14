@@ -441,7 +441,7 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
             ❌ Cancel
           </button>
         </div>
-
+        
         {/* Right Side - Zoom Controls */}
         <div className="flex space-x-2">
           <button
@@ -463,8 +463,8 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
         </div>
       </div>
 
-      {/* Map Container - Takes remaining height */}
-      <div className="flex-1 relative">
+      {/* Map Container - Natural sizing to match view mode */}
+      <div className="relative">
         <div 
           className="w-full h-full border border-gray-300 rounded-lg overflow-hidden bg-gray-50"
           onMouseDown={handleMouseDown}
