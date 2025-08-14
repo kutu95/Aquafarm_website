@@ -464,7 +464,7 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
       </div>
 
       {/* Map Container - Fixed height with margin for bottom panel */}
-      <div className="flex-1 relative mb-20">
+      <div className="flex-1 relative mb-32">
         <div 
           className="w-full h-full border border-gray-300 rounded-lg overflow-hidden bg-gray-50"
           onMouseDown={handleMouseDown}
@@ -967,44 +967,77 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
         </div>
       )}
 
-      {/* Bottom Instructions Bar - Fixed position below map */}
-      <div className="p-4 bg-white border-t border-gray-200 text-sm text-gray-600 shadow-sm">
-        <div className="flex items-center justify-between">
-          {/* Component Legend */}
-          <div className="flex items-center space-x-4">
+      {/* Bottom Information Panel - Clean and organized */}
+      <div className="bg-white border-t border-gray-200 shadow-sm">
+        {/* Component Types Section */}
+        <div className="px-6 py-3 border-b border-gray-100">
+          <h3 className="text-sm font-medium text-gray-900 mb-2">Component Types</h3>
+          <div className="grid grid-cols-4 gap-3">
             <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-green-500 rounded"></div>
-              <span className="text-gray-700">Growbeds</span>
+              <div className="w-3 h-3 bg-green-500 rounded-sm"></div>
+              <span className="text-xs text-gray-600">Growbeds</span>
             </div>
             <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-blue-500 rounded"></div>
-              <span className="text-gray-700">Fish tanks</span>
+              <div className="w-3 h-3 bg-blue-500 rounded-sm"></div>
+              <span className="text-xs text-gray-600">Fish Tanks</span>
             </div>
             <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-orange-500 rounded"></div>
-              <span className="text-gray-700">Pumps</span>
+              <div className="w-3 h-3 bg-orange-500 rounded-sm"></div>
+              <span className="text-xs text-gray-600">Pumps</span>
             </div>
             <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-purple-500 rounded"></div>
-              <span className="text-gray-700">Sensors</span>
+              <div className="w-3 h-3 bg-purple-500 rounded-sm"></div>
+              <span className="text-xs text-gray-600">Sensors</span>
             </div>
             <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-brown-500 rounded"></div>
-              <span className="text-gray-700">Pipes</span>
+              <div className="w-3 h-3 bg-yellow-600 rounded-sm"></div>
+              <span className="text-xs text-gray-600">Pipes</span>
             </div>
             <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-gray-300 rounded"></div>
-              <span className="text-gray-700">Valves</span>
+              <div className="w-3 h-3 bg-gray-800 rounded-sm"></div>
+              <span className="text-xs text-gray-600">Valves</span>
             </div>
             <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-gray-500 rounded"></div>
-              <span className="text-gray-700">Filters</span>
+              <div className="w-3 h-3 bg-gray-500 rounded-sm"></div>
+              <span className="text-xs text-gray-600">Filters</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 bg-gray-300 rounded-sm"></div>
+              <span className="text-xs text-gray-600">Greenhouse</span>
             </div>
           </div>
-          
-          {/* Instructions */}
-          <div className="flex items-center space-x-4 text-gray-600">
-            <span>🖱️ Drag to move • 🔍 Scroll to zoom • 👆 Click components for details • 📏 20m × 20m greenhouse</span>
+        </div>
+        
+        {/* Status Indicators Section */}
+        <div className="px-6 py-3 border-b border-gray-100">
+          <h3 className="text-sm font-medium text-gray-900 mb-2">Status Indicators</h3>
+          <div className="grid grid-cols-4 gap-3">
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 bg-green-500 rounded-sm"></div>
+              <span className="text-xs text-gray-600">Active</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 bg-red-500 rounded-sm"></div>
+              <span className="text-xs text-gray-600">Inactive</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 bg-yellow-500 rounded-sm"></div>
+              <span className="text-xs text-gray-600">Maintenance</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 bg-red-600 rounded-sm"></div>
+              <span className="text-xs text-gray-600">Error</span>
+            </div>
+          </div>
+        </div>
+        
+        {/* Instructions Section */}
+        <div className="px-6 py-3">
+          <div className="flex items-center justify-center space-x-6 text-xs text-gray-500">
+            <span>🖱️ Drag to move</span>
+            <span>🔍 Scroll to zoom</span>
+            <span>👆 Click components for details</span>
+            <span>📏 20m × 20m greenhouse</span>
           </div>
         </div>
       </div>
