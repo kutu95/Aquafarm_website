@@ -463,8 +463,8 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
         </div>
       </div>
 
-      {/* Map Container - Fixed height with margin for bottom panel */}
-      <div className="flex-1 relative mb-16">
+      {/* Map Container - Takes remaining height */}
+      <div className="flex-1 relative">
         <div 
           className="w-full h-full border border-gray-300 rounded-lg overflow-hidden bg-gray-50"
           onMouseDown={handleMouseDown}
@@ -966,16 +966,6 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
           </div>
         </div>
       )}
-
-      {/* Simple Bottom Instructions Bar */}
-      <div className="bg-white border-t border-gray-200 px-6 py-4">
-        <div className="flex items-center justify-center space-x-8 text-sm text-gray-600">
-          <span>🖱️ Drag to move</span>
-          <span>🔍 Scroll to zoom</span>
-          <span>👆 Click components for details</span>
-          <span>📏 20m × 20m greenhouse</span>
-        </div>
-      </div>
     </div>
   );
 }
