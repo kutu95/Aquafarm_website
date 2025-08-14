@@ -195,6 +195,10 @@ export const translations = {
       addNewGrowbed: 'Add New Growbed',
       growbedName: 'Growbed Name',
       namePlaceholder: 'e.g., Bed A, Bed B, North Bed',
+      width: 'Width (m)',
+      widthPlaceholder: 'e.g., 1.2',
+      length: 'Length (m)',
+      lengthPlaceholder: 'e.g., 2.0',
       holes: 'Number of Holes',
       holesPlaceholder: 'e.g., 24',
       flowRate: 'Flow Rate (L/hr)',
@@ -211,11 +215,18 @@ export const translations = {
       errorSavingGrowbed: 'Error saving growbed',
       errorDeletingGrowbed: 'Error deleting growbed',
       summary: 'Summary',
+      capacity: 'Capacity',
+      current: 'Current',
       totalHoles: 'Total Holes',
+      activeHoles: 'Active Holes',
       totalArea: 'Total Area (m²)',
+      activeArea: 'Active Area (m²)',
       totalVolume: 'Total Volume (L)',
+      activeVolume: 'Active Volume (L)',
       totalFlowRate: 'Total Flow Rate (L/hr)',
-      showingFiltered: 'Showing {filtered} of {total} growbeds'
+      activeFlowRate: 'Active Flow Rate (L/hr)',
+      showingFiltered: 'Showing {filtered} of {total} growbeds',
+      activeGrowbedsOnly: 'Active growbeds only'
     },
 
     // Fishtanks Page
@@ -498,6 +509,10 @@ export const translations = {
       addNewGrowbed: 'Neues Wachstumsbeet hinzufügen',
       growbedName: 'Wachstumsbeet-Name',
       namePlaceholder: 'z.B. Beet A, Beet B, Nordbeet',
+      width: 'Breite (m)',
+      widthPlaceholder: 'z.B. 1.2',
+      length: 'Länge (m)',
+      lengthPlaceholder: 'z.B. 2.0',
       holes: 'Anzahl der Löcher',
       holesPlaceholder: 'z.B. 24',
       flowRate: 'Durchflussrate (L/Std)',
@@ -514,11 +529,18 @@ export const translations = {
       errorSavingGrowbed: 'Fehler beim Speichern des Wachstumsbeets',
       errorDeletingGrowbed: 'Fehler beim Löschen des Wachstumsbeets',
       summary: 'Zusammenfassung',
+      capacity: 'Kapazität',
+      current: 'Aktuell',
       totalHoles: 'Gesamte Löcher',
+      activeHoles: 'Aktive Löcher',
       totalArea: 'Gesamtfläche (m²)',
+      activeArea: 'Aktive Fläche (m²)',
       totalVolume: 'Gesamtvolumen (L)',
+      activeVolume: 'Aktives Volumen (L)',
       totalFlowRate: 'Gesamtdurchflussrate (L/Std)',
-      showingFiltered: '{filtered} von {total} Wachstumsbeeten werden angezeigt'
+      activeFlowRate: 'Aktive Durchflussrate (L/Std)',
+      showingFiltered: '{filtered} von {total} Wachstumsbeeten werden angezeigt',
+      activeGrowbedsOnly: 'Nur aktive Wachstumsbeete'
     },
 
     // Fishtanks Page
