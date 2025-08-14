@@ -8,6 +8,20 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
   const [selectedComponent, setSelectedComponent] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Filter out growbeds that are already placed on the map
+  const availableGrowbeds = existingGrowbeds.filter(growbed => 
+    !layoutComponents.some(comp => 
+      comp.metadata?.growbed_id === growbed.id
+    )
+  );
+
+  // Filter out fishtanks that are already placed on the map
+  const availableFishtanks = existingFishtanks.filter(fishtank => 
+    !layoutComponents.some(comp => 
+      comp.metadata?.fishtank_id === fishtank.id
+    )
+  );
   const [editingComponent, setEditingComponent] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newComponent, setNewComponent] = useState({
@@ -812,22 +826,30 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
             {newComponent.component_type === 'growbed' && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Select Existing Growbed *</label>
-                <select
-                  value={newComponent.metadata.growbed_id || ''}
-                  onChange={(e) => handleGrowbedSelection(parseInt(e.target.value))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                >
-                  <option value="">Choose a growbed...</option>
-                  {existingGrowbeds.map(growbed => (
-                    <option key={growbed.id} value={growbed.id}>
-                      {growbed.name} ({growbed.type})
-                    </option>
-                  ))}
-                </select>
-                <p className="text-xs text-gray-500 mt-1">
-                  A growbed can only exist once on the map
-                </p>
+                {availableGrowbeds.length > 0 ? (
+                  <>
+                    <select
+                      value={newComponent.metadata.growbed_id || ''}
+                      onChange={(e) => handleGrowbedSelection(parseInt(e.target.value))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    >
+                      <option value="">Choose a growbed...</option>
+                      {availableGrowbeds.map(growbed => (
+                        <option key={growbed.id} value={growbed.id}>
+                          {growbed.name} ({growbed.type})
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-gray-500 mt-1">
+                      A growbed can only exist once on the map
+                    </p>
+                  </>
+                ) : (
+                  <div className="px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500 text-sm">
+                    All growbeds are already placed on the map
+                  </div>
+                )}
               </div>
             )}
 
@@ -835,22 +857,30 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
             {newComponent.component_type === 'fishtank' && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Select Existing Fishtank *</label>
-                <select
-                  value={newComponent.metadata.fishtank_id || ''}
-                  onChange={(e) => handleFishtankSelection(parseInt(e.target.value))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                >
-                  <option value="">Choose a fishtank...</option>
-                  {existingFishtanks.map(fishtank => (
-                    <option key={fishtank.id} value={fishtank.id}>
-                      {fishtank.name}
-                    </option>
-                  ))}
-                </select>
-                <p className="text-xs text-gray-500 mt-1">
-                  A fishtank can only exist once on the map
-                </p>
+                {availableFishtanks.length > 0 ? (
+                  <>
+                    <select
+                      value={newComponent.metadata.fishtank_id || ''}
+                      onChange={(e) => handleFishtankSelection(parseInt(e.target.value))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    >
+                      <option value="">Choose a fishtank...</option>
+                      {availableFishtanks.map(fishtank => (
+                        <option key={fishtank.id} value={fishtank.id}>
+                          {fishtank.name}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-gray-500 mt-1">
+                      A fishtank can only exist once on the map
+                        </p>
+                  </>
+                ) : (
+                  <div className="px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500 text-sm">
+                    All fishtanks are already placed on the map
+                  </div>
+                )}
               </div>
             )}
 
