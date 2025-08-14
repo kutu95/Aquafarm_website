@@ -597,7 +597,7 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
 
       {/* Component Details Modal */}
       {selectedComponent && (
-        <div className="absolute top-4 right-4 z-20 bg-white border border-gray-300 rounded-lg shadow-lg p-4 max-w-sm">
+        <div className="absolute top-4 right-4 z-50 bg-white border border-gray-300 rounded-lg shadow-xl p-4 max-w-sm">
           <div className="flex justify-between items-start mb-3">
             <h3 className="text-lg font-semibold text-gray-900">
               {selectedComponent.name}
@@ -666,7 +666,7 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
 
       {/* Edit Component Form */}
       {editingComponent && (
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-30 bg-white border border-gray-300 rounded-lg shadow-xl p-6 max-w-md w-full">
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 bg-white border border-gray-300 rounded-lg shadow-xl p-6 max-w-md w-full">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Edit Component</h3>
           
           <div className="space-y-4">
@@ -787,7 +787,7 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
 
       {/* Add Component Form */}
       {showAddForm && (
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-30 bg-white border border-gray-300 rounded-lg shadow-xl p-6 max-w-md w-full">
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 bg-white border border-gray-300 rounded-lg shadow-xl p-6 max-w-md w-full">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Add New Component</h3>
           
           <div className="space-y-4">
