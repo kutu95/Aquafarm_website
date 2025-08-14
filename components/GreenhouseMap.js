@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, forwardRef, useImperativeHandle, useRef } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 
-export default function GreenhouseMap() {
+const GreenhouseMap = forwardRef(({ onScaleChange }, ref) => {
   const [layoutComponents, setLayoutComponents] = useState([]);
   const [selectedComponent, setSelectedComponent] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -10,14 +10,57 @@ export default function GreenhouseMap() {
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const scaleRef = useRef(1);
 
   // Greenhouse dimensions in metres
   const GREENHOUSE_WIDTH = 20;
   const GREENHOUSE_HEIGHT = 20;
 
+  // Update scale ref when scale changes
+  useEffect(() => {
+    scaleRef.current = scale;
+  }, [scale]);
+
+  // Notify parent of scale changes
+  useEffect(() => {
+    if (onScaleChange) {
+      onScaleChange(scale);
+    }
+  }, [scale, onScaleChange]);
+
+  // Expose functions to parent component
+  useImperativeHandle(ref, () => ({
+    fitToView: () => {
+      // Calculate scale to fit the entire greenhouse in view
+      const containerWidth = 800; // Approximate container width
+      const containerHeight = 600; // Approximate container height
+      const scaleX = containerWidth / GREENHOUSE_WIDTH;
+      const scaleY = containerHeight / GREENHOUSE_HEIGHT;
+      const newScale = Math.min(scaleX, scaleY) * 0.9; // 90% to add some padding
+      
+      setScale(newScale);
+      setPanOffset({ x: 0, y: 0 });
+    },
+    resetView: () => {
+      setScale(1);
+      setPanOffset({ x: 0, y: 0 });
+    },
+    zoomIn: () => setScale(prevScale => Math.min(3, prevScale * 1.2)),
+    zoomOut: () => setScale(prevScale => Math.max(0.1, prevScale / 1.2)),
+    getScale: () => scaleRef.current
+  }), []);
+
   useEffect(() => {
     fetchLayoutData();
   }, []);
+
+  // Update zoom level display in parent component
+  useEffect(() => {
+    const zoomLevelElement = document.getElementById('zoom-level');
+    if (zoomLevelElement) {
+      zoomLevelElement.textContent = `${Math.round(scale * 100)}%`;
+    }
+  }, [scale]);
 
   const fetchLayoutData = async () => {
     try {
@@ -61,29 +104,6 @@ export default function GreenhouseMap() {
     setIsDragging(false);
   };
 
-  const handleWheel = (e) => {
-    e.preventDefault();
-    const delta = e.deltaY > 0 ? 0.9 : 1.1;
-    setScale(prevScale => Math.max(0.1, Math.min(3, prevScale * delta)));
-  };
-
-  const resetView = () => {
-    setScale(1);
-    setPanOffset({ x: 0, y: 0 });
-  };
-
-  const fitToView = () => {
-    // Calculate scale to fit the entire greenhouse in view
-    const containerWidth = 800; // Approximate container width
-    const containerHeight = 600; // Approximate container height
-    const scaleX = containerWidth / GREENHOUSE_WIDTH;
-    const scaleY = containerHeight / GREENHOUSE_HEIGHT;
-    const newScale = Math.min(scaleX, scaleY) * 0.9; // 90% to add some padding
-    
-    setScale(newScale);
-    setPanOffset({ x: 0, y: 0 });
-  };
-
   const getComponentIcon = (componentType) => {
     switch (componentType) {
       case 'growbed':
@@ -100,6 +120,8 @@ export default function GreenhouseMap() {
         return '⚫';
       case 'filter':
         return '⚪';
+      case 'other':
+        return '⬜';
       default:
         return '⬜';
     }
@@ -138,33 +160,12 @@ export default function GreenhouseMap() {
 
   return (
     <div className="w-full h-full relative">
-      {/* Controls */}
-      <div className="absolute top-4 right-4 z-10 flex space-x-2">
-        <button
-          onClick={fitToView}
-          className="px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 text-sm"
-        >
-          🔍 Fit to View
-        </button>
-        <button
-          onClick={resetView}
-          className="px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 text-sm"
-        >
-          Reset View
-        </button>
-        <div className="flex items-center space-x-2 bg-white border border-gray-300 rounded-md px-3 py-2">
-          <span className="text-sm text-gray-600">Zoom:</span>
-          <span className="text-sm font-medium">{Math.round(scale * 100)}%</span>
-        </div>
-      </div>
-
       {/* Map Container */}
       <div 
         className="w-full h-full border border-gray-300 rounded-lg overflow-hidden bg-gray-50"
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
-        onWheel={handleWheel}
         style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
       >
         <svg
@@ -216,40 +217,109 @@ export default function GreenhouseMap() {
                   onClick={() => handleComponentClick(component)}
                 />
               ) : (
-                <rect
-                  x={component.x_position}
-                  y={component.y_position}
-                  width={component.width}
-                  height={component.height}
-                  fill={component.color}
-                  stroke={getStatusColor(component.status)}
-                  strokeWidth="0.05"
-                  rx="0.1"
-                  ry="0.1"
-                  style={{
-                    transform: `rotate(${component.rotation}deg)`,
-                    transformOrigin: `${component.x_position + component.width / 2} ${component.y_position + component.height / 2}`
-                  }}
-                  className="cursor-pointer hover:opacity-80 transition-opacity"
-                  onClick={() => handleComponentClick(component)}
-                />
+                <>
+                  {/* Background fill for different growbed types */}
+                  {component.component_type === 'growbed' && (
+                    <rect
+                      x={component.x_position}
+                      y={component.y_position}
+                      width={component.width}
+                      height={component.height}
+                      fill={(() => {
+                        if (component.metadata?.growbed_type === 'DWC' || component.name?.includes('DWC')) {
+                          return '#87CEEB'; // Light blue for DWC
+                        } else if (component.metadata?.growbed_type === 'Wicking' || component.name?.includes('Wicking')) {
+                          return '#4CAF50'; // Green for Wicking
+                        } else if (component.metadata?.growbed_type === 'Media' || component.name?.includes('Media')) {
+                          return '#9CA3AF'; // Grey for Media
+                        } else {
+                          return component.color || '#4CAF50'; // Default to green
+                        }
+                      })()}
+                      rx="0.1"
+                      ry="0.1"
+                    />
+                  )}
+                  
+                  {/* Main component rectangle */}
+                  <rect
+                    x={component.x_position}
+                    y={component.y_position}
+                    width={component.width}
+                    height={component.height}
+                    fill={component.component_type === 'growbed' ? 'transparent' : component.color}
+                    stroke={(() => {
+                      if (component.component_type === 'growbed') {
+                        if (component.metadata?.growbed_type === 'DWC' || component.name?.includes('DWC')) {
+                          return '#DC2626'; // Red border for DWC
+                        } else if (component.metadata?.growbed_type === 'Wicking' || component.name?.includes('Wicking')) {
+                          return '#166534'; // Dark green border for Wicking
+                        } else if (component.metadata?.growbed_type === 'Media' || component.name?.includes('Media')) {
+                          return '#374151'; // Dark grey border for Media
+                        } else {
+                          return getStatusColor(component.status); // Default status color
+                        }
+                      } else {
+                        return getStatusColor(component.status);
+                      }
+                    })()}
+                    strokeWidth={component.component_type === 'growbed' ? '0.08' : '0.05'}
+                    rx="0.1"
+                    ry="0.1"
+                    style={{
+                      transform: `rotate(${component.rotation}deg)`,
+                      transformOrigin: `${component.x_position + component.width / 2} ${component.y_position + component.height / 2}`
+                    }}
+                    className="cursor-pointer hover:opacity-80 transition-opacity"
+                    onClick={() => handleComponentClick(component)}
+                  />
+                  
+                  {/* DWC hole pattern for growbeds */}
+                  {(component.component_type === 'growbed' && 
+                    (component.metadata?.growbed_type === 'DWC' || component.name?.includes('DWC'))) && (
+                    <>
+                      {/* Manual hole rendering */}
+                      {(() => {
+                        const holes = [];
+                        const spacing = 0.2; // 20cm spacing
+                        const startOffset = 0.1; // 10cm from edge
+                        
+                        // Calculate number of holes in each direction
+                        const holesX = Math.floor((component.width - 0.2) / spacing) + 1;
+                        const holesY = Math.floor((component.height - 0.2) / spacing) + 1;
+                        
+                        // Generate holes
+                        for (let x = 0; x < holesX; x++) {
+                          for (let y = 0; y < holesY; y++) {
+                            const holeX = component.x_position + startOffset + (x * spacing);
+                            const holeY = component.y_position + startOffset + (y * spacing);
+                            
+                            holes.push(
+                              <circle
+                                key={`hole-${component.id}-${x}-${y}`}
+                                cx={holeX}
+                                cy={holeY}
+                                r="0.025"
+                                fill="#000000"
+                                opacity="1"
+                                style={{ 
+                                  pointerEvents: 'none',
+                                  visibility: 'visible',
+                                  display: 'block'
+                                }}
+                              />
+                            );
+                          }
+                        }
+                        
+                        return holes;
+                      })()}
+                    </>
+                  )}
+                </>
               )}
               
-              {/* Component icon */}
-              <text
-                x={component.x_position + component.width / 2}
-                y={component.y_position + component.height / 2}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                fontSize="0.8"
-                fill="white"
-                style={{
-                  transform: `rotate(${component.rotation}deg)`,
-                  transformOrigin: `${component.x_position + component.width / 2} ${component.y_position + component.height / 2}`
-                }}
-              >
-                {getComponentIcon(component.component_type)}
-              </text>
+
 
               {/* Component name */}
               <text
@@ -349,12 +419,9 @@ export default function GreenhouseMap() {
         </div>
       )}
 
-      {/* Instructions */}
-      <div className="absolute bottom-4 left-4 z-10 bg-white border border-gray-300 rounded-lg shadow-lg p-3 text-sm text-gray-600">
-        <div className="flex items-center space-x-4">
-          <span>🖱️ Drag to pan • 🔍 Scroll to zoom • 👆 Click components for details • 📏 20m × 20m greenhouse</span>
-        </div>
-      </div>
+      {/* Instructions - Removed to eliminate overlap with parent component's instructions panel */}
     </div>
   );
-}
+});
+
+export default GreenhouseMap;
