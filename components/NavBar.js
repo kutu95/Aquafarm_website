@@ -475,6 +475,13 @@ export default function NavBar() {
                   >
                     SOP's
                   </Link>
+                  <Link
+                    href="/greenhouse/map"
+                    className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    Map
+                  </Link>
                 </>
               );
             } else {
@@ -578,20 +585,22 @@ export default function NavBar() {
           }
         })()}
         
-        {/* Language Selector - Mobile */}
-        <div className="border-t border-gray-700 pt-2">
-          <div className="px-3 py-2 text-sm font-medium text-gray-400">
-            Language / Sprache
+        {/* Language Selector - Mobile - Only for logged in users */}
+        {user && (
+          <div className="border-t border-gray-700 pt-2">
+            <div className="px-3 py-2 text-sm font-medium text-gray-400">
+              Language / Sprache
+            </div>
+            <select
+              value={currentLanguage}
+              onChange={(e) => changeLanguage(e.target.value)}
+              className="mx-3 mb-2 px-3 py-2 rounded-md text-sm font-medium text-gray-300 bg-gray-800 border border-gray-600 cursor-pointer w-full"
+            >
+              <option value="en">🇺🇸 English</option>
+              <option value="de">🇩🇪 Deutsch</option>
+            </select>
           </div>
-          <select
-            value={currentLanguage}
-            onChange={(e) => changeLanguage(e.target.value)}
-            className="mx-3 mb-2 px-3 py-2 rounded-md text-sm font-medium text-gray-300 bg-gray-800 border border-gray-600 cursor-pointer w-full"
-          >
-            <option value="en">🇺🇸 English</option>
-            <option value="de">🇩🇪 Deutsch</option>
-          </select>
-        </div>
+        )}
         
         {user ? (
             <>
