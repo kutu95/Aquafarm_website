@@ -416,59 +416,63 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
   ];
 
   return (
-    <div className="w-full h-full relative">
-      {/* Editor Controls */}
-      <div className="absolute top-4 left-4 z-20 flex space-x-2">
-        <button
-          onClick={() => setShowAddForm(true)}
-          className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm"
-        >
-          ➕ Add Component
-        </button>
-        <button
-          onClick={handleSaveLayout}
-          disabled={isSaving}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-sm"
-        >
-          {isSaving ? '💾 Saving...' : '💾 Save Layout'}
-        </button>
-        <button
-          onClick={onCancel}
-          className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 text-sm"
-        >
-          ❌ Cancel
-        </button>
-      </div>
+    <div className="w-full h-full flex flex-col">
+      {/* Top Controls Bar */}
+      <div className="flex justify-between items-center p-4 bg-white border-b border-gray-200">
+        {/* Left Side - Editor Controls */}
+        <div className="flex space-x-2">
+          <button
+            onClick={() => setShowAddForm(true)}
+            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm"
+          >
+            ➕ Add Component
+          </button>
+          <button
+            onClick={handleSaveLayout}
+            disabled={isSaving}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-sm"
+          >
+            {isSaving ? '💾 Saving...' : '💾 Save Layout'}
+          </button>
+          <button
+            onClick={onCancel}
+            className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 text-sm"
+          >
+            ❌ Cancel
+          </button>
+        </div>
 
-      {/* Zoom Controls */}
-      <div className="absolute top-4 right-4 z-20 flex space-x-2">
-        <button
-          onClick={fitToView}
-          className="px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 text-sm"
-        >
-          🔍 Fit to View
-        </button>
-        <button
-          onClick={resetView}
-          className="px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 text-sm"
-        >
-          Reset View
-        </button>
-        <div className="flex items-center space-x-2 bg-white border border-gray-300 rounded-md px-3 py-2">
-          <span className="text-sm text-gray-600">Zoom:</span>
-          <span className="text-sm font-medium">{Math.round(scale * 100)}%</span>
+        {/* Right Side - Zoom Controls */}
+        <div className="flex space-x-2">
+          <button
+            onClick={fitToView}
+            className="px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 text-sm"
+          >
+            🔍 Fit to View
+          </button>
+          <button
+            onClick={resetView}
+            className="px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 text-sm"
+          >
+            Reset View
+          </button>
+          <div className="flex items-center space-x-2 bg-white border border-gray-300 rounded-md px-3 py-2">
+            <span className="text-sm text-gray-600">Zoom:</span>
+            <span className="text-sm font-medium">{Math.round(scale * 100)}%</span>
+          </div>
         </div>
       </div>
 
-      {/* Map Container */}
-      <div 
-        className="w-full h-full border border-gray-300 rounded-lg overflow-hidden bg-gray-50"
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onWheel={handleWheel}
-        style={{ cursor: isDragging ? 'grabbing' : (isEditing ? 'grabbing' : 'grab') }}
-      >
+      {/* Map Container - Takes remaining height */}
+      <div className="flex-1 relative">
+        <div 
+          className="w-full h-full border border-gray-300 rounded-lg overflow-hidden bg-gray-50"
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onWheel={handleWheel}
+          style={{ cursor: isDragging ? 'grabbing' : (isEditing ? 'grabbing' : 'grab') }}
+        >
         <svg
           ref={svgRef}
           width="100%"
@@ -588,6 +592,7 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
             </g>
           ))}
         </svg>
+        </div>
       </div>
 
       {/* Component Details Modal */}
@@ -962,9 +967,9 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
         </div>
       )}
 
-      {/* Instructions */}
-      <div className="absolute bottom-4 left-4 z-10 bg-white border border-gray-300 rounded-lg shadow-lg p-3 text-sm text-gray-600">
-        <div className="flex items-center space-x-4">
+      {/* Bottom Instructions Bar */}
+      <div className="p-3 bg-white border-t border-gray-200 text-sm text-gray-600">
+        <div className="flex items-center justify-center space-x-4">
           <span>🖱️ Drag to move • 🔍 Scroll to zoom • 👆 Click components for details • 📏 20m × 20m greenhouse</span>
         </div>
       </div>
