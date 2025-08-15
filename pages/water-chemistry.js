@@ -911,7 +911,7 @@ export default function WaterChemistry() {
                     )}
                   </button>
                   <p className="text-xs text-gray-600 mt-2">
-                    💰 Token cost: ~${useChatGPT ? '0.01-0.03' : '0.005-0.015'} (cropped image reduces cost)
+                    💰 Token cost: ~${isAnalyzing ? '0.01-0.03' : '0.005-0.015'} (cropped image reduces cost)
                   </p>
                 </div>
               )}

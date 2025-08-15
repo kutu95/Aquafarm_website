@@ -50,7 +50,8 @@ export default async function handler(req, res) {
 
     console.log('API Request authenticated for user:', session.user.id);
 
-    const { imageData, filename, useChatGPT: userPrefersChatGPT } = req.body;
+    // Extract request data
+    const { imageData, filename } = req.body;
 
     if (!imageData || !filename) {
       return res.status(400).json({ error: 'Image data and filename are required' });
