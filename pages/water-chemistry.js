@@ -34,6 +34,154 @@ export default function WaterChemistry() {
   });
   const [saving, setSaving] = useState(false);
   
+  // Function to extract date from image metadata or filename
+  const extractDateFromImage = async (file) => {
+    try {
+      // First try to extract date from EXIF metadata
+      const exifDate = await extractDateFromExif(file);
+      if (exifDate) {
+        console.log('Date extracted from EXIF:', exifDate);
+        return exifDate;
+      }
+      
+      // Fallback to parsing filename for date patterns
+      const filenameDate = extractDateFromFilename(file.name);
+      if (filenameDate) {
+        console.log('Date extracted from filename:', filenameDate);
+        return filenameDate;
+      }
+      
+      console.log('No date found in image, using today');
+      return null; // Will use today's date as fallback
+    } catch (error) {
+      console.error('Error extracting date from image:', error);
+      return null;
+    }
+  };
+
+  // Extract date from EXIF metadata
+  const extractDateFromExif = (file) => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          // Look for EXIF data in the image
+          const arrayBuffer = e.target.result;
+          const uint8Array = new Uint8Array(arrayBuffer);
+          
+          // Check for JPEG EXIF marker
+          let exifStart = -1;
+          for (let i = 0; i < uint8Array.length - 1; i++) {
+            if (uint8Array[i] === 0xFF && uint8Array[i + 1] === 0xE1) {
+              exifStart = i + 2;
+              break;
+            }
+          }
+          
+          if (exifStart !== -1) {
+            // Try to find date fields in EXIF data
+            const exifData = uint8Array.slice(exifStart);
+            const exifString = new TextDecoder().decode(exifData);
+            
+            // Look for common date patterns in EXIF
+            const datePatterns = [
+              /(\d{4}):(\d{2}):(\d{2})/, // YYYY:MM:DD format
+              /(\d{4})-(\d{2})-(\d{2})/, // YYYY-MM-DD format
+              /(\d{2})\/(\d{2})\/(\d{4})/, // MM/DD/YYYY format
+            ];
+            
+            for (const pattern of datePatterns) {
+              const match = exifString.match(pattern);
+              if (match) {
+                let year, month, day;
+                if (pattern.source.includes('YYYY')) {
+                  [_, year, month, day] = match;
+                } else {
+                  [_, month, day, year] = match;
+                }
+                
+                const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+                if (!isNaN(date.getTime())) {
+                  resolve(date.toISOString().split('T')[0]);
+                  return;
+                }
+              }
+            }
+          }
+          
+          resolve(null);
+        } catch (error) {
+          console.error('Error parsing EXIF data:', error);
+          resolve(null);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    });
+  };
+
+  // Extract date from filename
+  const extractDateFromFilename = (filename) => {
+    // Common date patterns in filenames
+    const datePatterns = [
+      // YYYY-MM-DD or YYYY_MM_DD
+      /(\d{4})[-_](\d{2})[-_](\d{2})/,
+      // DD-MM-YYYY or DD_MM_YYYY
+      /(\d{2})[-_](\d{2})[-_](\d{4})/,
+      // MM-DD-YYYY or MM_DD_YYYY
+      /(\d{2})[-_](\d{2})[-_](\d{4})/,
+      // YYYYMMDD
+      /(\d{4})(\d{2})(\d{2})/,
+      // DDMMYYYY
+      /(\d{2})(\d{2})(\d{4})/,
+    ];
+    
+    for (const pattern of datePatterns) {
+      const match = filename.match(pattern);
+      if (match) {
+        try {
+          let year, month, day;
+          
+          if (pattern.source.includes('YYYY')) {
+            if (pattern.source.startsWith('(\\d{4})')) {
+              // YYYY-MM-DD format
+              [_, year, month, day] = match;
+            } else if (pattern.source.startsWith('(\\d{2})')) {
+              // DD-MM-YYYY or MM-DD-YYYY format
+              [_, first, second, year] = match;
+              // Try to determine if it's DD-MM or MM-DD by checking ranges
+              if (parseInt(first) <= 12 && parseInt(second) <= 31) {
+                // Likely MM-DD format
+                month = first;
+                day = second;
+              } else {
+                // Likely DD-MM format
+                day = first;
+                month = second;
+              }
+            }
+          } else if (pattern.source.includes('(\\d{4})(\\d{2})(\\d{2})')) {
+            // YYYYMMDD format
+            [_, year, month, day] = match;
+          } else if (pattern.source.includes('(\\d{2})(\\d{2})(\\d{4})')) {
+            // DDMMYYYY format
+            [_, day, month, year] = match;
+          }
+          
+          if (year && month && day) {
+            const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+            if (!isNaN(date.getTime())) {
+              return date.toISOString().split('T')[0];
+            }
+          }
+        } catch (error) {
+          console.error('Error parsing date from filename:', error);
+        }
+      }
+    }
+    
+    return null;
+  };
+
   const fileInputRef = useRef(null);
   const imageRef = useRef();
   const canvasRef = useRef();
@@ -72,7 +220,7 @@ export default function WaterChemistry() {
   }, [showCropper, cropArea.width, cropArea.height, cropArea.x, cropArea.y]);
 
   // Cropping functions
-  const handleImageSelect = (file) => {
+  const handleImageSelect = async (file) => {
     console.log('handleImageSelect called with file:', {
       name: file.name,
       size: file.size,
@@ -84,6 +232,18 @@ export default function WaterChemistry() {
     setImagePreview(null);
     setResults(null);
     setError(null);
+    
+    // Extract date from image metadata or filename
+    const extractedDate = await extractDateFromImage(file);
+    
+    // Update record data with extracted date if found
+    if (extractedDate) {
+      setRecordData(prev => ({
+        ...prev,
+        record_date: extractedDate
+      }));
+      console.log('Updated record date to extracted date:', extractedDate);
+    }
     
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -667,7 +827,9 @@ export default function WaterChemistry() {
         nitrite: analysisResults.parameters.nitrite?.value !== undefined ? analysisResults.parameters.nitrite.value : null,
         nitrate: analysisResults.parameters.nitrate?.value !== undefined ? analysisResults.parameters.nitrate.value : null,
         confidence: analysisResults.confidence !== undefined ? analysisResults.confidence : null,
-        notes: analysisResults.recommendations?.join('; ') || ''
+        notes: analysisResults.recommendations?.join('; ') || '',
+        // Preserve the extracted date if it was set
+        record_date: prev.record_date || new Date().toISOString().split('T')[0]
       }));
       
       // Show save prompt
@@ -1218,6 +1380,19 @@ export default function WaterChemistry() {
               <p className="text-gray-600 mb-4">
                 Would you like to save these results to your water chemistry history?
               </p>
+              
+              {/* Date extraction notification */}
+              {recordData.record_date !== new Date().toISOString().split('T')[0] && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                  <div className="flex items-center text-blue-800">
+                    <span className="mr-2">📅</span>
+                    <span className="text-sm">
+                      Date automatically detected from image: <strong>{recordData.record_date}</strong>
+                    </span>
+                  </div>
+                </div>
+              )}
+              
               <div className="flex space-x-4">
                 <button
                   onClick={() => setShowEditForm(true)}
