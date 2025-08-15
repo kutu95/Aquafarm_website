@@ -251,15 +251,32 @@ export default function WaterChemistry() {
     const ctx = canvas.getContext('2d');
     const img = imageRef.current;
     
-    // Set canvas size to crop area
-    canvas.width = cropArea.width;
-    canvas.height = cropArea.height;
+    // Calculate scale factors between displayed and natural image sizes
+    const scaleX = img.naturalWidth / img.width;
+    const scaleY = img.naturalHeight / img.height;
     
-    // Draw cropped portion
+    // Scale crop coordinates to natural image dimensions
+    const scaledX = Math.round(cropArea.x * scaleX);
+    const scaledY = Math.round(cropArea.y * scaleY);
+    const scaledWidth = Math.round(cropArea.width * scaleX);
+    const scaledHeight = Math.round(cropArea.height * scaleY);
+    
+    console.log('Cropping with coordinates:', {
+      display: { x: cropArea.x, y: cropArea.y, width: cropArea.width, height: cropArea.height },
+      natural: { x: scaledX, y: scaledY, width: scaledWidth, height: scaledHeight },
+      scale: { scaleX, scaleY },
+      imageSizes: { natural: `${img.naturalWidth}x${img.naturalHeight}`, display: `${img.width}x${img.height}` }
+    });
+    
+    // Set canvas size to crop area
+    canvas.width = scaledWidth;
+    canvas.height = scaledHeight;
+    
+    // Draw cropped portion using scaled coordinates
     ctx.drawImage(
       img,
-      cropArea.x, cropArea.y, cropArea.width, cropArea.height,
-      0, 0, cropArea.width, cropArea.height
+      scaledX, scaledY, scaledWidth, scaledHeight,
+      0, 0, scaledWidth, scaledHeight
     );
     
     // Convert to base64
