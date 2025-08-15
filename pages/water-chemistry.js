@@ -182,6 +182,15 @@ export default function WaterChemistry() {
   };
 
   const handleMouseMove = (e) => {
+    // Always log mouse move to see if events are being captured
+    console.log('Mouse move event captured:', { 
+      clientX: e.clientX, 
+      clientY: e.clientY,
+      isDragging, 
+      isResizing, 
+      resizeHandle 
+    });
+    
     if (!isDragging && !isResizing) {
       console.log('Mouse move - no action:', { isDragging, isResizing, resizeHandle });
       return;
@@ -647,6 +656,7 @@ export default function WaterChemistry() {
                             onMouseMove={handleMouseMove}
                             onMouseUp={handleMouseUp}
                             onMouseLeave={handleMouseUp}
+                            onClick={() => console.log('Image clicked at:', { x: cropArea.x, y: cropArea.y })}
                             draggable={false}
                           />
                           {/* Crop overlay */}
@@ -743,6 +753,12 @@ export default function WaterChemistry() {
                             >
                               Test Resize State
                             </button>
+                            <div className="mt-2 text-xs">
+                              <div>Current State:</div>
+                              <div>isResizing: {isResizing.toString()}</div>
+                              <div>resizeHandle: {resizeHandle || 'null'}</div>
+                              <div>isDragging: {isDragging.toString()}</div>
+                            </div>
                           </div>
                           
                           {/* Crop area dimensions */}
