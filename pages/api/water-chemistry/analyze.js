@@ -18,6 +18,26 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Image data and filename are required' });
     }
 
+    // Check payload size (base64 data can be large)
+    const payloadSize = JSON.stringify(req.body).length;
+    const maxSize = 10 * 1024 * 1024; // 10MB limit
+    
+    console.log('API Request received:', {
+      filename,
+      payloadSize: `${(payloadSize / 1024 / 1024).toFixed(2)}MB`,
+      maxSize: `${(maxSize / 1024 / 1024).toFixed(2)}MB`,
+      imageDataLength: imageData ? imageData.length : 0
+    });
+    
+    if (payloadSize > maxSize) {
+      return res.status(413).json({ 
+        error: 'Payload too large', 
+        size: payloadSize,
+        maxSize: maxSize,
+        suggestion: 'Try uploading a smaller image or compress the image before upload'
+      });
+    }
+
     // For Phase 1, we'll simulate the analysis
     // In Phase 2, this will use actual AI/computer vision libraries
     

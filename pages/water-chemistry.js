@@ -54,7 +54,10 @@ export default function WaterChemistry() {
     setResults(null);
 
     try {
-      // Convert image to base64 for API
+      // Compress and resize the image before sending
+      const compressedImage = await compressImage(selectedImage);
+      
+      // Convert compressed image to base64 for API
       const reader = new FileReader();
       reader.onload = async (e) => {
         const base64Data = e.target.result.split(',')[1]; // Remove data:image/...;base64, prefix
@@ -71,7 +74,9 @@ export default function WaterChemistry() {
         });
 
         if (!response.ok) {
-          throw new Error('Failed to analyze image');
+          const errorText = await response.text();
+          console.error('API Error:', response.status, errorText);
+          throw new Error(`Analysis failed: ${response.status}`);
         }
 
         const analysisResults = await response.json();
@@ -90,14 +95,59 @@ export default function WaterChemistry() {
         }
       };
       
-      reader.readAsDataURL(selectedImage);
+      reader.readAsDataURL(compressedImage);
       
     } catch (error) {
       console.error('Error analyzing image:', error);
-      setError('Failed to analyze image. Please try again.');
+      setError(`Failed to analyze image: ${error.message}`);
     } finally {
       setIsAnalyzing(false);
     }
+  };
+
+  const compressImage = (file) => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      
+      img.onload = () => {
+        // Calculate new dimensions (max 800x600)
+        const maxWidth = 800;
+        const maxHeight = 600;
+        let { width, height } = img;
+        
+        if (width > height) {
+          if (width > maxWidth) {
+            height = (height * maxWidth) / width;
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width = (width * maxHeight) / height;
+            height = maxHeight;
+          }
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        // Draw and compress
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(
+          (blob) => {
+            resolve(new File([blob], file.name, {
+              type: 'image/jpeg',
+              lastModified: Date.now(),
+            }));
+          },
+          'image/jpeg',
+          0.7 // 70% quality
+        );
+      };
+      
+      img.src = URL.createObjectURL(file);
+    });
   };
 
   const getStatusColor = (status) => {
