@@ -196,26 +196,40 @@ export default function WaterChemistry() {
       if (response.ok) {
         const data = await response.json();
         console.log('Status check response:', data);
+        console.log('Response structure:', {
+          hasProcessingNotes: !!data.processingNotes,
+          processingNotesValue: data.processingNotes,
+          hasImageAnalysis: !!data.imageAnalysis,
+          hasAvailableServices: !!data.availableServices
+        });
         
         // Check if this is a status check response
         if (data.processingNotes) {
+          console.log('Processing notes found:', data.processingNotes);
           if (data.processingNotes.includes('ChatGPT')) {
+            console.log('Setting status to chatgpt');
             setAiStatus('chatgpt');
           } else if (data.processingNotes.includes('Google Vision')) {
+            console.log('Setting status to google');
             setAiStatus('google');
           } else {
+            console.log('Setting status to error - unknown processing notes');
             setAiStatus('error');
           }
         }
         // Check if the response indicates real AI analysis (for actual image uploads)
         else if (data.imageAnalysis?.processingNotes?.includes('ChatGPT') || data.imageAnalysis?.aiModel === 'gpt-4o') {
+          console.log('Setting status to chatgpt from image analysis');
           setAiStatus('chatgpt');
         } else if (data.imageAnalysis?.processingNotes?.includes('Google Cloud Vision')) {
+          console.log('Setting status to google from image analysis');
           setAiStatus('google');
         } else {
+          console.log('Setting status to error - no matching AI service found');
           setAiStatus('error');
         }
       } else {
+        console.log('Response not ok, setting status to error');
         setAiStatus('error');
       }
     } catch (error) {
