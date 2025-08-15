@@ -349,6 +349,9 @@ export default function WaterChemistry() {
                       or drag and drop
                     </p>
                     <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                    <p className="text-xs text-blue-600 mt-1">
+                      💡 The system automatically includes the official API color chart for accurate readings
+                    </p>
                   </div>
                 ) : (
                   <div>
