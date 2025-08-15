@@ -10,12 +10,9 @@ export default function WaterChemistry() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [results, setResults] = useState(null);
   const [error, setError] = useState(null);
-  const [useChatGPT, setUseChatGPT] = useState(true); // Toggle for AI service choice
-  const [aiStatus, setAiStatus] = useState('chatgpt'); // Default to ChatGPT since it's the recommended option
   const [showCropper, setShowCropper] = useState(false);
   const [cropArea, setCropArea] = useState({ x: 0, y: 0, width: 200, height: 200 });
   const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [isResizing, setIsResizing] = useState(false);
   const [resizeHandle, setResizeHandle] = useState(null);
   
@@ -24,16 +21,16 @@ export default function WaterChemistry() {
   const canvasRef = useRef();
 
   // Track if user has made a manual selection
-  const [userHasSelectedService, setUserHasSelectedService] = useState(false);
+  // const [userHasSelectedService, setUserHasSelectedService] = useState(false);
 
   // Update AI status when user toggles between services
-  useEffect(() => {
-    if (useChatGPT) {
-      setAiStatus('chatgpt');
-    } else {
-      setAiStatus('google');
-    }
-  }, [useChatGPT]);
+  // useEffect(() => {
+  //   if (userHasSelectedService) {
+  //     setAiStatus('chatgpt');
+  //   } else {
+  //     setAiStatus('google');
+  //   }
+  // }, [userHasSelectedService]);
 
   // Ensure crop area is always visible when cropper is shown
   useEffect(() => {
@@ -409,7 +406,7 @@ export default function WaterChemistry() {
       console.log('About to send to API:', {
         imageDataLength: imageData.length,
         filename: filename,
-        useChatGPT: useChatGPT
+        useChatGPT: true // Always true for ChatGPT
       });
       
       // Validate image data before sending to API
@@ -444,7 +441,7 @@ export default function WaterChemistry() {
         body: JSON.stringify({
           imageData: imageData,
           filename: filename,
-          useChatGPT: useChatGPT
+          useChatGPT: true // Always true for ChatGPT
         }),
       });
 
@@ -631,53 +628,17 @@ export default function WaterChemistry() {
                 </ul>
               </div>
 
-              {/* AI Service Selection */}
-              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  🤖 Choose AI Analysis Service
-                </label>
-                <div className="flex items-center space-x-4">
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="aiService"
-                      value="chatgpt"
-                      checked={useChatGPT}
-                      onChange={() => {
-                        setUseChatGPT(true);
-                        setUserHasSelectedService(true);
-                      }}
-                      className="mr-2 text-blue-600"
-                    />
-                    <span className="text-sm font-medium text-gray-700">
-                      ChatGPT + Color Chart (Recommended)
-                    </span>
-                    <span className="ml-2 text-xs text-blue-600">
-                      Uses embedded API color chart for accuracy
-                    </span>
-                  </label>
+              {/* AI Service Selection - Removed, only ChatGPT available */}
+              <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                <div className="flex items-center">
+                  <span className="mr-2">🧠</span>
+                  <span className="text-green-900 font-medium">
+                    Expert AI Analysis (ChatGPT) - Ready
+                  </span>
                 </div>
-                <div className="flex items-center space-x-4 mt-2">
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="aiService"
-                      value="google"
-                      checked={!useChatGPT}
-                      onChange={() => {
-                        setUseChatGPT(false);
-                        setUserHasSelectedService(true);
-                      }}
-                      className="mr-2 text-blue-600"
-                    />
-                    <span className="text-sm font-medium text-gray-700">
-                      Google Cloud Vision
-                    </span>
-                    <span className="ml-2 text-xs text-gray-600">
-                      Traditional computer vision analysis
-                    </span>
-                  </label>
-                </div>
+                <p className="text-sm text-green-700 mt-1">
+                  Using advanced AI to analyze your water test kit with API Freshwater Master Test Kit knowledge
+                </p>
               </div>
 
               {/* File Upload */}
@@ -954,10 +915,10 @@ export default function WaterChemistry() {
                     {isAnalyzing ? (
                       <>
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mx-auto mb-2"></div>
-                        Analyzing with {useChatGPT ? 'ChatGPT + Color Chart' : 'Google Vision'}...
+                        Analyzing with ChatGPT...
                       </>
                     ) : (
-                      `🔬 Analyze with ${useChatGPT ? 'ChatGPT + Color Chart' : 'Google Vision'}`
+                      `🔬 Analyze with ChatGPT`
                     )}
                   </button>
                   <p className="text-xs text-gray-600 mt-2">
@@ -1052,126 +1013,28 @@ export default function WaterChemistry() {
             
             <div className="space-y-4">
               {/* Current Status */}
-              <div className={`border rounded-lg p-4 ${
-                aiStatus === 'chatgpt' ? 'bg-purple-50 border-purple-200' :
-                aiStatus === 'google' ? 'bg-green-50 border-green-200' :
-                'bg-blue-50 border-blue-200'
-              }`}>
+              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
                 <div className="flex items-center">
-                  <span className="mr-2">{
-                    aiStatus === 'chatgpt' ? '🧠' :
-                    aiStatus === 'google' ? '🤖' :
-                    '🔍'
-                  }</span>
-                  <span className={`font-medium ${
-                    aiStatus === 'chatgpt' ? 'text-purple-900' :
-                    aiStatus === 'google' ? 'text-green-900' :
-                    'text-blue-900'
-                  }`}>
-                    Current Mode: {
-                      aiStatus === 'chatgpt' ? 'Expert AI Analysis (ChatGPT)' :
-                      aiStatus === 'google' ? 'Basic AI Analysis (Google Vision)' :
-                      'AI Analysis'
-                    }
+                  <span className="mr-2">🧠</span>
+                  <span className="font-medium text-purple-900">
+                    Current Mode: Expert AI Analysis (ChatGPT)
                   </span>
                 </div>
-                <p className={`text-sm mt-2 ${
-                  aiStatus === 'chatgpt' ? 'text-purple-800' :
-                  aiStatus === 'google' ? 'text-green-800' :
-                  'text-blue-800'
-                }`}>
-                  {aiStatus === 'chatgpt' 
-                    ? 'The system is using expert AI analysis with ChatGPT for superior accuracy! 🧠✨'
-                    : aiStatus === 'google'
-                    ? 'The system is using basic AI analysis with Google Cloud Vision.'
-                    : 'The system encountered an error with AI services. Please check your configuration.'
-                  }
+                <p className="text-sm mt-2 text-purple-800">
+                  Using advanced AI to analyze water chemistry with API Freshwater Master Test Kit knowledge
                 </p>
               </div>
-
-              {/* Setup Instructions */}
-              {aiStatus === 'error' ? (
-                <div className="bg-gradient-to-r from-purple-50 to-green-50 border border-purple-200 rounded-lg p-4">
-                  <h3 className="font-medium text-purple-900 mb-2">🚀 Enable AI Analysis</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* ChatGPT Option */}
-                    <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
-                      <h4 className="font-medium text-purple-800 mb-2">🧠 Expert Mode (Recommended)</h4>
-                      <ol className="text-sm text-purple-700 space-y-1">
-                        <li>1. Get OpenAI API key from <a href="https://platform.openai.com/" target="_blank" rel="noopener noreferrer" className="underline">OpenAI Platform</a></li>
-                        <li>2. Add <code className="bg-purple-100 px-1 rounded">OPEN_AI_KEY=your_key</code> to <code className="bg-purple-100 px-1 rounded">.env.local</code></li>
-                        <li>3. Restart the development server</li>
-                      </ol>
-                      <div className="mt-2">
-                        <span className="text-xs text-purple-600">✅ Superior accuracy • 🧠 Context understanding • 🎯 Focus on test tubes</span>
-                      </div>
-                    </div>
-                    
-                    {/* Google Vision Option */}
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                      <h4 className="font-medium text-green-800 mb-2">🤖 Basic Mode</h4>
-                      <ol className="text-sm text-green-700 space-y-1">
-                        <li>1. Get Google Cloud Vision API key from <a href="https://console.cloud.google.com/" target="_blank" rel="noopener noreferrer" className="underline">Google Cloud Console</a></li>
-                        <li>2. Add <code className="bg-green-100 px-1 rounded">GOOGLE_CLOUD_VISION_API_KEY=your_key</code> to <code className="bg-green-100 px-1 rounded">.env.local</code></li>
-                        <li>3. Restart the development server</li>
-                      </ol>
-                      <div className="mt-2">
-                        <span className="text-xs text-green-600">⚠️ Limited accuracy • 🔍 Basic color analysis • 📊 Background noise issues</span>
-                      </div>
-                    </div>
-                  </div>
+              
+              {/* Service Information */}
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <h3 className="font-medium text-gray-900 mb-2">Service Details</h3>
+                <div className="text-sm text-gray-600 space-y-1">
+                  <div>• <strong>AI Model:</strong> GPT-4o (OpenAI)</div>
+                  <div>• <strong>Analysis Type:</strong> Expert water chemistry interpretation</div>
+                  <div>• <strong>Test Kit Knowledge:</strong> API Freshwater Master Test Kit</div>
+                  <div>• <strong>Parameters:</strong> pH, Ammonia, Nitrite, Nitrate</div>
                 </div>
-              ) : aiStatus === 'chatgpt' ? (
-                <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                  <h3 className="font-medium text-purple-900 mb-2">🎉 Expert AI Analysis Active!</h3>
-                  <p className="text-sm text-purple-800">
-                    Your OpenAI API key is configured and working perfectly! The system is now using ChatGPT for superior water chemistry analysis.
-                  </p>
-                  <div className="mt-3">
-                    <span className="inline-flex items-center px-3 py-2 border border-purple-300 rounded-md text-sm font-medium text-purple-700 bg-purple-100">
-                      🧠 ChatGPT Expert Mode Enabled
-                    </span>
-                  </div>
-                </div>
-              ) : aiStatus === 'google' ? (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <h3 className="font-medium text-green-900 mb-2">🤖 Basic AI Analysis Active</h3>
-                  <p className="text-sm text-green-800">
-                    Your Google Cloud Vision API key is configured and working. Consider upgrading to ChatGPT for superior accuracy.
-                  </p>
-                  <div className="mt-3">
-                    <span className="inline-flex items-center px-3 py-2 border border-green-300 rounded-md text-sm font-medium text-green-700 bg-green-100">
-                      🤖 Google Vision Basic Mode
-                    </span>
-                  </div>
-                </div>
-              ) : (
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                  <h3 className="font-medium text-gray-900 mb-2">⏳ Checking AI Status...</h3>
-                  <p className="text-sm text-gray-800">
-                    Verifying your AI configuration...
-                  </p>
-                </div>
-              )}
-
-              {/* Error Information - Only show when there's an error */}
-              {aiStatus === 'error' && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <h4 className="font-medium text-red-900 mb-2">⚠️ AI Service Issue</h4>
-                  <p className="text-sm text-red-800 mb-3">
-                    The system is unable to connect to AI services. This could be due to:
-                  </p>
-                  <ul className="text-sm text-red-700 space-y-1">
-                    <li>• Missing or invalid API keys</li>
-                    <li>• Network connectivity issues</li>
-                    <li>• AI service outages</li>
-                    <li>• Configuration errors</li>
-                  </ul>
-                  <p className="text-sm text-red-800 mt-3">
-                    Please check your API configuration and try again.
-                  </p>
-                </div>
-              )}
+              </div>
             </div>
           </div>
         </div>
