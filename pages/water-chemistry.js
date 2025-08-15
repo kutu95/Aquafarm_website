@@ -142,47 +142,61 @@ export default function WaterChemistry() {
       if (match) {
         try {
           let year, month, day;
+          let dateDetected = false;
+          
+          console.log('Pattern matched:', pattern.source, 'Match groups:', match);
           
           if (pattern.source.includes('20\\d{2}')) {
             if (pattern.source.startsWith('(20\\d{2})')) {
               // YYYYMMDD format (e.g., 20250518)
-              const [, year, month, day] = match;
+              [, year, month, day] = match;
+              dateDetected = true;
               console.log('YYYYMMDD format detected:', { year, month, day });
             } else if (pattern.source.endsWith('(20\\d{2})')) {
               // DDMMYYYY format
-              const [, day, month, year] = match;
+              [, day, month, year] = match;
+              dateDetected = true;
               console.log('DDMMYYYY format detected:', { day, month, year });
             }
           } else if (pattern.source.includes('YYYY')) {
             if (pattern.source.startsWith('(\\d{4})')) {
               // YYYY-MM-DD format
-              const [, year, month, day] = match;
+              [, year, month, day] = match;
+              dateDetected = true;
               console.log('YYYY-MM-DD format detected:', { year, month, day });
             } else if (pattern.source.startsWith('(\\d{2})')) {
               // DD-MM-YYYY or MM-DD-YYYY format
-              const [, first, second, year] = match;
+              [, first, second, year] = match;
               // Try to determine if it's DD-MM or MM-DD by checking ranges
               if (parseInt(first) <= 12 && parseInt(second) <= 31) {
                 // Likely MM-DD format
                 month = first;
                 day = second;
+                dateDetected = true;
                 console.log('MM-DD-YYYY format detected:', { month, day, year });
               } else {
                 // Likely DD-MM format
                 day = first;
                 month = second;
+                dateDetected = true;
                 console.log('DD-MM-YYYY format detected:', { day, month, year });
               }
             }
           }
           
-          if (year && month && day) {
+          console.log('After pattern processing:', { year, month, day, dateDetected });
+          
+          if (dateDetected && year && month && day) {
             const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
             if (!isNaN(date.getTime())) {
               const dateString = date.toISOString().split('T')[0];
               console.log('Valid date parsed:', { year, month, day, dateString });
               return dateString;
+            } else {
+              console.log('Invalid date created:', { year, month, day, date });
             }
+          } else {
+            console.log('Date not fully detected:', { year, month, day, dateDetected });
           }
         } catch (error) {
           console.error('Error parsing date from filename:', error);
