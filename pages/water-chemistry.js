@@ -401,25 +401,61 @@ export default function WaterChemistry() {
             </div>
           )}
 
-          {/* Coming Soon Features */}
+          {/* AI Status & Configuration */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mt-8">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">🚀 Coming Soon</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-              <div className="flex items-center">
-                <span className="mr-2">🤖</span>
-                <span>AI-powered test tube detection</span>
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">🤖 AI Analysis Status</h2>
+            
+            <div className="space-y-4">
+              {/* Current Status */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-center">
+                  <span className="mr-2">🔍</span>
+                  <span className="font-medium text-blue-900">Current Mode: Enhanced Simulation</span>
+                </div>
+                <p className="text-sm text-blue-800 mt-2">
+                  The system is currently using enhanced simulation mode. Enable Google Cloud Vision API for real AI-powered analysis!
+                </p>
               </div>
-              <div className="flex items-center">
-                <span className="mr-2">🎨</span>
-                <span>Advanced color correction</span>
+
+              {/* Setup Instructions */}
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <h3 className="font-medium text-green-900 mb-2">🚀 Enable Real AI Analysis</h3>
+                <ol className="text-sm text-green-800 space-y-1">
+                  <li>1. Get Google Cloud Vision API key from <a href="https://console.cloud.google.com/" target="_blank" rel="noopener noreferrer" className="underline">Google Cloud Console</a></li>
+                  <li>2. Add <code className="bg-green-100 px-1 rounded">GOOGLE_CLOUD_VISION_API_KEY=your_key</code> to your <code className="bg-green-100 px-1 rounded">.env.local</code></li>
+                  <li>3. Restart the development server</li>
+                </ol>
+                <div className="mt-3">
+                  <a 
+                    href="/GOOGLE_CLOUD_VISION_SETUP.md" 
+                    target="_blank" 
+                    className="inline-flex items-center px-3 py-2 border border-green-300 rounded-md text-sm font-medium text-green-700 bg-green-50 hover:bg-green-100"
+                  >
+                    📖 View Full Setup Guide
+                  </a>
+                </div>
               </div>
-              <div className="flex items-center">
-                <span className="mr-2">📱</span>
-                <span>Multiple test kit support</span>
-              </div>
-              <div className="flex items-center">
-                <span className="mr-2">📈</span>
-                <span>Trend analysis over time</span>
+
+              {/* Features Comparison */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-2">Current (Simulation)</h4>
+                  <ul className="space-y-1 text-gray-600">
+                    <li>• Basic water chemistry simulation</li>
+                    <li>• Consistent results for testing</li>
+                    <li>• No external API calls</li>
+                    <li>• Good for development</li>
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-2">With Real AI</h4>
+                  <ul className="space-y-1 text-gray-600">
+                    <li>• Test tube detection & analysis</li>
+                    <li>• Real color extraction & correction</li>
+                    <li>• AI-powered confidence scoring</li>
+                    <li>• Production-ready accuracy</li>
+                  </ul>
+                </div>
               </div>
             </div>
           </div>
