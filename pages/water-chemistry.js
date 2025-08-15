@@ -28,6 +28,15 @@ export default function WaterChemistry() {
     checkAiStatus();
   }, []);
 
+  // Update AI status when user toggles between services
+  useEffect(() => {
+    if (useChatGPT) {
+      setAiStatus('chatgpt');
+    } else {
+      setAiStatus('google');
+    }
+  }, [useChatGPT]);
+
   // Ensure crop area is always visible when cropper is shown
   useEffect(() => {
     if (showCropper && imageRef.current) {
