@@ -58,27 +58,46 @@ export default function WaterChemistry() {
   };
 
   const handleMouseDown = (e) => {
+    e.preventDefault();
     const rect = imageRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     
+    console.log('Mouse down:', { x, y, cropArea });
+    
     // Check if clicking on resize handles
-    const handleSize = 10;
+    const handleSize = 15;
     const right = cropArea.x + cropArea.width;
     const bottom = cropArea.y + cropArea.height;
     
-    if (x >= right - handleSize && x <= right && y >= bottom - handleSize && y <= bottom) {
+    // Bottom-right resize handle
+    if (x >= right - handleSize && x <= right + handleSize && 
+        y >= bottom - handleSize && y <= bottom + handleSize) {
+      console.log('Bottom-right resize handle clicked');
       setIsResizing(true);
       setResizeHandle('bottom-right');
-    } else if (x >= cropArea.x && x <= right && y >= cropArea.y && y <= bottom) {
+    }
+    // Top-left resize handle
+    else if (x >= cropArea.x - handleSize && x <= cropArea.x + handleSize && 
+             y >= cropArea.y - handleSize && y <= cropArea.y + handleSize) {
+      console.log('Top-left resize handle clicked');
+      setIsResizing(true);
+      setResizeHandle('top-left');
+    }
+    // Check if clicking inside crop area for dragging
+    else if (x >= cropArea.x && x <= right && y >= cropArea.y && y <= bottom) {
+      console.log('Crop area clicked for dragging');
       setIsDragging(true);
       setDragStart({ x: x - cropArea.x, y: y - cropArea.y });
+    } else {
+      console.log('Clicked outside crop area');
     }
   };
 
   const handleMouseMove = (e) => {
     if (!isDragging && !isResizing) return;
     
+    e.preventDefault();
     const rect = imageRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
@@ -88,13 +107,29 @@ export default function WaterChemistry() {
       const newY = Math.max(0, Math.min(y - dragStart.y, imageRef.current.height - cropArea.height));
       setCropArea(prev => ({ ...prev, x: newX, y: newY }));
     } else if (isResizing) {
-      const newWidth = Math.max(50, Math.min(x - cropArea.x, imageRef.current.width - cropArea.x));
-      const newHeight = Math.max(50, Math.min(y - cropArea.y, imageRef.current.height - cropArea.y));
-      setCropArea(prev => ({ ...prev, width: newWidth, height: newHeight }));
+      if (resizeHandle === 'bottom-right') {
+        const newWidth = Math.max(50, Math.min(x - cropArea.x, imageRef.current.width - cropArea.x));
+        const newHeight = Math.max(50, Math.min(y - cropArea.y, imageRef.current.height - cropArea.y));
+        setCropArea(prev => ({ ...prev, width: newWidth, height: newHeight }));
+      } else if (resizeHandle === 'top-left') {
+        const newWidth = Math.max(50, cropArea.x + cropArea.width - x);
+        const newHeight = Math.max(50, cropArea.y + cropArea.height - y);
+        const newX = Math.max(0, Math.min(x, cropArea.x + cropArea.width - 50));
+        const newY = Math.max(0, Math.min(y, cropArea.y + cropArea.height - 50));
+        setCropArea(prev => ({ 
+          x: newX, 
+          y: newY, 
+          width: newWidth, 
+          height: newHeight 
+        }));
+      }
     }
   };
 
   const handleMouseUp = () => {
+    if (isDragging || isResizing) {
+      console.log('Mouse up - final crop area:', cropArea);
+    }
     setIsDragging(false);
     setIsResizing(false);
     setResizeHandle(null);
@@ -511,18 +546,39 @@ export default function WaterChemistry() {
                               height: cropArea.height
                             }}
                           >
-                            {/* Resize handle */}
+                            {/* Top-left resize handle */}
                             <div
-                              className="absolute w-3 h-3 bg-blue-600 border border-white rounded-full cursor-se-resize"
+                              className="absolute w-4 h-4 bg-blue-600 border-2 border-white rounded-full cursor-nw-resize"
                               style={{
-                                right: '-6px',
-                                bottom: '-6px'
+                                left: '-8px',
+                                top: '-8px'
                               }}
                             />
+                            {/* Bottom-right resize handle */}
+                            <div
+                              className="absolute w-4 h-4 bg-blue-600 border-2 border-white rounded-full cursor-se-resize"
+                              style={{
+                                right: '-8px',
+                                bottom: '-8px'
+                              }}
+                            />
+                            {/* Center drag indicator */}
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <div className="w-2 h-2 bg-white rounded-full opacity-50"></div>
+                            </div>
                           </div>
                           {/* Instructions */}
-                          <div className="absolute top-2 left-2 bg-black bg-opacity-75 text-white text-xs p-2 rounded">
-                            Drag to move • Drag corner to resize • Click "Crop & Analyze" when ready
+                          <div className="absolute top-2 left-2 bg-black bg-opacity-75 text-white text-xs p-2 rounded max-w-xs">
+                            <div className="font-medium mb-1">How to crop:</div>
+                            <div>• Drag the blue box to move</div>
+                            <div>• Drag corners to resize</div>
+                            <div>• Click "Crop & Analyze" when ready</div>
+                          </div>
+                          
+                          {/* Crop area dimensions */}
+                          <div className="absolute bottom-2 right-2 bg-black bg-opacity-75 text-white text-xs p-2 rounded">
+                            <div className="font-medium">Crop Area:</div>
+                            <div>{Math.round(cropArea.width)} × {Math.round(cropArea.height)} pixels</div>
                           </div>
                         </div>
                       ) : (
