@@ -956,7 +956,7 @@ export default function WaterChemistry() {
                       {parameter.toUpperCase()}
                     </div>
                     <div className={`text-3xl font-bold mb-2 ${getStatusColor(data.status).split(' ')[0]}`}>
-                      {data.value || 'N/A'}
+                      {data.value !== null && data.value !== undefined ? data.value : 'N/A'}
                     </div>
                     <div className="text-sm text-gray-600 mb-2">
                       {referenceRanges[parameter]?.unit || ''}
