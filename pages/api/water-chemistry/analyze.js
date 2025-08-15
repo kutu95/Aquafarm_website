@@ -66,22 +66,27 @@ export default async function handler(req, res) {
       });
     }
 
-    // Phase 2: Real AI Analysis using Google Cloud Vision
+    // Phase 2: Real AI Analysis using ChatGPT (primary) or Google Cloud Vision (fallback)
     let analysisResults;
     
-    // Debug: Check if API key is available
+    // Debug: Check if API keys are available
     console.log('Environment check:', {
-      hasApiKey: !!process.env.GOOGLE_CLOUD_VISION_API_KEY,
-      apiKeyLength: process.env.GOOGLE_CLOUD_VISION_API_KEY ? process.env.GOOGLE_CLOUD_VISION_API_KEY.length : 0,
-      apiKeyPreview: process.env.GOOGLE_CLOUD_VISION_API_KEY ? process.env.GOOGLE_CLOUD_VISION_API_KEY.substring(0, 10) + '...' : 'none'
+      hasGoogleKey: !!process.env.GOOGLE_CLOUD_VISION_API_KEY,
+      hasChatGPTKey: !!process.env.OPENAI_API_KEY,
+      googleKeyLength: process.env.GOOGLE_CLOUD_VISION_API_KEY ? process.env.GOOGLE_CLOUD_VISION_API_KEY.length : 0,
+      chatGPTKeyLength: process.env.OPENAI_API_KEY ? process.env.OPENAI_API_KEY.length : 0
     });
     
-    if (process.env.GOOGLE_CLOUD_VISION_API_KEY) {
-      console.log('Using Google Cloud Vision API for real AI analysis');
-      // Use real Google Cloud Vision API
+    if (process.env.OPENAI_API_KEY) {
+      console.log('Using ChatGPT for expert AI analysis');
+      // Use ChatGPT for superior analysis
+      analysisResults = await analyzeWithChatGPT(imageData, filename);
+    } else if (process.env.GOOGLE_CLOUD_VISION_API_KEY) {
+      console.log('No ChatGPT key found, using Google Cloud Vision API as fallback');
+      // Fallback to Google Cloud Vision API
       analysisResults = await analyzeWithGoogleVision(imageData);
     } else {
-      console.log('No Google Cloud Vision API key found, using enhanced simulation');
+      console.log('No AI API keys found, using enhanced simulation');
       // Fallback to enhanced simulation for development
       analysisResults = await enhancedSimulation(imageData);
     }
@@ -111,6 +116,121 @@ export default async function handler(req, res) {
       error: 'Internal server error',
       details: error.message 
     });
+  }
+}
+
+async function analyzeWithChatGPT(imageData, filename) {
+  try {
+    console.log('Starting ChatGPT expert analysis...');
+    
+    // Convert base64 to data URL for ChatGPT
+    const dataUrl = `data:image/jpeg;base64,${imageData}`;
+    
+    // Prepare the prompt for ChatGPT
+    const prompt = `You are an expert water chemistry analyst. Analyze this image of water chemistry test tubes and provide accurate readings for:
+
+1. pH level
+2. Ammonia level (NH3/NH4+)
+3. Nitrite level (NO2-)
+4. Nitrate level (NO3-)
+
+For each parameter, provide:
+- The actual value/level
+- The status (good, warning, or danger)
+- Your confidence level (0-1)
+- Brief notes explaining your analysis
+
+Focus ONLY on the test tube contents and their colors. Ignore background colors, test tube holders, or other irrelevant elements.
+
+Return your response as a JSON object with this exact structure:
+{
+  "success": true,
+  "confidence": 0.95,
+  "parameters": {
+    "pH": {"value": 7.2, "status": "good", "confidence": 0.9, "color": "#4CAF50", "notes": "..."},
+    "ammonia": {"value": 0.0, "status": "good", "confidence": 0.85, "color": "#4CAF50", "notes": "..."},
+    "nitrite": {"value": 0.0, "status": "good", "confidence": 0.88, "color": "#4CAF50", "notes": "..."},
+    "nitrate": {"value": 5.0, "status": "good", "confidence": 0.87, "color": "#4CAF50", "notes": "..."}
+  },
+  "imageAnalysis": {
+    "tubesDetected": 4,
+    "imageQuality": "good",
+    "lightingConditions": "natural",
+    "processingNotes": "Expert analysis using ChatGPT vision capabilities",
+    "aiModel": "gpt-4o"
+  }
+}`;
+
+    // Call OpenAI ChatGPT API
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o',
+        messages: [
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'text',
+                text: prompt
+              },
+              {
+                type: 'image_url',
+                image_url: {
+                  url: dataUrl
+                }
+              }
+            ]
+          }
+        ],
+        max_tokens: 1000,
+        temperature: 0.1
+      })
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('ChatGPT API error:', errorText);
+      throw new Error(`ChatGPT API error: ${response.status}`);
+    }
+
+    const chatGPTData = await response.json();
+    console.log('ChatGPT response received');
+    
+    // Extract the JSON response from ChatGPT
+    const content = chatGPTData.choices[0]?.message?.content;
+    if (!content) {
+      throw new Error('No content received from ChatGPT');
+    }
+    
+    // Try to parse the JSON response
+    try {
+      const analysisResults = JSON.parse(content);
+      console.log('ChatGPT analysis parsed successfully');
+      return analysisResults;
+    } catch (parseError) {
+      console.error('Failed to parse ChatGPT JSON response:', parseError);
+      console.log('Raw ChatGPT response:', content);
+      
+      // Fallback to enhanced simulation if parsing fails
+      console.log('Falling back to enhanced simulation due to parsing error');
+      return await enhancedSimulation(imageData);
+    }
+    
+  } catch (error) {
+    console.error('ChatGPT analysis error:', error);
+    // Fallback to Google Vision or simulation
+    if (process.env.GOOGLE_CLOUD_VISION_API_KEY) {
+      console.log('Falling back to Google Vision API');
+      return await analyzeWithGoogleVision(imageData);
+    } else {
+      console.log('Falling back to enhanced simulation');
+      return await enhancedSimulation(imageData);
+    }
   }
 }
 

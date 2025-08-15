@@ -196,8 +196,10 @@ export default function WaterChemistry() {
       if (response.ok) {
         const data = await response.json();
         // Check if the response indicates real AI analysis
-        if (data.imageAnalysis?.processingNotes?.includes('Google Cloud Vision')) {
-          setAiStatus('real');
+        if (data.imageAnalysis?.processingNotes?.includes('ChatGPT') || data.imageAnalysis?.aiModel === 'gpt-4o') {
+          setAiStatus('chatgpt');
+        } else if (data.imageAnalysis?.processingNotes?.includes('Google Cloud Vision')) {
+          setAiStatus('google');
         } else {
           setAiStatus('simulation');
         }
@@ -447,49 +449,96 @@ export default function WaterChemistry() {
             
             <div className="space-y-4">
               {/* Current Status */}
-              <div className={`border rounded-lg p-4 ${aiStatus === 'real' ? 'bg-green-50 border-green-200' : 'bg-blue-50 border-blue-200'}`}>
+              <div className={`border rounded-lg p-4 ${
+                aiStatus === 'chatgpt' ? 'bg-purple-50 border-purple-200' :
+                aiStatus === 'google' ? 'bg-green-50 border-green-200' :
+                'bg-blue-50 border-blue-200'
+              }`}>
                 <div className="flex items-center">
-                  <span className="mr-2">{aiStatus === 'real' ? '🤖' : '🔍'}</span>
-                  <span className={`font-medium ${aiStatus === 'real' ? 'text-green-900' : 'text-blue-900'}`}>
-                    Current Mode: {aiStatus === 'real' ? 'Real AI Analysis' : 'Enhanced Simulation'}
+                  <span className="mr-2">{
+                    aiStatus === 'chatgpt' ? '🧠' :
+                    aiStatus === 'google' ? '🤖' :
+                    '🔍'
+                  }</span>
+                  <span className={`font-medium ${
+                    aiStatus === 'chatgpt' ? 'text-purple-900' :
+                    aiStatus === 'google' ? 'text-green-900' :
+                    'text-blue-900'
+                  }`}>
+                    Current Mode: {
+                      aiStatus === 'chatgpt' ? 'Expert AI Analysis (ChatGPT)' :
+                      aiStatus === 'google' ? 'Basic AI Analysis (Google Vision)' :
+                      'Enhanced Simulation'
+                    }
                   </span>
                 </div>
-                <p className={`text-sm mt-2 ${aiStatus === 'real' ? 'text-green-800' : 'text-blue-800'}`}>
-                  {aiStatus === 'real' 
-                    ? 'The system is using real AI-powered analysis with Google Cloud Vision! 🎉'
-                    : 'The system is currently using enhanced simulation mode. Enable Google Cloud Vision API for real AI-powered analysis!'
+                <p className={`text-sm mt-2 ${
+                  aiStatus === 'chatgpt' ? 'text-purple-800' :
+                  aiStatus === 'google' ? 'text-green-800' :
+                  'text-blue-800'
+                }`}>
+                  {aiStatus === 'chatgpt' 
+                    ? 'The system is using expert AI analysis with ChatGPT for superior accuracy! 🧠✨'
+                    : aiStatus === 'google'
+                    ? 'The system is using basic AI analysis with Google Cloud Vision.'
+                    : 'The system is currently using enhanced simulation mode. Enable AI APIs for real analysis!'
                   }
                 </p>
               </div>
 
               {/* Setup Instructions */}
               {aiStatus === 'simulation' ? (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <h3 className="font-medium text-green-900 mb-2">🚀 Enable Real AI Analysis</h3>
-                  <ol className="text-sm text-green-800 space-y-1">
-                    <li>1. Get Google Cloud Vision API key from <a href="https://console.cloud.google.com/" target="_blank" rel="noopener noreferrer" className="underline">Google Cloud Console</a></li>
-                    <li>2. Add <code className="bg-green-100 px-1 rounded">GOOGLE_CLOUD_VISION_API_KEY=your_key</code> to your <code className="bg-green-100 px-1 rounded">.env.local</code></li>
-                    <li>3. Restart the development server</li>
-                  </ol>
-                  <div className="mt-3">
-                    <a 
-                      href="/GOOGLE_CLOUD_VISION_SETUP.md" 
-                      target="_blank" 
-                      className="inline-flex items-center px-3 py-2 border border-green-300 rounded-md text-sm font-medium text-green-700 bg-green-50 hover:bg-green-100"
-                    >
-                      📖 View Full Setup Guide
-                    </a>
+                <div className="bg-gradient-to-r from-purple-50 to-green-50 border border-purple-200 rounded-lg p-4">
+                  <h3 className="font-medium text-purple-900 mb-2">🚀 Enable AI Analysis</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* ChatGPT Option */}
+                    <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
+                      <h4 className="font-medium text-purple-800 mb-2">🧠 Expert Mode (Recommended)</h4>
+                      <ol className="text-sm text-purple-700 space-y-1">
+                        <li>1. Get OpenAI API key from <a href="https://platform.openai.com/" target="_blank" rel="noopener noreferrer" className="underline">OpenAI Platform</a></li>
+                        <li>2. Add <code className="bg-purple-100 px-1 rounded">OPENAI_API_KEY=your_key</code> to <code className="bg-purple-100 px-1 rounded">.env.local</code></li>
+                        <li>3. Restart the development server</li>
+                      </ol>
+                      <div className="mt-2">
+                        <span className="text-xs text-purple-600">✅ Superior accuracy • 🧠 Context understanding • 🎯 Focus on test tubes</span>
+                      </div>
+                    </div>
+                    
+                    {/* Google Vision Option */}
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                      <h4 className="font-medium text-green-800 mb-2">🤖 Basic Mode</h4>
+                      <ol className="text-sm text-green-700 space-y-1">
+                        <li>1. Get Google Cloud Vision API key from <a href="https://console.cloud.google.com/" target="_blank" rel="noopener noreferrer" className="underline">Google Cloud Console</a></li>
+                        <li>2. Add <code className="bg-green-100 px-1 rounded">GOOGLE_CLOUD_VISION_API_KEY=your_key</code> to <code className="bg-green-100 px-1 rounded">.env.local</code></li>
+                        <li>3. Restart the development server</li>
+                      </ol>
+                      <div className="mt-2">
+                        <span className="text-xs text-green-600">⚠️ Limited accuracy • 🔍 Basic color analysis • 📊 Background noise issues</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              ) : aiStatus === 'real' ? (
+              ) : aiStatus === 'chatgpt' ? (
+                <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                  <h3 className="font-medium text-purple-900 mb-2">🎉 Expert AI Analysis Active!</h3>
+                  <p className="text-sm text-purple-800">
+                    Your OpenAI API key is configured and working perfectly! The system is now using ChatGPT for superior water chemistry analysis.
+                  </p>
+                  <div className="mt-3">
+                    <span className="inline-flex items-center px-3 py-2 border border-purple-300 rounded-md text-sm font-medium text-purple-700 bg-purple-100">
+                      🧠 ChatGPT Expert Mode Enabled
+                    </span>
+                  </div>
+                </div>
+              ) : aiStatus === 'google' ? (
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <h3 className="font-medium text-green-900 mb-2">🎉 Real AI Analysis Active!</h3>
+                  <h3 className="font-medium text-green-900 mb-2">🤖 Basic AI Analysis Active</h3>
                   <p className="text-sm text-green-800">
-                    Your Google Cloud Vision API key is configured and working perfectly! The system is now using real AI-powered analysis.
+                    Your Google Cloud Vision API key is configured and working. Consider upgrading to ChatGPT for superior accuracy.
                   </p>
                   <div className="mt-3">
                     <span className="inline-flex items-center px-3 py-2 border border-green-300 rounded-md text-sm font-medium text-green-700 bg-green-100">
-                      ✅ AI Analysis Enabled
+                      🤖 Google Vision Basic Mode
                     </span>
                   </div>
                 </div>
