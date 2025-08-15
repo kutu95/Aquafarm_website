@@ -298,20 +298,19 @@ export default function WaterChemistry() {
       0, 0, scaledWidth, scaledHeight
     );
     
-    // Calculate target dimensions for compression (max 800x600)
-    const maxDimension = 800;
-    let targetWidth = scaledWidth;
-    let targetHeight = scaledHeight;
+    // Calculate target dimensions for compression (fixed width of 800px, height varies by aspect ratio)
+    const targetWidth = 800;
+    const targetHeight = Math.round((scaledHeight * targetWidth) / scaledWidth);
     
-    if (targetWidth > maxDimension || targetHeight > maxDimension) {
-      if (targetWidth > targetHeight) {
-        targetHeight = (targetHeight * maxDimension) / targetWidth;
-        targetWidth = maxDimension;
-      } else {
-        targetWidth = (targetWidth * maxDimension) / targetHeight;
-        targetHeight = maxDimension;
-      }
-    }
+    console.log('=== CROP DEBUG START ===');
+    console.log('Original crop dimensions:', `${scaledWidth}x${scaledHeight}`);
+    console.log('Compressed dimensions:', `${targetWidth}x${targetHeight}`);
+    console.log('Aspect ratio preserved:', `${(scaledWidth / scaledHeight).toFixed(2)}:1 → ${(targetWidth / targetHeight).toFixed(2)}:1`);
+    console.log('Compression ratio:', `${((targetWidth * targetHeight) / (scaledWidth * scaledHeight) * 100).toFixed(1)}%`);
+    console.log('Cropped image data length:', croppedImageData.length);
+    console.log('Cropped image data prefix:', croppedImageData.substring(0, 100));
+    console.log('Has data URL prefix:', croppedImageData.startsWith('data:image'));
+    console.log('=== CROP DEBUG END ===');
     
     // Create a new compressed canvas
     const compressedCanvas = document.createElement('canvas');
