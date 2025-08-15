@@ -228,6 +228,13 @@ export default async function handler(req, res) {
       // Don't fail the request if DB storage fails
     }
 
+    console.log('=== FINAL RESPONSE DEBUG ===');
+    console.log('analysisResults type:', typeof analysisResults);
+    console.log('analysisResults keys:', Object.keys(analysisResults));
+    console.log('analysisResults structure:', JSON.stringify(analysisResults, null, 2));
+    console.log('About to return to frontend...');
+    console.log('=== END FINAL RESPONSE DEBUG ===');
+
     return res.status(200).json(analysisResults);
 
   } catch (error) {
@@ -448,6 +455,7 @@ RESPOND WITH ONLY THIS JSON STRUCTURE - NO OTHER TEXT:
 
 async function analyzeWithGoogleVision(imageData) {
   try {
+    console.log('=== analyzeWithGoogleVision START ===');
     console.log('Starting Google Cloud Vision analysis...');
     
     // The imageData is already a data URL (same format as OpenAI)
@@ -513,7 +521,14 @@ async function analyzeWithGoogleVision(imageData) {
     console.log('Google Cloud Vision response received');
 
     // Process the AI results
-    return processVisionResults(visionData, imageData);
+    console.log('About to call processVisionResults...');
+    const result = processVisionResults(visionData, imageData);
+    console.log('processVisionResults returned:', result);
+    console.log('Result type:', typeof result);
+    console.log('Result keys:', Object.keys(result));
+    console.log('=== analyzeWithGoogleVision END ===');
+    
+    return result;
     
   } catch (error) {
     console.error('Google Cloud Vision error:', error);
