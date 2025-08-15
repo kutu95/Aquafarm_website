@@ -231,9 +231,22 @@ Return your response as a JSON object with this exact structure:
       throw new Error('No content received from ChatGPT');
     }
     
-    // Try to parse the JSON response
+    // Try to parse the JSON response (handle markdown-wrapped responses)
     try {
-      const analysisResults = JSON.parse(content);
+      let cleanedContent = content;
+      
+      // Remove markdown code blocks if present
+      if (content.includes('```json')) {
+        cleanedContent = content.replace(/```json\n?/g, '').replace(/```\n?/g, '');
+      } else if (content.includes('```')) {
+        cleanedContent = content.replace(/```\n?/g, '');
+      }
+      
+      // Trim whitespace
+      cleanedContent = cleanedContent.trim();
+      
+      console.log('Cleaned ChatGPT response:', cleanedContent);
+      const analysisResults = JSON.parse(cleanedContent);
       console.log('ChatGPT analysis parsed successfully');
       return analysisResults;
     } catch (parseError) {
