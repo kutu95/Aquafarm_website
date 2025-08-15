@@ -164,11 +164,11 @@ async function analyzeWithChatGPT(imageData, filename) {
     const dataUrl = `data:image/jpeg;base64,${imageData}`;
     
     // Prepare the prompt for ChatGPT
-    const prompt = `You are an educational assistant helping with color interpretation. Look at this image and identify the colors in the test tubes.
+    const prompt = `You are an educational assistant helping with aquaponics water quality testing. Look at this image and identify the colors in the test tubes from an aquaponics system.
 
 CRITICAL: You MUST respond with ONLY valid JSON. No explanations, no additional text, no markdown formatting.
 
-You are looking at a water quality test kit with 4 test tubes. Simply observe the colors you see and interpret them based on what you observe.
+You are looking at a water quality test kit with 4 test tubes from an aquaponics system. Simply observe the colors you see and interpret them based on what you observe.
 
 For each parameter, provide:
 - The value/level based on what you observe in the test tube
@@ -192,7 +192,7 @@ RESPOND WITH ONLY THIS JSON STRUCTURE - NO OTHER TEXT:
     "tubesDetected": 4,
     "imageQuality": "good",
     "lightingConditions": "natural",
-    "processingNotes": "Color analysis completed",
+    "processingNotes": "Aquaponics water quality analysis completed",
     "aiModel": "gpt-4o"
   }
 }`;
