@@ -66,6 +66,22 @@ export default async function handler(req, res) {
       });
     }
 
+    // Check if this is a status check request
+    if (filename === 'status-check.png' && imageData.length < 100) {
+      // Return status information without processing
+      return res.status(200).json({
+        status: 'ready',
+        message: 'Water chemistry analyzer is ready',
+        availableServices: {
+          chatgpt: !!process.env.OPEN_AI_KEY,
+          googleVision: !!process.env.GOOGLE_CLOUD_VISION_API_KEY
+        },
+        processingNotes: process.env.OPEN_AI_KEY ? 'ChatGPT Expert Mode Enabled' : 
+                        process.env.GOOGLE_CLOUD_VISION_API_KEY ? 'Google Vision Mode Enabled' : 
+                        'Simulation Mode (No API Keys)'
+      });
+    }
+
     // Phase 2: Real AI Analysis using ChatGPT (primary) or Google Cloud Vision (fallback)
     let analysisResults;
     

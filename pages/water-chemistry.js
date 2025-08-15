@@ -188,8 +188,8 @@ export default function WaterChemistry() {
         },
         credentials: 'include',
         body: JSON.stringify({
-          imageData: 'test',
-          filename: 'test.jpg'
+          imageData: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+          filename: 'status-check.png'
         }),
       });
 
@@ -496,7 +496,7 @@ export default function WaterChemistry() {
                       <h4 className="font-medium text-purple-800 mb-2">🧠 Expert Mode (Recommended)</h4>
                       <ol className="text-sm text-purple-700 space-y-1">
                         <li>1. Get OpenAI API key from <a href="https://platform.openai.com/" target="_blank" rel="noopener noreferrer" className="underline">OpenAI Platform</a></li>
-                        <li>2. Add <code className="bg-purple-100 px-1 rounded">OPENAI_API_KEY=your_key</code> to <code className="bg-purple-100 px-1 rounded">.env.local</code></li>
+                        <li>2. Add <code className="bg-purple-100 px-1 rounded">OPEN_AI_KEY=your_key</code> to <code className="bg-purple-100 px-1 rounded">.env.local</code></li>
                         <li>3. Restart the development server</li>
                       </ol>
                       <div className="mt-2">
