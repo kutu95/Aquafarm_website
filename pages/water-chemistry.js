@@ -11,7 +11,7 @@ export default function WaterChemistry() {
   const [results, setResults] = useState(null);
   const [error, setError] = useState(null);
   const [useChatGPT, setUseChatGPT] = useState(true); // Toggle for AI service choice
-  const [aiStatus, setAiStatus] = useState('checking'); // 'checking', 'chatgpt', 'google', 'error'
+  const [aiStatus, setAiStatus] = useState('chatgpt'); // Default to ChatGPT since it's the recommended option
   const [showCropper, setShowCropper] = useState(false);
   const [cropArea, setCropArea] = useState({ x: 0, y: 0, width: 200, height: 200 });
   const [isDragging, setIsDragging] = useState(false);
@@ -24,9 +24,9 @@ export default function WaterChemistry() {
   const canvasRef = useRef();
 
   // Check AI status when component mounts
-  useEffect(() => {
-    checkAiStatus();
-  }, []);
+  // useEffect(() => {
+  //   checkAiStatus();
+  // }, []);
 
   // Track if user has made a manual selection
   const [userHasSelectedService, setUserHasSelectedService] = useState(false);
