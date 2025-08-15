@@ -195,8 +195,20 @@ export default function WaterChemistry() {
 
       if (response.ok) {
         const data = await response.json();
-        // Check if the response indicates real AI analysis
-        if (data.imageAnalysis?.processingNotes?.includes('ChatGPT') || data.imageAnalysis?.aiModel === 'gpt-4o') {
+        console.log('Status check response:', data);
+        
+        // Check if this is a status check response
+        if (data.processingNotes) {
+          if (data.processingNotes.includes('ChatGPT')) {
+            setAiStatus('chatgpt');
+          } else if (data.processingNotes.includes('Google Vision')) {
+            setAiStatus('google');
+          } else {
+            setAiStatus('simulation');
+          }
+        }
+        // Check if the response indicates real AI analysis (for actual image uploads)
+        else if (data.imageAnalysis?.processingNotes?.includes('ChatGPT') || data.imageAnalysis?.aiModel === 'gpt-4o') {
           setAiStatus('chatgpt');
         } else if (data.imageAnalysis?.processingNotes?.includes('Google Cloud Vision')) {
           setAiStatus('google');
