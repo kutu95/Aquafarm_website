@@ -37,6 +37,8 @@ export default function WaterChemistry() {
   // Function to extract date from image metadata or filename
   const extractDateFromImage = async (file) => {
     try {
+      console.log('Starting date extraction for file:', file.name);
+      
       // First try to extract date from filename (takes precedence)
       const filenameDate = extractDateFromFilename(file.name);
       if (filenameDate) {
@@ -129,10 +131,10 @@ export default function WaterChemistry() {
       /(\d{2})[-_](\d{2})[-_](\d{4})/,
       // MM-DD-YYYY or MM_DD_YYYY
       /(\d{2})[-_](\d{2})[-_](\d{4})/,
-      // YYYYMMDD
-      /(\d{4})(\d{2})(\d{2})/,
-      // DDMMYYYY
-      /(\d{2})(\d{2})(\d{4})/,
+      // YYYYMMDD (8 consecutive digits starting with 20xx)
+      /(20\d{2})(\d{2})(\d{2})/,
+      // DDMMYYYY (8 consecutive digits ending with 20xx)
+      /(\d{2})(\d{2})(20\d{2})/,
     ];
     
     for (const pattern of datePatterns) {
@@ -141,10 +143,21 @@ export default function WaterChemistry() {
         try {
           let year, month, day;
           
-          if (pattern.source.includes('YYYY')) {
+          if (pattern.source.includes('20\\d{2}')) {
+            if (pattern.source.startsWith('(20\\d{2})')) {
+              // YYYYMMDD format (e.g., 20250518)
+              [_, year, month, day] = match;
+              console.log('YYYYMMDD format detected:', { year, month, day });
+            } else if (pattern.source.endsWith('(20\\d{2})')) {
+              // DDMMYYYY format
+              [_, day, month, year] = match;
+              console.log('DDMMYYYY format detected:', { day, month, year });
+            }
+          } else if (pattern.source.includes('YYYY')) {
             if (pattern.source.startsWith('(\\d{4})')) {
               // YYYY-MM-DD format
               [_, year, month, day] = match;
+              console.log('YYYY-MM-DD format detected:', { year, month, day });
             } else if (pattern.source.startsWith('(\\d{2})')) {
               // DD-MM-YYYY or MM-DD-YYYY format
               [_, first, second, year] = match;
@@ -153,24 +166,22 @@ export default function WaterChemistry() {
                 // Likely MM-DD format
                 month = first;
                 day = second;
+                console.log('MM-DD-YYYY format detected:', { month, day, year });
               } else {
                 // Likely DD-MM format
                 day = first;
                 month = second;
+                console.log('DD-MM-YYYY format detected:', { day, month, year });
               }
             }
-          } else if (pattern.source.includes('(\\d{4})(\\d{2})(\\d{2})')) {
-            // YYYYMMDD format
-            [_, year, month, day] = match;
-          } else if (pattern.source.includes('(\\d{2})(\\d{2})(\\d{4})')) {
-            // DDMMYYYY format
-            [_, day, month, year] = match;
           }
           
           if (year && month && day) {
             const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
             if (!isNaN(date.getTime())) {
-              return date.toISOString().split('T')[0];
+              const dateString = date.toISOString().split('T')[0];
+              console.log('Valid date parsed:', { year, month, day, dateString });
+              return dateString;
             }
           }
         } catch (error) {
@@ -179,6 +190,7 @@ export default function WaterChemistry() {
       }
     }
     
+    console.log('No date pattern matched in filename:', filename);
     return null;
   };
 
