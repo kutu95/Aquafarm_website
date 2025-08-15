@@ -105,14 +105,38 @@ export default function WaterChemistry() {
     
     if (!imageRef.current) return;
     
+    // Get the image's actual position and size
     const rect = imageRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const computedStyle = window.getComputedStyle(imageRef.current);
     
-    console.log('Mouse down:', { x, y, cropArea, rect });
+    // Account for any CSS transforms or scaling
+    const transform = computedStyle.transform;
+    let scaleX = 1, scaleY = 1;
+    
+    if (transform && transform !== 'none') {
+      const matrix = new DOMMatrix(transform);
+      scaleX = matrix.a;
+      scaleY = matrix.d;
+    }
+    
+    // Calculate coordinates relative to the image's natural size
+    const x = (e.clientX - rect.left) / scaleX;
+    const y = (e.clientY - rect.top) / scaleY;
+    
+    console.log('Mouse down:', { 
+      clientX: e.clientX, 
+      clientY: e.clientY, 
+      rectLeft: rect.left, 
+      rectTop: rect.top,
+      scaleX, 
+      scaleY,
+      x, 
+      y, 
+      cropArea 
+    });
     
     // Check if clicking on resize handles with larger click area
-    const handleSize = 20; // Increased from 15 to 20 for easier clicking
+    const handleSize = 20;
     const right = cropArea.x + cropArea.width;
     const bottom = cropArea.y + cropArea.height;
     
@@ -148,22 +172,34 @@ export default function WaterChemistry() {
     
     if (!imageRef.current) return;
     
+    // Get the image's actual position and size
     const rect = imageRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const computedStyle = window.getComputedStyle(imageRef.current);
     
-    console.log('Mouse move:', { x, y, isDragging, isResizing, resizeHandle });
+    // Account for any CSS transforms or scaling
+    const transform = computedStyle.transform;
+    let scaleX = 1, scaleY = 1;
+    
+    if (transform && transform !== 'none') {
+      const matrix = new DOMMatrix(transform);
+      scaleX = matrix.a;
+      scaleY = matrix.d;
+    }
+    
+    // Calculate coordinates relative to the image's natural size
+    const x = (e.clientX - rect.left) / scaleX;
+    const y = (e.clientY - rect.top) / scaleY;
     
     if (isDragging) {
-      const newX = Math.max(0, Math.min(x - dragStart.x, imageRef.current.width - cropArea.width));
-      const newY = Math.max(0, Math.min(y - dragStart.y, imageRef.current.height - cropArea.height));
-      console.log('Dragging to:', { newX, newY });
+      const newX = Math.max(0, Math.min(x - dragStart.x, imageRef.current.naturalWidth - cropArea.width));
+      const newY = Math.max(0, Math.min(y - dragStart.y, imageRef.current.naturalHeight - cropArea.height));
+      console.log('Dragging to:', { newX, newY, naturalWidth: imageRef.current.naturalWidth, naturalHeight: imageRef.current.naturalHeight });
       setCropArea(prev => ({ ...prev, x: newX, y: newY }));
     } else if (isResizing) {
       if (resizeHandle === 'bottom-right') {
         // Allow flexible aspect ratio - no square constraint
-        const newWidth = Math.max(30, Math.min(x - cropArea.x, imageRef.current.width - cropArea.x));
-        const newHeight = Math.max(30, Math.min(y - cropArea.y, imageRef.current.height - cropArea.y));
+        const newWidth = Math.max(30, Math.min(x - cropArea.x, imageRef.current.naturalWidth - cropArea.x));
+        const newHeight = Math.max(30, Math.min(y - cropArea.y, imageRef.current.naturalHeight - cropArea.y));
         console.log('Resizing bottom-right to:', { newWidth, newHeight });
         setCropArea(prev => ({ ...prev, width: newWidth, height: newHeight }));
       } else if (resizeHandle === 'top-left') {
@@ -654,6 +690,9 @@ export default function WaterChemistry() {
                                 ✨ Dragging crop area
                               </div>
                             )}
+                            <div className="mt-2 text-blue-300 text-xs">
+                              💡 Click anywhere on image to test coordinates
+                            </div>
                           </div>
                           
                           {/* Debug info */}
@@ -663,6 +702,12 @@ export default function WaterChemistry() {
                             <div>Area: {JSON.stringify(cropArea)}</div>
                             <div>Dragging: {isDragging ? 'Yes' : 'No'}</div>
                             <div>Resizing: {isResizing ? resizeHandle : 'No'}</div>
+                            {imageRef.current && (
+                              <>
+                                <div>Image: {imageRef.current.naturalWidth}×{imageRef.current.naturalHeight}</div>
+                                <div>Display: {Math.round(imageRef.current.width)}×{Math.round(imageRef.current.height)}</div>
+                              </>
+                            )}
                           </div>
                           
                           {/* Crop area dimensions */}
