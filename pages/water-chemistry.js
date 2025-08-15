@@ -18,6 +18,20 @@ export default function WaterChemistry() {
   const [resizeHandle, setResizeHandle] = useState(null);
   const [aiStatus, setAiStatus] = useState('chatgpt');
   const [showDebug, setShowDebug] = useState(false);
+  const [showSavePrompt, setShowSavePrompt] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [recordData, setRecordData] = useState({
+    record_date: new Date().toISOString().split('T')[0],
+    ph: null,
+    ammonia: null,
+    nitrite: null,
+    nitrate: null,
+    dissolved_oxygen: '',
+    water_temperature: '',
+    confidence: null,
+    notes: ''
+  });
+  const [saving, setSaving] = useState(false);
   
   const fileInputRef = useRef(null);
   const imageRef = useRef();
@@ -450,7 +464,7 @@ export default function WaterChemistry() {
       
       if (analysisResults.success) {
         // Use the API results directly - no transformation needed
-        setResults(analysisResults);
+        handleAnalysisComplete(analysisResults);
       } else {
         throw new Error('Analysis failed');
       }
@@ -527,6 +541,68 @@ export default function WaterChemistry() {
       case 'warning': return '⚠️';
       case 'danger': return '🚨';
       default: return '❓';
+    }
+  };
+
+  const handleSaveRecord = async () => {
+    setSaving(true);
+    try {
+      const response = await fetch('/api/water-chemistry/save-record', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(recordData)
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        alert(result.message);
+        setShowEditForm(false);
+        setShowSavePrompt(false);
+        // Reset form
+        setRecordData({
+          record_date: new Date().toISOString().split('T')[0],
+          ph: null,
+          ammonia: null,
+          nitrite: null,
+          nitrate: null,
+          dissolved_oxygen: '',
+          water_temperature: '',
+          confidence: null,
+          notes: ''
+        });
+      } else {
+        throw new Error(result.error || 'Failed to save record');
+      }
+    } catch (error) {
+      console.error('Error saving record:', error);
+      alert(`Error saving record: ${error.message}`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleAnalysisComplete = (analysisResults) => {
+    setResults(analysisResults);
+    setIsAnalyzing(false);
+    
+    // Prepare record data for saving
+    if (analysisResults.parameters) {
+      setRecordData(prev => ({
+        ...prev,
+        ph: analysisResults.parameters.pH?.value || null,
+        ammonia: analysisResults.parameters.ammonia?.value || null,
+        nitrite: analysisResults.parameters.nitrite?.value || null,
+        nitrate: analysisResults.parameters.nitrate?.value || null,
+        confidence: analysisResults.confidence || null,
+        notes: analysisResults.recommendations?.join('; ') || ''
+      }));
+      
+      // Show save prompt
+      setShowSavePrompt(true);
     }
   };
 
@@ -987,6 +1063,132 @@ export default function WaterChemistry() {
                 <p>
                   ⚠️ This analysis is for informational purposes only. Always verify results with your test kit instructions and consult with aquarium professionals for critical decisions.
                 </p>
+              </div>
+            </div>
+          )}
+
+          {/* Save Prompt */}
+          {showSavePrompt && (
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mt-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">💾 Save Results</h2>
+              <p className="text-gray-600 mb-4">
+                Would you like to save these results to your water chemistry history?
+              </p>
+              <div className="flex space-x-4">
+                <button
+                  onClick={() => setShowEditForm(true)}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Yes, Save Results
+                </button>
+                <button
+                  onClick={() => setShowSavePrompt(false)}
+                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors"
+                >
+                  No, Thanks
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Edit Form */}
+          {showEditForm && (
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mt-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">📝 Edit & Save Results</h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                {/* Date */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Date
+                  </label>
+                  <input
+                    type="date"
+                    value={recordData.record_date}
+                    onChange={(e) => setRecordData(prev => ({ ...prev, record_date: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                {/* Water Temperature */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Water Temperature (°C)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    placeholder="e.g., 24.5"
+                    value={recordData.water_temperature}
+                    onChange={(e) => setRecordData(prev => ({ ...prev, water_temperature: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                {/* Dissolved Oxygen */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Dissolved Oxygen (mg/L)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    placeholder="e.g., 6.5"
+                    value={recordData.dissolved_oxygen}
+                    onChange={(e) => setRecordData(prev => ({ ...prev, dissolved_oxygen: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                {/* Notes */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Additional Notes
+                  </label>
+                  <textarea
+                    rows="3"
+                    placeholder="Any additional observations..."
+                    value={recordData.notes}
+                    onChange={(e) => setRecordData(prev => ({ ...prev, notes: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+
+              {/* Current Values Display */}
+              <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                <h3 className="font-medium text-gray-900 mb-3">Current Test Results</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div>
+                    <span className="font-medium">pH:</span> {recordData.ph}
+                  </div>
+                  <div>
+                    <span className="font-medium">Ammonia:</span> {recordData.ammonia} ppm
+                  </div>
+                  <div>
+                    <span className="font-medium">Nitrite:</span> {recordData.nitrite} ppm
+                  </div>
+                  <div>
+                    <span className="font-medium">Nitrate:</span> {recordData.nitrate} ppm
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex space-x-4">
+                <button
+                  onClick={handleSaveRecord}
+                  disabled={saving}
+                  className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+                >
+                  {saving ? 'Saving...' : 'Save Record'}
+                </button>
+                <button
+                  onClick={() => setShowEditForm(false)}
+                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors"
+                >
+                  Cancel
+                </button>
               </div>
             </div>
           )}
