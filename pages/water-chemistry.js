@@ -117,6 +117,31 @@ export default function WaterChemistry() {
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     
+    // Calculate resize handle positions
+    const handleSize = 25; // Increased for easier clicking
+    const right = cropArea.x + cropArea.width;
+    const bottom = cropArea.y + cropArea.height;
+    
+    // Top-left handle bounds
+    const topLeftHandleX = cropArea.x - 12;
+    const topLeftHandleY = cropArea.y - 12;
+    const topLeftHandleBounds = {
+      x: topLeftHandleX - handleSize/2,
+      y: topLeftHandleY - handleSize/2,
+      width: handleSize,
+      height: handleSize
+    };
+    
+    // Bottom-right handle bounds
+    const bottomRightHandleX = right + 12;
+    const bottomRightHandleY = bottom + 12;
+    const bottomRightHandleBounds = {
+      x: bottomRightHandleX - handleSize/2,
+      y: bottomRightHandleY - handleSize/2,
+      width: handleSize,
+      height: handleSize
+    };
+    
     console.log('Mouse down:', { 
       clientX: e.clientX, 
       clientY: e.clientY, 
@@ -126,25 +151,23 @@ export default function WaterChemistry() {
       y, 
       cropArea,
       imageWidth: imageRef.current.width,
-      imageHeight: imageRef.current.height
+      imageHeight: imageRef.current.height,
+      topLeftHandleBounds,
+      bottomRightHandleBounds
     });
     
-    // Check if clicking on resize handles with larger click area
-    const handleSize = 20;
-    const right = cropArea.x + cropArea.width;
-    const bottom = cropArea.y + cropArea.height;
-    
+    // Check if clicking on resize handles
     // Bottom-right resize handle
-    if (x >= right - handleSize && x <= right + handleSize && 
-        y >= bottom - handleSize && y <= bottom + handleSize) {
-      console.log('Bottom-right resize handle clicked');
+    if (x >= bottomRightHandleBounds.x && x <= bottomRightHandleBounds.x + bottomRightHandleBounds.width &&
+        y >= bottomRightHandleBounds.y && y <= bottomRightHandleBounds.y + bottomRightHandleBounds.height) {
+      console.log('Bottom-right resize handle clicked!');
       setIsResizing(true);
       setResizeHandle('bottom-right');
     }
     // Top-left resize handle
-    else if (x >= cropArea.x - handleSize && x <= cropArea.x + handleSize && 
-             y >= cropArea.y - handleSize && y <= cropArea.y + handleSize) {
-      console.log('Top-left resize handle clicked');
+    else if (x >= topLeftHandleBounds.x && x <= topLeftHandleBounds.x + topLeftHandleBounds.width &&
+             y >= topLeftHandleBounds.y && y <= topLeftHandleBounds.y + topLeftHandleBounds.height) {
+      console.log('Top-left resize handle clicked!');
       setIsResizing(true);
       setResizeHandle('top-left');
     }
@@ -154,7 +177,7 @@ export default function WaterChemistry() {
       setIsDragging(true);
       setDragStart({ x: x - cropArea.x, y: y - cropArea.y });
     } else {
-      console.log('Clicked outside crop area');
+      console.log('Clicked outside crop area and handles');
     }
   };
 
@@ -628,28 +651,30 @@ export default function WaterChemistry() {
                           >
                             {/* Top-left resize handle */}
                             <div
-                              className={`absolute w-5 h-5 bg-blue-600 border-2 border-white rounded-full transition-all duration-150 ${
+                              className={`absolute w-6 h-6 bg-blue-600 border-2 border-white rounded-full transition-all duration-150 cursor-nw-resize ${
                                 isResizing && resizeHandle === 'top-left' 
                                   ? 'scale-125 bg-blue-700 shadow-lg' 
                                   : 'hover:scale-110 hover:bg-blue-700'
                               }`}
                               style={{
-                                left: '-10px',
-                                top: '-10px',
-                                pointerEvents: 'auto'
+                                left: '-12px',
+                                top: '-12px',
+                                pointerEvents: 'auto',
+                                zIndex: 10
                               }}
                             />
                             {/* Bottom-right resize handle */}
                             <div
-                              className={`absolute w-5 h-5 bg-blue-600 border-2 border-white rounded-full transition-all duration-150 ${
+                              className={`absolute w-6 h-6 bg-blue-600 border-2 border-white rounded-full transition-all duration-150 cursor-se-resize ${
                                 isResizing && resizeHandle === 'bottom-right' 
                                   ? 'scale-125 bg-blue-700 shadow-lg' 
                                   : 'hover:scale-110 hover:bg-blue-700'
                               }`}
                               style={{
-                                right: '-10px',
-                                bottom: '-10px',
-                                pointerEvents: 'auto'
+                                right: '-12px',
+                                bottom: '-12px',
+                                pointerEvents: 'auto',
+                                zIndex: 10
                               }}
                             />
                             {/* Center drag indicator */}
@@ -691,6 +716,9 @@ export default function WaterChemistry() {
                                 <div>Display: {Math.round(imageRef.current.width)}×{Math.round(imageRef.current.height)}</div>
                               </>
                             )}
+                            <div className="mt-2 text-yellow-300">
+                              Click areas: 25px around handles
+                            </div>
                           </div>
                           
                           {/* Crop area dimensions */}
