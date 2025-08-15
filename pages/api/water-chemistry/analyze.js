@@ -273,9 +273,16 @@ async function analyzeWithChatGPT(imageData, filename) {
     // Get the embedded color chart
     const colorChart = await getEmbeddedColorChart();
     
-    // Convert base64 to data URL for ChatGPT
-    const testTubesDataUrl = `data:image/png;base64,${imageData}`;
+    // The imageData is already a data URL from the frontend
+    const testTubesDataUrl = imageData;
     
+    console.log('ChatGPT analysis setup:', {
+      hasColorChart: !!colorChart.dataUrl,
+      imageDataLength: imageData.length,
+      imageDataPrefix: imageData.substring(0, 100),
+      isDataUrl: imageData.startsWith('data:image')
+    });
+
     // Prepare the prompt for ChatGPT with both images
     const prompt = `You are an educational assistant helping with aquaponics water quality testing. You will analyze TWO images:
 
@@ -424,12 +431,12 @@ RESPOND WITH ONLY THIS JSON STRUCTURE - NO OTHER TEXT:
         console.log('JSON extraction also failed:', extractError.message);
       }
       
-          // Return error if all parsing attempts fail
-    console.log('ChatGPT response parsing failed completely');
-    
-    // If ChatGPT refuses to analyze, fall back to Google Vision
-    console.log('ChatGPT refused analysis, falling back to Google Vision...');
-    return await analyzeWithGoogleVision(imageData);
+      // Return error if all parsing attempts fail
+      console.log('ChatGPT response parsing failed completely');
+      
+      // If ChatGPT refuses to analyze, fall back to Google Vision
+      console.log('ChatGPT refused analysis, falling back to Google Vision...');
+      return await analyzeWithGoogleVision(imageData);
     }
     
   } catch (error) {
