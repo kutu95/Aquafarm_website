@@ -570,48 +570,40 @@ function processVisionResults(visionData, imageData) {
     }
 
     // Analyze the image for test tubes and colors
-    let analysis;
-    try {
-      analysis = analyzeWaterChemistryFromVision(dominantColors, objects, labels);
-      console.log('analyzeWaterChemistryFromVision completed successfully');
-    } catch (analysisError) {
-      console.error('Error in analyzeWaterChemistryFromVision:', analysisError);
-      // Create a fallback analysis object
-      analysis = {
-        tubesDetected: 0,
-        imageQuality: 'unknown',
-        lightingConditions: 'unknown',
-        confidence: 0.5,
-        parameters: {
-          pH: { value: null, status: 'unknown', confidence: 0, color: '#999999', notes: 'Analysis failed' },
-          ammonia: { value: null, status: 'unknown', confidence: 0, color: '#999999', notes: 'Analysis failed' },
-          nitrite: { value: null, status: 'unknown', confidence: 0, color: '#999999', notes: 'Analysis failed' },
-          nitrate: { value: null, status: 'unknown', confidence: 0, color: '#999999', notes: 'Analysis failed' }
-        }
-      };
+    console.log('About to call analyzeWaterChemistryFromVision with:', {
+      dominantColorsLength: dominantColors.length,
+      objectsLength: objects.length,
+      labelsLength: labels.length
+    });
+    
+    const analysis = analyzeWaterChemistryFromVision(dominantColors, objects, labels);
+    
+    console.log('analyzeWaterChemistryFromVision returned:', analysis);
+    console.log('Analysis type:', typeof analysis);
+    console.log('Analysis is null/undefined:', analysis === null || analysis === undefined);
+    
+    if (!analysis) {
+      throw new Error('analyzeWaterChemistryFromVision returned null or undefined');
     }
     
     console.log('Final analysis result:', JSON.stringify(analysis, null, 2));
-    console.log('Analysis object keys:', Object.keys(analysis || {}));
-    console.log('Analysis.tubesDetected value:', analysis?.tubesDetected);
+    console.log('Analysis object keys:', Object.keys(analysis));
+    console.log('Analysis.tubesDetected value:', analysis.tubesDetected);
+    console.log('Analysis.tubesDetected type:', typeof analysis.tubesDetected);
     
-    // Ensure analysis object has all required properties
-    const safeAnalysis = {
-      tubesDetected: analysis?.tubesDetected || 0,
-      imageQuality: analysis?.imageQuality || 'unknown',
-      lightingConditions: analysis?.lightingConditions || 'unknown',
-      confidence: analysis?.confidence || 0.5,
-      parameters: analysis?.parameters || {}
-    };
+    // Validate the analysis object structure
+    if (typeof analysis.tubesDetected === 'undefined') {
+      throw new Error(`tubesDetected is undefined in analysis object. Full analysis: ${JSON.stringify(analysis)}`);
+    }
     
     const result = {
       success: true,
-      confidence: safeAnalysis.confidence,
-      parameters: safeAnalysis.parameters,
+      confidence: analysis.confidence,
+      parameters: analysis.parameters,
       imageAnalysis: {
-        tubesDetected: safeAnalysis.tubesDetected,
-        imageQuality: safeAnalysis.imageQuality,
-        lightingConditions: safeAnalysis.lightingConditions,
+        tubesDetected: analysis.tubesDetected,
+        imageQuality: analysis.imageQuality,
+        lightingConditions: analysis.lightingConditions,
         processingNotes: 'AI-powered analysis using Google Cloud Vision',
         visionData: {
           dominantColors: dominantColors.length,
@@ -645,10 +637,15 @@ function analyzeWaterChemistryFromVision(dominantColors, objects, labels) {
   // This is where we'll implement the actual chemistry analysis
   // For now, we'll use the vision data to make intelligent estimates
   
+  console.log('=== analyzeWaterChemistryFromVision START ===');
+  console.log('Input parameters:', { dominantColors, objects, labels });
+  
   let tubesDetected = 0;
   let imageQuality = 'good';
   let lightingConditions = 'natural';
   let confidence = 0.85;
+  
+  console.log('Initial variable values:', { tubesDetected, imageQuality, lightingConditions, confidence });
   
   console.log('Starting analyzeWaterChemistryFromVision with:', {
     dominantColorsCount: dominantColors.length,
@@ -667,7 +664,11 @@ function analyzeWaterChemistryFromVision(dominantColors, objects, labels) {
            name.includes('beaker');
   });
   
+  console.log('Test tube objects found:', testTubeObjects);
+  
   tubesDetected = testTubeObjects.length;
+  
+  console.log('tubesDetected after assignment:', tubesDetected);
   
   // Log test tube detection details
   if (testTubeObjects.length > 0) {
@@ -698,7 +699,9 @@ function analyzeWaterChemistryFromVision(dominantColors, objects, labels) {
   
   // Estimate water chemistry parameters based on color analysis
   // This is a simplified version - in production, we'd use more sophisticated algorithms
+  console.log('About to call estimateChemistryFromColors...');
   const parameters = estimateChemistryFromColors(dominantColors, confidence);
+  console.log('estimateChemistryFromColors returned:', parameters);
   
   console.log('Final parameters object being returned:', JSON.stringify(parameters, null, 2));
   
@@ -712,6 +715,9 @@ function analyzeWaterChemistryFromVision(dominantColors, objects, labels) {
   };
   
   console.log('Final result object being returned from analyzeWaterChemistryFromVision:', JSON.stringify(result, null, 2));
+  console.log('Result object keys:', Object.keys(result));
+  console.log('Result.tubesDetected:', result.tubesDetected);
+  console.log('=== analyzeWaterChemistryFromVision END ===');
   
   return result;
 }
