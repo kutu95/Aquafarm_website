@@ -37,18 +37,18 @@ export default function WaterChemistry() {
   // Function to extract date from image metadata or filename
   const extractDateFromImage = async (file) => {
     try {
-      // First try to extract date from EXIF metadata
-      const exifDate = await extractDateFromExif(file);
-      if (exifDate) {
-        console.log('Date extracted from EXIF:', exifDate);
-        return exifDate;
-      }
-      
-      // Fallback to parsing filename for date patterns
+      // First try to extract date from filename (takes precedence)
       const filenameDate = extractDateFromFilename(file.name);
       if (filenameDate) {
-        console.log('Date extracted from filename:', filenameDate);
+        console.log('Date extracted from filename (takes precedence):', filenameDate);
         return filenameDate;
+      }
+      
+      // Fallback to EXIF metadata if no filename date found
+      const exifDate = await extractDateFromExif(file);
+      if (exifDate) {
+        console.log('Date extracted from EXIF metadata:', exifDate);
+        return exifDate;
       }
       
       console.log('No date found in image, using today');
@@ -958,6 +958,14 @@ export default function WaterChemistry() {
                             onTouchEnd={handleTouchEnd}
                             draggable={false}
                           />
+                          
+                          {/* Extracted date display */}
+                          {recordData.record_date !== new Date().toISOString().split('T')[0] && (
+                            <div className="absolute top-2 left-2 bg-green-600 text-white text-sm px-3 py-1 rounded-lg shadow-lg">
+                              📅 {recordData.record_date}
+                            </div>
+                          )}
+                          
                           {/* Crop overlay */}
                           <div
                             className={`absolute border-2 border-blue-500 bg-blue-500 bg-opacity-20 ${
@@ -1155,11 +1163,20 @@ export default function WaterChemistry() {
                           </div>
                         </div>
                       ) : (
-                        <img
-                          src={imagePreview}
-                          alt="Cropped preview"
-                          className="max-w-full max-h-96 object-contain"
-                        />
+                        <div className="relative">
+                          <img
+                            src={imagePreview}
+                            alt="Cropped preview"
+                            className="max-w-full max-h-96 object-contain"
+                          />
+                          
+                          {/* Extracted date display */}
+                          {recordData.record_date !== new Date().toISOString().split('T')[0] && (
+                            <div className="absolute top-2 left-2 bg-green-600 text-white text-sm px-3 py-1 rounded-lg shadow-lg">
+                              📅 {recordData.record_date}
+                            </div>
+                          )}
+                        </div>
                       )}
                     </div>
                     
