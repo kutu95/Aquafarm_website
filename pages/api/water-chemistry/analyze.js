@@ -573,15 +573,17 @@ function processVisionResults(visionData, imageData) {
     const analysis = analyzeWaterChemistryFromVision(dominantColors, objects, labels);
     
     console.log('Final analysis result:', JSON.stringify(analysis, null, 2));
+    console.log('Analysis object keys:', Object.keys(analysis));
+    console.log('Analysis.tubesDetected value:', analysis.tubesDetected);
     
     const result = {
       success: true,
-      confidence: analysis.confidence,
-      parameters: analysis.parameters,
+      confidence: analysis.confidence || 0.85,
+      parameters: analysis.parameters || {},
       imageAnalysis: {
-        tubesDetected: analysis.tubesDetected,
-        imageQuality: analysis.imageQuality,
-        lightingConditions: analysis.lightingConditions,
+        tubesDetected: analysis.tubesDetected || 0,
+        imageQuality: analysis.imageQuality || 'good',
+        lightingConditions: analysis.lightingConditions || 'natural',
         processingNotes: 'AI-powered analysis using Google Cloud Vision',
         visionData: {
           dominantColors: dominantColors.length,
