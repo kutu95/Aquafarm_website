@@ -101,11 +101,15 @@ export default function WaterChemistry() {
 
   const handleMouseDown = (e) => {
     e.preventDefault();
+    e.stopPropagation();
+    
+    if (!imageRef.current) return;
+    
     const rect = imageRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     
-    console.log('Mouse down:', { x, y, cropArea });
+    console.log('Mouse down:', { x, y, cropArea, rect });
     
     // Check if clicking on resize handles
     const handleSize = 15;
@@ -140,24 +144,33 @@ export default function WaterChemistry() {
     if (!isDragging && !isResizing) return;
     
     e.preventDefault();
+    e.stopPropagation();
+    
+    if (!imageRef.current) return;
+    
     const rect = imageRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     
+    console.log('Mouse move:', { x, y, isDragging, isResizing, resizeHandle });
+    
     if (isDragging) {
       const newX = Math.max(0, Math.min(x - dragStart.x, imageRef.current.width - cropArea.width));
       const newY = Math.max(0, Math.min(y - dragStart.y, imageRef.current.height - cropArea.height));
+      console.log('Dragging to:', { newX, newY });
       setCropArea(prev => ({ ...prev, x: newX, y: newY }));
     } else if (isResizing) {
       if (resizeHandle === 'bottom-right') {
         const newWidth = Math.max(50, Math.min(x - cropArea.x, imageRef.current.width - cropArea.x));
         const newHeight = Math.max(50, Math.min(y - cropArea.y, imageRef.current.height - cropArea.y));
+        console.log('Resizing bottom-right to:', { newWidth, newHeight });
         setCropArea(prev => ({ ...prev, width: newWidth, height: newHeight }));
       } else if (resizeHandle === 'top-left') {
         const newWidth = Math.max(50, cropArea.x + cropArea.width - x);
         const newHeight = Math.max(50, cropArea.y + cropArea.height - y);
         const newX = Math.max(0, Math.min(x, cropArea.x + cropArea.width - 50));
         const newY = Math.max(0, Math.min(y, cropArea.y + cropArea.height - 50));
+        console.log('Resizing top-left to:', { newX, newY, newWidth, newHeight });
         setCropArea(prev => ({ 
           x: newX, 
           y: newY, 
@@ -572,40 +585,50 @@ export default function WaterChemistry() {
                             ref={imageRef}
                             src={imagePreview}
                             alt="Preview"
-                            className="max-w-full max-h-96 object-contain"
+                            className="max-w-full max-h-96 object-contain select-none"
                             onMouseDown={handleMouseDown}
                             onMouseMove={handleMouseMove}
                             onMouseUp={handleMouseUp}
                             onMouseLeave={handleMouseUp}
+                            draggable={false}
                           />
                           {/* Crop overlay */}
                           <div
-                            className="absolute border-2 border-blue-500 bg-blue-500 bg-opacity-20 cursor-move"
+                            className={`absolute border-2 border-blue-500 bg-blue-500 bg-opacity-20 ${
+                              isDragging ? 'cursor-grabbing' : 'cursor-grab'
+                            }`}
                             style={{
                               left: cropArea.x,
                               top: cropArea.y,
                               width: cropArea.width,
-                              height: cropArea.height
+                              height: cropArea.height,
+                              pointerEvents: 'none'
                             }}
                           >
                             {/* Top-left resize handle */}
                             <div
-                              className="absolute w-4 h-4 bg-blue-600 border-2 border-white rounded-full cursor-nw-resize"
+                              className={`absolute w-4 h-4 bg-blue-600 border-2 border-white rounded-full ${
+                                isResizing && resizeHandle === 'top-left' ? 'cursor-nw-resize' : 'cursor-nw-resize'
+                              }`}
                               style={{
                                 left: '-8px',
-                                top: '-8px'
+                                top: '-8px',
+                                pointerEvents: 'auto'
                               }}
                             />
                             {/* Bottom-right resize handle */}
                             <div
-                              className="absolute w-4 h-4 bg-blue-600 border-2 border-white rounded-full cursor-se-resize"
+                              className={`absolute w-4 h-4 bg-blue-600 border-2 border-white rounded-full ${
+                                isResizing && resizeHandle === 'bottom-right' ? 'cursor-se-resize' : 'cursor-se-resize'
+                              }`}
                               style={{
                                 right: '-8px',
-                                bottom: '-8px'
+                                bottom: '-8px',
+                                pointerEvents: 'auto'
                               }}
                             />
                             {/* Center drag indicator */}
-                            <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                               <div className="w-2 h-2 bg-white rounded-full opacity-50"></div>
                             </div>
                           </div>
@@ -622,6 +645,8 @@ export default function WaterChemistry() {
                             <div className="font-medium">Debug:</div>
                             <div>Show: {showCropper ? 'Yes' : 'No'}</div>
                             <div>Area: {JSON.stringify(cropArea)}</div>
+                            <div>Dragging: {isDragging ? 'Yes' : 'No'}</div>
+                            <div>Resizing: {isResizing ? resizeHandle : 'No'}</div>
                           </div>
                           
                           {/* Crop area dimensions */}
