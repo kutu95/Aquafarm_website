@@ -316,13 +316,13 @@ export default function WaterChemistryRecords() {
 function EditRecordForm({ record, onSave, onCancel }) {
   const [formData, setFormData] = useState({
     record_date: record.record_date,
-    ph: record.ph || '',
-    ammonia: record.ammonia || '',
-    nitrite: record.nitrite || '',
-    nitrate: record.nitrate || '',
+    ph: record.ph !== undefined && record.ph !== null ? record.ph : '',
+    ammonia: record.ammonia !== undefined && record.ammonia !== null ? record.ammonia : '',
+    nitrite: record.nitrite !== undefined && record.nitrite !== null ? record.nitrite : '',
+    nitrate: record.nitrate !== undefined && record.nitrate !== null ? record.nitrate : '',
     dissolved_oxygen: record.dissolved_oxygen || '',
     water_temperature: record.water_temperature || '',
-    confidence: record.confidence || '',
+    confidence: record.confidence !== undefined && record.confidence !== null ? record.confidence : '',
     notes: record.notes || ''
   });
 

@@ -662,11 +662,11 @@ export default function WaterChemistry() {
     if (analysisResults.parameters) {
       setRecordData(prev => ({
         ...prev,
-        ph: analysisResults.parameters.pH?.value || null,
-        ammonia: analysisResults.parameters.ammonia?.value || null,
-        nitrite: analysisResults.parameters.nitrite?.value || null,
-        nitrate: analysisResults.parameters.nitrate?.value || null,
-        confidence: analysisResults.confidence || null,
+        ph: analysisResults.parameters.pH?.value !== undefined ? analysisResults.parameters.pH.value : null,
+        ammonia: analysisResults.parameters.ammonia?.value !== undefined ? analysisResults.parameters.ammonia.value : null,
+        nitrite: analysisResults.parameters.nitrite?.value !== undefined ? analysisResults.parameters.nitrite.value : null,
+        nitrate: analysisResults.parameters.nitrate?.value !== undefined ? analysisResults.parameters.nitrate.value : null,
+        confidence: analysisResults.confidence !== undefined ? analysisResults.confidence : null,
         notes: analysisResults.recommendations?.join('; ') || ''
       }));
       
