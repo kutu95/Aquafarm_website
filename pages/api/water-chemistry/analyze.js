@@ -358,7 +358,11 @@ RESPOND WITH ONLY THIS JSON STRUCTURE - NO OTHER TEXT:
       throw new Error('No analysis content received from ChatGPT');
     }
 
-    console.log('Raw ChatGPT analysis:', analysisText);
+    console.log('=== CHATGPT RESPONSE DEBUG ===');
+    console.log('Raw ChatGPT response length:', analysisText.length);
+    console.log('Raw ChatGPT response (first 500 chars):', analysisText.substring(0, 500));
+    console.log('Raw ChatGPT response (last 500 chars):', analysisText.substring(Math.max(0, analysisText.length - 500)));
+    console.log('=== END CHATGPT RESPONSE DEBUG ===');
 
     // Parse the JSON response from ChatGPT
     let analysis;
@@ -367,7 +371,9 @@ RESPOND WITH ONLY THIS JSON STRUCTURE - NO OTHER TEXT:
       const jsonMatch = analysisText.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         analysis = JSON.parse(jsonMatch[0]);
+        console.log('=== PARSED JSON DEBUG ===');
         console.log('Parsed JSON analysis:', JSON.stringify(analysis, null, 2));
+        console.log('=== END PARSED JSON DEBUG ===');
       } else {
         throw new Error('No JSON found in response');
       }
@@ -378,40 +384,54 @@ RESPOND WITH ONLY THIS JSON STRUCTURE - NO OTHER TEXT:
     }
 
     // Check if the response has the expected structure
+    console.log('=== STRUCTURE ANALYSIS DEBUG ===');
     console.log('Analysis structure check:', {
       hasSuccess: 'success' in analysis,
       hasParameters: 'parameters' in analysis,
       hasDirectParams: ['pH', 'ammonia', 'nitrite', 'nitrate'].some(p => p in analysis),
-      topLevelKeys: Object.keys(analysis)
+      topLevelKeys: Object.keys(analysis),
+      parametersKeys: analysis.parameters ? Object.keys(analysis.parameters) : 'NO PARAMETERS'
     });
+    console.log('=== END STRUCTURE ANALYSIS DEBUG ===');
 
     // Handle different response formats from ChatGPT
     let parameters;
     if (analysis.parameters && typeof analysis.parameters === 'object') {
       // Format: { success: true, parameters: { pH: {...}, ammonia: {...} } }
       parameters = analysis.parameters;
-      console.log('Using parameters from analysis.parameters');
+      console.log('✅ Using parameters from analysis.parameters');
     } else if (['pH', 'ammonia', 'nitrite', 'nitrate'].some(p => p in analysis)) {
       // Format: { pH: {...}, ammonia: {...}, nitrite: {...}, nitrate: {...} }
       parameters = analysis;
-      console.log('Using direct parameters from analysis root');
+      console.log('✅ Using direct parameters from analysis root');
     } else {
-      console.error('Unexpected analysis structure:', JSON.stringify(analysis, null, 2));
+      console.error('❌ Unexpected analysis structure:', JSON.stringify(analysis, null, 2));
       throw new Error('Analysis response does not contain expected parameter structure');
     }
 
     // Validate the parameters structure
     const requiredParams = ['pH', 'ammonia', 'nitrite', 'nitrate'];
+    console.log('=== PARAMETER VALIDATION DEBUG ===');
     for (const param of requiredParams) {
+      console.log(`Checking ${param}:`, {
+        exists: !!parameters[param],
+        type: typeof parameters[param],
+        isObject: typeof parameters[param] === 'object',
+        hasValue: parameters[param] ? 'value' in parameters[param] : false,
+        value: parameters[param]?.value,
+        fullParam: parameters[param]
+      });
+      
       if (!parameters[param] || typeof parameters[param] !== 'object') {
-        console.error(`Missing or invalid ${param} parameter:`, parameters[param]);
+        console.error(`❌ Missing or invalid ${param} parameter:`, parameters[param]);
         throw new Error(`Missing or invalid ${param} parameter in analysis`);
       }
       if (typeof parameters[param].value === 'undefined') {
-        console.error(`Missing value for ${param} parameter:`, parameters[param]);
+        console.error(`❌ Missing value for ${param} parameter:`, parameters[param]);
         throw new Error(`Missing value for ${param} parameter`);
       }
     }
+    console.log('=== END PARAMETER VALIDATION DEBUG ===');
 
     // Create the final result structure
     const result = {
