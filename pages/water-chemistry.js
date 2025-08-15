@@ -298,11 +298,37 @@ export default function WaterChemistry() {
       0, 0, scaledWidth, scaledHeight
     );
     
-    // Convert to data URL (same format both APIs expect)
-    const croppedImageData = canvas.toDataURL('image/jpeg', 0.8); // Use JPEG with 80% quality for smaller size
+    // Calculate target dimensions for compression (max 800x600)
+    const maxDimension = 800;
+    let targetWidth = scaledWidth;
+    let targetHeight = scaledHeight;
+    
+    if (targetWidth > maxDimension || targetHeight > maxDimension) {
+      if (targetWidth > targetHeight) {
+        targetHeight = (targetHeight * maxDimension) / targetWidth;
+        targetWidth = maxDimension;
+      } else {
+        targetWidth = (targetWidth * maxDimension) / targetHeight;
+        targetHeight = maxDimension;
+      }
+    }
+    
+    // Create a new compressed canvas
+    const compressedCanvas = document.createElement('canvas');
+    const compressedCtx = compressedCanvas.getContext('2d');
+    compressedCanvas.width = targetWidth;
+    compressedCanvas.height = targetHeight;
+    
+    // Draw the cropped image to the compressed canvas (this will resize it)
+    compressedCtx.drawImage(canvas, 0, 0, targetWidth, targetHeight);
+    
+    // Convert to data URL with JPEG compression (much smaller than PNG)
+    const croppedImageData = compressedCanvas.toDataURL('image/jpeg', 0.7); // 70% quality for good compression
     
     console.log('=== CROP DEBUG START ===');
-    console.log('Canvas dimensions:', `${canvas.width}x${canvas.height}`);
+    console.log('Original crop dimensions:', `${scaledWidth}x${scaledHeight}`);
+    console.log('Compressed dimensions:', `${targetWidth}x${targetHeight}`);
+    console.log('Compression ratio:', `${((targetWidth * targetHeight) / (scaledWidth * scaledHeight) * 100).toFixed(1)}%`);
     console.log('Cropped image data length:', croppedImageData.length);
     console.log('Cropped image data prefix:', croppedImageData.substring(0, 100));
     console.log('Has data URL prefix:', croppedImageData.startsWith('data:image'));
@@ -314,7 +340,8 @@ export default function WaterChemistry() {
     
     console.log('Cropped image created successfully:', {
       dataUrlLength: croppedImageData.length,
-      canvasDimensions: `${canvas.width}x${canvas.height}`,
+      originalDimensions: `${scaledWidth}x${scaledHeight}`,
+      compressedDimensions: `${targetWidth}x${targetHeight}`,
       hasDataUrlPrefix: croppedImageData.startsWith('data:image')
     });
   };
