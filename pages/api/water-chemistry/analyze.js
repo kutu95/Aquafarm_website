@@ -263,6 +263,8 @@ async function analyzeWithChatGPT(imageData, filename) {
 1. A user's test tube image (water chemistry test tubes from an aquaponics system)
 2. The official API Freshwater Master Test Kit color chart (with standardized color scales)
 
+IMPORTANT: This aquaponics system is targeting a pH of 6.4 for optimal plant and fish health.
+
 CRITICAL: You MUST respond with ONLY valid JSON. No explanations, no additional text, no markdown formatting.
 
 Compare the colors in the test tubes to the exact colors on the color chart to determine precise readings.
@@ -275,7 +277,7 @@ For each parameter, provide:
 
 Focus ONLY on the test tube colors compared to the chart colors. Ignore background elements.
 
-Additionally, provide personalized recommendations based on the water chemistry values for an aquaponics system.
+Additionally, provide personalized recommendations based on the water chemistry values for an aquaponics system targeting pH 6.4.
 
 RESPOND WITH ONLY THIS JSON STRUCTURE - NO OTHER TEXT:
 {
@@ -288,7 +290,7 @@ RESPOND WITH ONLY THIS JSON STRUCTURE - NO OTHER TEXT:
     "nitrate": {"value": 80.0, "status": "danger", "confidence": 0.87, "color": "#FF0000", "notes": "Red color matches chart at 80.0 ppm"}
   },
   "recommendations": [
-    "pH is low (6.0) - Consider adding crushed coral or limestone to raise pH gradually to 6.5-7.5 range",
+    "pH is low (6.0) - Need to raise pH from 6.0 to target of 6.4. Consider adding crushed coral or limestone gradually",
     "Ammonia is dangerously high (2.0 ppm) - Perform immediate 50% water change and check for overfeeding or dead fish",
     "Nitrite is good (0.0 ppm) - Your tank is properly cycled for this parameter",
     "Nitrate is very high (80.0 ppm) - Perform water change and check filtration system"
