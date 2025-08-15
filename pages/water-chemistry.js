@@ -16,6 +16,8 @@ export default function WaterChemistry() {
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [isResizing, setIsResizing] = useState(false);
   const [resizeHandle, setResizeHandle] = useState(null);
+  const [aiStatus, setAiStatus] = useState('chatgpt');
+  const [showDebug, setShowDebug] = useState(false);
   
   const fileInputRef = useRef(null);
   const imageRef = useRef();
@@ -924,26 +926,37 @@ export default function WaterChemistry() {
               <h2 className="text-xl font-semibold text-gray-900 mb-4">📊 Analysis Results</h2>
               
               {/* Debug Results Structure */}
-              <div className="bg-gray-100 border border-gray-300 rounded-lg p-4 mb-4 text-xs">
-                <div className="font-medium mb-2">🔍 Debug: Results Structure</div>
-                <div>Results keys: {Object.keys(results).join(', ')}</div>
-                <div>Has parameters: {results.parameters ? 'Yes' : 'No'}</div>
-                {results.parameters && (
-                  <div>Parameter keys: {Object.keys(results.parameters).join(', ')}</div>
-                )}
-                <div>Success: {results.success?.toString()}</div>
-                <div>Confidence: {results.confidence}</div>
-                <div>Has imageAnalysis: {results.imageAnalysis ? 'Yes' : 'No'}</div>
+              <div className="mb-4">
+                <button
+                  onClick={() => setShowDebug(!showDebug)}
+                  className="text-xs text-gray-500 hover:text-gray-700 mb-2 flex items-center"
+                >
+                  {showDebug ? '🔽' : '🔼'} Debug Info
+                </button>
                 
-                {/* Debug individual parameter values */}
-                {results.parameters && (
-                  <div className="mt-2 pt-2 border-t border-gray-300">
-                    <div className="font-medium">Parameter Values:</div>
-                    {Object.entries(results.parameters).map(([param, data]) => (
-                      <div key={param} className="ml-2">
-                        {param}: {JSON.stringify(data)}
+                {showDebug && (
+                  <div className="bg-gray-100 border border-gray-300 rounded-lg p-4 text-xs">
+                    <div className="font-medium mb-2">🔍 Debug: Results Structure</div>
+                    <div>Results keys: {Object.keys(results).join(', ')}</div>
+                    <div>Has parameters: {results.parameters ? 'Yes' : 'No'}</div>
+                    {results.parameters && (
+                      <div>Parameter keys: {Object.keys(results.parameters).join(', ')}</div>
+                    )}
+                    <div>Success: {results.success?.toString()}</div>
+                    <div>Confidence: {results.confidence}</div>
+                    <div>Has imageAnalysis: {results.imageAnalysis ? 'Yes' : 'No'}</div>
+                    
+                    {/* Debug individual parameter values */}
+                    {results.parameters && (
+                      <div className="mt-2 pt-2 border-t border-gray-300">
+                        <div className="font-medium">Parameter Values:</div>
+                        {Object.entries(results.parameters).map(([param, data]) => (
+                          <div key={param} className="ml-2">
+                            {param}: {JSON.stringify(data)}
+                          </div>
+                        ))}
                       </div>
-                    ))}
+                    )}
                   </div>
                 )}
               </div>
