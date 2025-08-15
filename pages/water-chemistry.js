@@ -230,18 +230,34 @@ export default function WaterChemistry() {
     } else if (isResizing) {
       console.log('Resizing with handle:', resizeHandle);
       if (resizeHandle === 'bottom-right') {
-        // Allow flexible aspect ratio - no square constraint
-        const newWidth = Math.max(30, Math.min(x - cropArea.x, imageRef.current.width - cropArea.x));
-        const newHeight = Math.max(30, Math.min(y - cropArea.y, imageRef.current.height - cropArea.y));
-        console.log('Resizing bottom-right to:', { newWidth, newHeight, x, y, cropArea });
-        setCropArea(prev => ({ ...prev, width: newWidth, height: newHeight }));
+        // Calculate new dimensions based on mouse position and initial offset
+        const newWidth = Math.max(50, x - cropArea.x - dragStart.x);
+        const newHeight = Math.max(50, y - cropArea.y - dragStart.y);
+        
+        console.log('Resizing bottom-right:', { 
+          x, y, dragStart, 
+          newWidth, newHeight, 
+          currentArea: cropArea 
+        });
+        
+        setCropArea(prev => ({ 
+          ...prev, 
+          width: newWidth, 
+          height: newHeight 
+        }));
       } else if (resizeHandle === 'top-left') {
-        // Allow flexible aspect ratio - no square constraint
-        const newWidth = Math.max(30, cropArea.x + cropArea.width - x);
-        const newHeight = Math.max(30, cropArea.y + cropArea.height - y);
-        const newX = Math.max(0, Math.min(x, cropArea.x + cropArea.width - 30));
-        const newY = Math.max(0, Math.min(y, cropArea.y + cropArea.height - 30));
-        console.log('Resizing top-left to:', { newX, newY, newWidth, newHeight, x, y, cropArea });
+        // Calculate new position and dimensions based on mouse position and initial offset
+        const newX = Math.max(0, x - dragStart.x);
+        const newY = Math.max(0, y - dragStart.y);
+        const newWidth = Math.max(50, (cropArea.x + cropArea.width) - newX);
+        const newHeight = Math.max(50, (cropArea.y + cropArea.height) - newY);
+        
+        console.log('Resizing top-left:', { 
+          x, y, dragStart, 
+          newX, newY, newWidth, newHeight, 
+          currentArea: cropArea 
+        });
+        
         setCropArea(prev => ({ 
           x: newX, 
           y: newY, 
@@ -694,10 +710,20 @@ export default function WaterChemistry() {
                                 console.log('Top-left handle clicked directly!');
                                 e.preventDefault();
                                 e.stopPropagation();
+                                
+                                // Get the image's position for coordinate calculations
+                                const rect = imageRef.current.getBoundingClientRect();
+                                const clickX = e.clientX - rect.left;
+                                const clickY = e.clientY - rect.top;
+                                
+                                // Calculate offset from the current crop area corner
+                                const offsetX = clickX - cropArea.x;
+                                const offsetY = clickY - cropArea.y;
+                                
                                 setIsResizing(true);
                                 setResizeHandle('top-left');
-                                setDragStart({ x: 0, y: 0 });
-                                console.log('Set resizing state to true, handle to top-left');
+                                setDragStart({ x: offsetX, y: offsetY });
+                                console.log('Set resizing state to true, handle to top-left, offset:', { offsetX, offsetY });
                               }}
                             />
                             {/* Bottom-right resize handle */}
@@ -717,10 +743,20 @@ export default function WaterChemistry() {
                                 console.log('Bottom-right handle clicked directly!');
                                 e.preventDefault();
                                 e.stopPropagation();
+                                
+                                // Get the image's position for coordinate calculations
+                                const rect = imageRef.current.getBoundingClientRect();
+                                const clickX = e.clientX - rect.left;
+                                const clickY = e.clientY - rect.top;
+                                
+                                // Calculate offset from the current crop area corner
+                                const offsetX = clickX - (cropArea.x + cropArea.width);
+                                const offsetY = clickY - (cropArea.y + cropArea.height);
+                                
                                 setIsResizing(true);
                                 setResizeHandle('bottom-right');
-                                setDragStart({ x: 0, y: 0 });
-                                console.log('Set resizing state to true, handle to bottom-right');
+                                setDragStart({ x: offsetX, y: offsetY });
+                                console.log('Set resizing state to true, handle to bottom-right, offset:', { offsetX, offsetY });
                               }}
                             />
                             {/* Center drag indicator */}
