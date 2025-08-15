@@ -69,10 +69,19 @@ export default async function handler(req, res) {
     // Phase 2: Real AI Analysis using Google Cloud Vision
     let analysisResults;
     
+    // Debug: Check if API key is available
+    console.log('Environment check:', {
+      hasApiKey: !!process.env.GOOGLE_CLOUD_VISION_API_KEY,
+      apiKeyLength: process.env.GOOGLE_CLOUD_VISION_API_KEY ? process.env.GOOGLE_CLOUD_VISION_API_KEY.length : 0,
+      apiKeyPreview: process.env.GOOGLE_CLOUD_VISION_API_KEY ? process.env.GOOGLE_CLOUD_VISION_API_KEY.substring(0, 10) + '...' : 'none'
+    });
+    
     if (process.env.GOOGLE_CLOUD_VISION_API_KEY) {
+      console.log('Using Google Cloud Vision API for real AI analysis');
       // Use real Google Cloud Vision API
       analysisResults = await analyzeWithGoogleVision(imageData);
     } else {
+      console.log('No Google Cloud Vision API key found, using enhanced simulation');
       // Fallback to enhanced simulation for development
       analysisResults = await enhancedSimulation(imageData);
     }
