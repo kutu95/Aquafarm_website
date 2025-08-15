@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabaseClient';
+import { createServerClient } from '@supabase/ssr';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -6,11 +6,39 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Get the user session
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      return res.status(401).json({ error: 'Unauthorized' });
+    // Create server-side Supabase client with cookie handling
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      {
+        cookies: {
+          get(name) {
+            return req.cookies[name];
+          },
+          set(name, value, options) {
+            res.setHeader('Set-Cookie', `${name}=${value}; Path=/`);
+          },
+          remove(name) {
+            res.setHeader('Set-Cookie', `${name}=; Path=/; Max-Age=0`);
+          },
+        },
+      }
+    );
+
+    // Get the user session from cookies
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError) {
+      console.error('Session error:', sessionError);
+      return res.status(401).json({ error: 'Authentication error', details: sessionError.message });
     }
+    
+    if (!session) {
+      console.log('No session found in API request');
+      return res.status(401).json({ error: 'Unauthorized - No valid session' });
+    }
+
+    console.log('API Request authenticated for user:', session.user.id);
 
     const { imageData, filename } = req.body;
 
