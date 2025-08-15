@@ -1,16 +1,16 @@
 import { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '@/pages/_app';
 import Layout from '@/components/Layout';
+import Link from 'next/link';
 
 export default function WaterChemistryRecords() {
   const { user, loading } = useContext(AuthContext);
   const [records, setRecords] = useState([]);
   const [loadingRecords, setLoadingRecords] = useState(true);
   const [editingRecord, setEditingRecord] = useState(null);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
   const [filterDate, setFilterDate] = useState('');
-  const [filterParameter, setFilterParameter] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [filterDateEnd, setFilterDateEnd] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
 
   useEffect(() => {
     if (user) {
@@ -92,16 +92,9 @@ export default function WaterChemistryRecords() {
 
   const filteredRecords = records.filter(record => {
     const matchesDate = !filterDate || record.record_date === filterDate;
-    const matchesParameter = !filterParameter || 
-      (record.ph && record.ph.toString().includes(filterParameter)) ||
-      (record.ammonia && record.ammonia.toString().includes(filterParameter)) ||
-      (record.nitrite && record.nitrite.toString().includes(filterParameter)) ||
-      (record.nitrate && record.nitrate.toString().includes(filterParameter));
-    const matchesSearch = !searchTerm || 
-      record.notes?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      record.record_date.includes(searchTerm);
+    const matchesDateEnd = !filterDateEnd || record.record_date <= filterDateEnd;
     
-    return matchesDate && matchesParameter && matchesSearch;
+    return matchesDate && matchesDateEnd;
   });
 
   const getStatusColor = (value, parameter) => {
@@ -144,15 +137,27 @@ export default function WaterChemistryRecords() {
     <Layout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Water Chemistry Records</h1>
-          <p className="mt-2 text-gray-600">Manage and track your water quality testing history</p>
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Water Chemistry Records</h1>
+              <p className="mt-2 text-gray-600">Manage and track your water quality testing history</p>
+            </div>
+            <Link
+              href="/water-chemistry"
+              className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2"
+            >
+              <span>🧪</span>
+              <span>New Test</span>
+            </Link>
+          </div>
         </div>
 
         {/* Filters and Search */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Filter by Date Range</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Filter by Date</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">From Date</label>
               <input
                 type="date"
                 value={filterDate}
@@ -161,22 +166,11 @@ export default function WaterChemistryRecords() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Filter by Parameter Value</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">To Date</label>
               <input
-                type="text"
-                placeholder="e.g., 6.4, 0.25"
-                value={filterParameter}
-                onChange={(e) => setFilterParameter(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Search Notes</label>
-              <input
-                type="text"
-                placeholder="Search in notes..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                type="date"
+                value={filterDateEnd}
+                onChange={(e) => setFilterDateEnd(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
@@ -184,8 +178,7 @@ export default function WaterChemistryRecords() {
               <button
                 onClick={() => {
                   setFilterDate('');
-                  setFilterParameter('');
-                  setSearchTerm('');
+                  setFilterDateEnd('');
                 }}
                 className="w-full bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors"
               >
