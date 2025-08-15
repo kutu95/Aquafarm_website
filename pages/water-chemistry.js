@@ -199,9 +199,8 @@ export default function WaterChemistry() {
       console.log('Inside crop area - starting drag');
       setIsDragging(true);
       setDragStart({ x: x - cropArea.x, y: y - cropArea.y });
-      console.log('Set dragging state to true');
     } else {
-      console.log('Outside crop area - no action');
+      // Outside crop area - no action
     }
   };
 
@@ -868,40 +867,7 @@ export default function WaterChemistry() {
                             </div>
                           </div>
                           
-                          {/* Debug info */}
-                          <div className="absolute top-2 right-2 bg-red-500 bg-opacity-75 text-white text-xs p-2 rounded">
-                            <div className="font-medium">Debug:</div>
-                            <div>Show: {showCropper ? 'Yes' : 'No'}</div>
-                            <div>Area: {JSON.stringify(cropArea)}</div>
-                            <div>Dragging: {isDragging.toString()}</div>
-                            <div>Resizing: {isResizing ? resizeHandle : 'No'}</div>
-                            {imageRef.current && (
-                              <>
-                                <div>Image: {imageRef.current.naturalWidth}×{imageRef.current.naturalHeight}</div>
-                                <div>Display: {Math.round(imageRef.current.width)}×{Math.round(imageRef.current.height)}</div>
-                              </>
-                            )}
-                            <div className="mt-2 text-yellow-300">
-                              Click areas: 25px around handles
-                            </div>
-                            <button 
-                              onClick={() => {
-                                console.log('Test button clicked');
-                                setIsResizing(true);
-                                setResizeHandle('bottom-right');
-                                console.log('Set resizing to true, handle to bottom-right');
-                              }}
-                              className="mt-2 px-2 py-1 bg-blue-600 text-white text-xs rounded"
-                            >
-                              Test Resize State
-                            </button>
-                            <div className="mt-2 text-xs">
-                              <div>Current State:</div>
-                              <div>isResizing: {isResizing.toString()}</div>
-                              <div>resizeHandle: {resizeHandle || 'null'}</div>
-                              <div>isDragging: {isDragging.toString()}</div>
-                            </div>
-                          </div>
+
                           
                           {/* Crop area dimensions */}
                           <div className="absolute bottom-2 right-2 bg-black bg-opacity-75 text-white text-xs p-2 rounded">

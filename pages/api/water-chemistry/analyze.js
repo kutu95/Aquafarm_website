@@ -683,6 +683,14 @@ function estimateChemistryFromColors(dominantColors, baseConfidence) {
   
   console.log('Analyzing dominant colors for chemistry...');
   
+  // Log all detected colors for debugging
+  console.log('All detected colors:', dominantColors.map((color, i) => ({
+    index: i,
+    rgb: color.color,
+    score: color.score,
+    pixelFraction: color.pixelFraction
+  })));
+  
   // Filter out likely background/container colors
   const relevantColors = dominantColors.filter(color => {
     const rgb = color.color;
@@ -715,21 +723,83 @@ function estimateChemistryFromColors(dominantColors, baseConfidence) {
     };
   }
   
-  // Analyze the actual colors to estimate chemistry
-  // This is a simplified analysis - in production, you'd use the actual color chart
-  const parameters = {
-    pH: { value: null, status: 'unknown', confidence: 0, color: '#999999', notes: 'Color analysis not implemented' },
-    ammonia: { value: null, status: 'unknown', confidence: 0, color: '#999999', notes: 'Color analysis not implemented' },
-    nitrite: { value: null, status: 'unknown', confidence: 0, color: '#999999', notes: 'Color analysis not implemented' },
-    nitrate: { value: null, status: 'unknown', confidence: 0, color: '#999999', notes: 'Color analysis not implemented' }
-  };
-  
-  // Log the actual colors being analyzed
-  console.log('Colors being analyzed:', relevantColors.map(color => ({
+  // Log the relevant colors being analyzed
+  console.log('Relevant colors being analyzed:', relevantColors.map(color => ({
     rgb: color.color,
     score: color.score,
     pixelFraction: color.pixelFraction
   })));
+  
+  // Basic color analysis for water chemistry
+  // This is a simplified version - in production you'd use the actual color chart
+  const parameters = {
+    pH: { value: null, status: 'unknown', confidence: 0, color: '#999999', notes: 'Basic color analysis not implemented' },
+    ammonia: { value: null, status: 'unknown', confidence: 0, color: '#999999', notes: 'Basic color analysis not implemented' },
+    nitrite: { value: null, status: 'unknown', confidence: 0, color: '#999999', notes: 'Basic color analysis not implemented' },
+    nitrate: { value: null, status: 'unknown', confidence: 0, color: '#999999', notes: 'Basic color analysis not implemented' }
+  };
+  
+  // Simple color-based estimation (this is where you'd implement real color chart matching)
+  if (relevantColors.length > 0) {
+    const primaryColor = relevantColors[0]; // Most dominant relevant color
+    const rgb = primaryColor.color;
+    const red = rgb.red;
+    const green = rgb.green;
+    const blue = rgb.blue;
+    
+    console.log('Analyzing primary color:', { red, green, blue, score: primaryColor.score });
+    
+    // Very basic pH estimation based on color
+    if (red > green + 50 && red > blue + 50) {
+      // Red dominant - likely acidic
+      parameters.pH.value = 6.5;
+      parameters.pH.status = 'warning';
+      parameters.pH.confidence = baseConfidence * 0.7;
+      parameters.pH.color = '#FF5722';
+      parameters.pH.notes = 'Red dominant color suggests acidic pH';
+    } else if (blue > red + 50 && blue > green + 50) {
+      // Blue dominant - likely alkaline
+      parameters.pH.value = 8.0;
+      parameters.pH.status = 'warning';
+      parameters.pH.confidence = baseConfidence * 0.7;
+      parameters.pH.color = '#2196F3';
+      parameters.pH.notes = 'Blue dominant color suggests alkaline pH';
+    } else if (green > red + 30 && green > blue + 30) {
+      // Green dominant - likely neutral
+      parameters.pH.value = 7.0;
+      parameters.pH.status = 'good';
+      parameters.pH.confidence = baseConfidence * 0.8;
+      parameters.pH.color = '#4CAF50';
+      parameters.pH.notes = 'Green dominant color suggests neutral pH';
+    }
+    
+    // Basic ammonia detection (yellow-green often indicates ammonia)
+    if (green > red && green > blue && green > 120 && red > 80) {
+      parameters.ammonia.value = 0.5;
+      parameters.ammonia.status = 'warning';
+      parameters.ammonia.confidence = baseConfidence * 0.6;
+      parameters.ammonia.color = '#FF9800';
+      parameters.ammonia.notes = 'Yellow-green color suggests potential ammonia';
+    }
+    
+    // Basic nitrite detection (pink/red often indicates nitrite)
+    if (red > 140 && blue > 80 && blue < 160) {
+      parameters.nitrite.value = 0.25;
+      parameters.nitrite.status = 'warning';
+      parameters.nitrite.confidence = baseConfidence * 0.6;
+      parameters.nitrite.color = '#E91E63';
+      parameters.nitrite.notes = 'Pink/red color suggests potential nitrite';
+    }
+    
+    // Basic nitrate detection (orange/red often indicates nitrate)
+    if (red > 160 && green > 80 && green < 160 && blue < 80) {
+      parameters.nitrate.value = 20.0;
+      parameters.nitrate.status = 'warning';
+      parameters.nitrate.confidence = baseConfidence * 0.6;
+      parameters.nitrate.color = '#FF9800';
+      parameters.nitrate.notes = 'Orange/red color suggests elevated nitrate';
+    }
+  }
   
   return parameters;
 }
