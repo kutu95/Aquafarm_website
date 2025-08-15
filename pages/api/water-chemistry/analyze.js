@@ -570,20 +570,48 @@ function processVisionResults(visionData, imageData) {
     }
 
     // Analyze the image for test tubes and colors
-    const analysis = analyzeWaterChemistryFromVision(dominantColors, objects, labels);
+    let analysis;
+    try {
+      analysis = analyzeWaterChemistryFromVision(dominantColors, objects, labels);
+      console.log('analyzeWaterChemistryFromVision completed successfully');
+    } catch (analysisError) {
+      console.error('Error in analyzeWaterChemistryFromVision:', analysisError);
+      // Create a fallback analysis object
+      analysis = {
+        tubesDetected: 0,
+        imageQuality: 'unknown',
+        lightingConditions: 'unknown',
+        confidence: 0.5,
+        parameters: {
+          pH: { value: null, status: 'unknown', confidence: 0, color: '#999999', notes: 'Analysis failed' },
+          ammonia: { value: null, status: 'unknown', confidence: 0, color: '#999999', notes: 'Analysis failed' },
+          nitrite: { value: null, status: 'unknown', confidence: 0, color: '#999999', notes: 'Analysis failed' },
+          nitrate: { value: null, status: 'unknown', confidence: 0, color: '#999999', notes: 'Analysis failed' }
+        }
+      };
+    }
     
     console.log('Final analysis result:', JSON.stringify(analysis, null, 2));
-    console.log('Analysis object keys:', Object.keys(analysis));
-    console.log('Analysis.tubesDetected value:', analysis.tubesDetected);
+    console.log('Analysis object keys:', Object.keys(analysis || {}));
+    console.log('Analysis.tubesDetected value:', analysis?.tubesDetected);
+    
+    // Ensure analysis object has all required properties
+    const safeAnalysis = {
+      tubesDetected: analysis?.tubesDetected || 0,
+      imageQuality: analysis?.imageQuality || 'unknown',
+      lightingConditions: analysis?.lightingConditions || 'unknown',
+      confidence: analysis?.confidence || 0.5,
+      parameters: analysis?.parameters || {}
+    };
     
     const result = {
       success: true,
-      confidence: analysis.confidence || 0.85,
-      parameters: analysis.parameters || {},
+      confidence: safeAnalysis.confidence,
+      parameters: safeAnalysis.parameters,
       imageAnalysis: {
-        tubesDetected: analysis.tubesDetected || 0,
-        imageQuality: analysis.imageQuality || 'good',
-        lightingConditions: analysis.lightingConditions || 'natural',
+        tubesDetected: safeAnalysis.tubesDetected,
+        imageQuality: safeAnalysis.imageQuality,
+        lightingConditions: safeAnalysis.lightingConditions,
         processingNotes: 'AI-powered analysis using Google Cloud Vision',
         visionData: {
           dominantColors: dominantColors.length,
