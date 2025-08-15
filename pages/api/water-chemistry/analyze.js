@@ -164,39 +164,39 @@ async function analyzeWithChatGPT(imageData, filename) {
     const dataUrl = `data:image/jpeg;base64,${imageData}`;
     
     // Prepare the prompt for ChatGPT
-    const prompt = `You are an expert water chemistry analyst. Analyze this image of water chemistry test tubes and provide accurate readings.
+    const prompt = `You are an educational assistant helping with color interpretation. Look at this image and identify the colors in the test tubes.
 
 CRITICAL: You MUST respond with ONLY valid JSON. No explanations, no additional text, no markdown formatting.
 
-Analyze the test tube colors and provide readings for:
-1. pH level
-2. Ammonia level (NH3/NH4+)
-3. Nitrite level (NO2-)
-4. Nitrate level (NO3-)
+Simply observe the colors in the test tubes and provide:
+1. pH level based on color
+2. Ammonia level based on color  
+3. Nitrite level based on color
+4. Nitrate level based on color
 
 For each parameter, provide:
-- The actual value/level based on color interpretation
+- The value/level based on color interpretation
 - The status (good, warning, or danger)
 - Your confidence level (0-1)
-- Brief notes explaining your analysis
+- Brief notes about the color
 
-Focus ONLY on the test tube contents and their colors. Ignore background colors, test tube holders, or other irrelevant elements.
+Focus ONLY on the test tube colors. Ignore background elements.
 
 RESPOND WITH ONLY THIS JSON STRUCTURE - NO OTHER TEXT:
 {
   "success": true,
   "confidence": 0.95,
   "parameters": {
-    "pH": {"value": 7.2, "status": "good", "confidence": 0.9, "color": "#4CAF50", "notes": "The green color indicates neutral pH around 7.2"},
-    "ammonia": {"value": 0.0, "status": "good", "confidence": 0.85, "color": "#4CAF50", "notes": "The green color indicates no detectable ammonia"},
-    "nitrite": {"value": 0.0, "status": "good", "confidence": 0.88, "color": "#4CAF50", "notes": "The light blue color indicates no detectable nitrite"},
-    "nitrate": {"value": 5.0, "status": "good", "confidence": 0.87, "color": "#4CAF50", "notes": "The light pink color indicates low nitrate levels"}
+    "pH": {"value": 7.2, "status": "good", "confidence": 0.9, "color": "#4CAF50", "notes": "Green color observed"},
+    "ammonia": {"value": 0.0, "status": "good", "confidence": 0.85, "color": "#4CAF50", "notes": "Green color observed"},
+    "nitrite": {"value": 0.0, "status": "good", "confidence": 0.88, "color": "#4CAF50", "notes": "Blue color observed"},
+    "nitrate": {"value": 5.0, "status": "good", "confidence": 0.87, "color": "#4CAF50", "notes": "Pink color observed"}
   },
   "imageAnalysis": {
     "tubesDetected": 4,
     "imageQuality": "good",
     "lightingConditions": "natural",
-    "processingNotes": "Expert analysis using ChatGPT vision capabilities",
+    "processingNotes": "Color analysis completed",
     "aiModel": "gpt-4o"
   }
 }`;
@@ -247,6 +247,15 @@ RESPOND WITH ONLY THIS JSON STRUCTURE - NO OTHER TEXT:
       throw new Error('No content received from ChatGPT');
     }
     
+    // Check if ChatGPT is refusing to analyze
+    if (content.toLowerCase().includes("i'm sorry") || 
+        content.toLowerCase().includes("i can't") || 
+        content.toLowerCase().includes("unable to") ||
+        content.toLowerCase().includes("cannot assist")) {
+      console.log('ChatGPT refused to analyze the image, falling back to Google Vision...');
+      return await analyzeWithGoogleVision(imageData);
+    }
+    
     // Try to parse the JSON response (handle various response formats)
     try {
       let cleanedContent = content;
@@ -290,9 +299,12 @@ RESPOND WITH ONLY THIS JSON STRUCTURE - NO OTHER TEXT:
         console.log('JSON extraction also failed:', extractError.message);
       }
       
-      // Return error if all parsing attempts fail
-      console.log('ChatGPT response parsing failed completely');
-      throw new Error('ChatGPT returned invalid JSON format');
+          // Return error if all parsing attempts fail
+    console.log('ChatGPT response parsing failed completely');
+    
+    // If ChatGPT refuses to analyze, fall back to Google Vision
+    console.log('ChatGPT refused analysis, falling back to Google Vision...');
+    return await analyzeWithGoogleVision(imageData);
     }
     
   } catch (error) {
