@@ -934,6 +934,18 @@ export default function WaterChemistry() {
                 <div>Success: {results.success?.toString()}</div>
                 <div>Confidence: {results.confidence}</div>
                 <div>Has imageAnalysis: {results.imageAnalysis ? 'Yes' : 'No'}</div>
+                
+                {/* Debug individual parameter values */}
+                {results.parameters && (
+                  <div className="mt-2 pt-2 border-t border-gray-300">
+                    <div className="font-medium">Parameter Values:</div>
+                    {Object.entries(results.parameters).map(([param, data]) => (
+                      <div key={param} className="ml-2">
+                        {param}: {JSON.stringify(data)}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
               
               {/* Results Grid */}
