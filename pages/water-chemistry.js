@@ -13,24 +13,13 @@ export default function WaterChemistry() {
   const [showCropper, setShowCropper] = useState(false);
   const [cropArea, setCropArea] = useState({ x: 0, y: 0, width: 200, height: 200 });
   const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [isResizing, setIsResizing] = useState(false);
   const [resizeHandle, setResizeHandle] = useState(null);
   
   const fileInputRef = useRef(null);
   const imageRef = useRef();
   const canvasRef = useRef();
-
-  // Track if user has made a manual selection
-  // const [userHasSelectedService, setUserHasSelectedService] = useState(false);
-
-  // Update AI status when user toggles between services
-  // useEffect(() => {
-  //   if (userHasSelectedService) {
-  //     setAiStatus('chatgpt');
-  //   } else {
-  //     setAiStatus('google');
-  //   }
-  // }, [userHasSelectedService]);
 
   // Ensure crop area is always visible when cropper is shown
   useEffect(() => {
