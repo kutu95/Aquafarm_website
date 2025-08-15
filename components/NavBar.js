@@ -327,6 +327,26 @@ export default function NavBar() {
                 >
                   🗺️ Map
                 </Link>
+                <Link
+                  href="/water-chemistry"
+                  className={`px-3 py-2 rounded-md text-sm font-medium ${
+                    router.asPath === '/water-chemistry'
+                      ? 'bg-gray-900 text-white'
+                      : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                  }`}
+                >
+                  🧪 Water Chemistry
+                </Link>
+                <Link
+                  href="/water-chemistry-records"
+                  className={`px-3 py-2 rounded-md text-sm font-medium ${
+                    router.asPath === '/water-chemistry-records'
+                      ? 'bg-gray-900 text-white'
+                      : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                  }`}
+                >
+                  📊 Records
+                </Link>
               </>
             )}
             
