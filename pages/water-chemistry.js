@@ -802,6 +802,12 @@ export default function WaterChemistry() {
   const handleSaveRecord = async () => {
     setSaving(true);
     try {
+      console.log('=== SAVE RECORD DEBUG START ===');
+      console.log('About to save recordData:', recordData);
+      console.log('recordData type:', typeof recordData);
+      console.log('recordData keys:', Object.keys(recordData));
+      console.log('recordData values:', Object.values(recordData));
+      
       const response = await fetch('/api/water-chemistry/save-record', {
         method: 'POST',
         headers: {
@@ -811,7 +817,11 @@ export default function WaterChemistry() {
         body: JSON.stringify(recordData)
       });
 
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+      
       const result = await response.json();
+      console.log('Response body:', result);
       
       if (result.success) {
         alert(result.message);
@@ -833,7 +843,12 @@ export default function WaterChemistry() {
         throw new Error(result.error || 'Failed to save record');
       }
     } catch (error) {
+      console.error('=== SAVE RECORD ERROR ===');
       console.error('Error saving record:', error);
+      console.error('Error name:', error.name);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+      console.error('=== SAVE RECORD ERROR END ===');
       alert(`Error saving record: ${error.message}`);
     } finally {
       setSaving(false);
