@@ -279,29 +279,18 @@ export default function WaterChemistry() {
       0, 0, scaledWidth, scaledHeight
     );
     
-    // Convert canvas to blob directly (more reliable than toDataURL)
-    canvas.toBlob((blob) => {
-      if (blob) {
-        // Create a cropped file from the blob
-        const croppedFile = new File([blob], selectedImage.name.replace(/\.[^/.]+$/, '_cropped.png'), { 
-          type: 'image/png' 
-        });
-        setSelectedImage(croppedFile);
-        
-        // Also update the preview
-        const previewUrl = URL.createObjectURL(blob);
-        setImagePreview(previewUrl);
-        
-        console.log('Cropped image created successfully:', {
-          fileSize: blob.size,
-          fileName: croppedFile.name,
-          fileType: croppedFile.type,
-          canvasDimensions: `${canvas.width}x${canvas.height}`
-        });
-      } else {
-        console.error('Failed to create blob from canvas');
-      }
-    }, 'image/png', 0.95); // 95% quality for good balance
+    // Convert to data URL (same format both APIs expect)
+    const croppedImageData = canvas.toDataURL('image/png', 0.95);
+    
+    // Store the cropped image data directly
+    setImagePreview(croppedImageData);
+    setSelectedImage({ dataUrl: croppedImageData, name: 'cropped_image.png' });
+    
+    console.log('Cropped image created successfully:', {
+      dataUrlLength: croppedImageData.length,
+      canvasDimensions: `${canvas.width}x${canvas.height}`,
+      hasDataUrlPrefix: croppedImageData.startsWith('data:image')
+    });
   };
 
   // Reference ranges for water chemistry tests
@@ -320,51 +309,68 @@ export default function WaterChemistry() {
     setResults(null);
 
     try {
-      // Compress and resize the image before sending
-      const compressedImage = await compressImage(selectedImage);
+      // Get the image data - either from original file or cropped data URL
+      let imageData;
+      let filename;
       
-      // Convert compressed image to base64 for API
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        const base64Data = e.target.result.split(',')[1]; // Remove data:image/...;base64, prefix
-        
-        const response = await fetch('/api/water-chemistry/analyze', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include', // Include cookies for authentication
-          body: JSON.stringify({
-            imageData: base64Data,
-            filename: selectedImage.name,
-            useChatGPT: useChatGPT
-          }),
+      if (selectedImage.dataUrl) {
+        // This is a cropped image (data URL format)
+        imageData = selectedImage.dataUrl;
+        filename = selectedImage.name;
+        console.log('Using cropped image data:', {
+          dataUrlLength: imageData.length,
+          filename: filename
         });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('API Error:', response.status, errorText);
-          console.error('Response headers:', response.headers);
-          throw new Error(`Analysis failed: ${response.status}`);
-        }
-
-        const analysisResults = await response.json();
-        
-        if (analysisResults.success) {
-          // Transform the API results to match our display format
-          const transformedResults = {
-            pH: analysisResults.parameters.pH,
-            ammonia: analysisResults.parameters.ammonia,
-            nitrite: analysisResults.parameters.nitrite,
-            nitrate: analysisResults.parameters.nitrate
-          };
-          setResults(transformedResults);
-        } else {
-          throw new Error('Analysis failed');
-        }
-      };
+      } else {
+        // This is an original file, convert to data URL
+        const reader = new FileReader();
+        imageData = await new Promise((resolve, reject) => {
+          reader.onload = (e) => resolve(e.target.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(selectedImage);
+        });
+        filename = selectedImage.name;
+        console.log('Converted original file to data URL:', {
+          dataUrlLength: imageData.length,
+          filename: filename
+        });
+      }
       
-      reader.readAsDataURL(compressedImage);
+      // Send the image data directly to the API
+      const response = await fetch('/api/water-chemistry/analyze', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include', // Include cookies for authentication
+        body: JSON.stringify({
+          imageData: imageData,
+          filename: filename,
+          useChatGPT: useChatGPT
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('API Error:', response.status, errorText);
+        console.error('Response headers:', response.headers);
+        throw new Error(`Analysis failed: ${response.status}`);
+      }
+
+      const analysisResults = await response.json();
+      
+      if (analysisResults.success) {
+        // Transform the API results to match our display format
+        const transformedResults = {
+          pH: analysisResults.parameters.pH,
+          ammonia: analysisResults.parameters.ammonia,
+          nitrite: analysisResults.parameters.nitrite,
+          nitrate: analysisResults.parameters.nitrate
+        };
+        setResults(transformedResults);
+      } else {
+        throw new Error('Analysis failed');
+      }
       
     } catch (error) {
       console.error('Error analyzing image:', error);

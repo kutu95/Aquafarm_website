@@ -396,15 +396,23 @@ async function analyzeWithGoogleVision(imageData) {
   try {
     console.log('Starting Google Cloud Vision analysis...');
     
-    // The imageData is already base64, use it directly
-    // No need to convert to buffer and back to base64
+    // The imageData is already a data URL (same format as OpenAI)
+    // Extract the base64 part after the comma
+    const base64Data = imageData.includes(',') ? imageData.split(',')[1] : imageData;
+    
+    console.log('Processing image for Google Cloud Vision:', {
+      originalLength: imageData.length,
+      base64Length: base64Data.length,
+      hasDataUrlPrefix: imageData.includes('data:image'),
+      base64Prefix: base64Data.substring(0, 50) + '...'
+    });
     
     // Prepare the request for Google Cloud Vision API
     const visionRequest = {
       requests: [
         {
           image: {
-            content: imageData  // Use the base64 data directly
+            content: base64Data  // Send the base64 data directly
           },
           features: [
             {
@@ -425,8 +433,7 @@ async function analyzeWithGoogleVision(imageData) {
     };
 
     console.log('Sending image to Google Cloud Vision:', {
-      imageDataLength: imageData.length,
-      imageDataPrefix: imageData.substring(0, 50) + '...',
+      base64DataLength: base64Data.length,
       requestSize: JSON.stringify(visionRequest).length
     });
 
