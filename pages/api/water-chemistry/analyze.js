@@ -572,7 +572,9 @@ function processVisionResults(visionData, imageData) {
     // Analyze the image for test tubes and colors
     const analysis = analyzeWaterChemistryFromVision(dominantColors, objects, labels);
     
-    return {
+    console.log('Final analysis result:', JSON.stringify(analysis, null, 2));
+    
+    const result = {
       success: true,
       confidence: analysis.confidence,
       parameters: analysis.parameters,
@@ -598,6 +600,10 @@ function processVisionResults(visionData, imageData) {
         }
       }
     };
+    
+    console.log('Final result being returned:', JSON.stringify(result, null, 2));
+    
+    return result;
     
   } catch (error) {
     console.error('Error processing vision results:', error);
@@ -657,6 +663,8 @@ function analyzeWaterChemistryFromVision(dominantColors, objects, labels) {
   // Estimate water chemistry parameters based on color analysis
   // This is a simplified version - in production, we'd use more sophisticated algorithms
   const parameters = estimateChemistryFromColors(dominantColors, confidence);
+  
+  console.log('Final parameters object being returned:', JSON.stringify(parameters, null, 2));
   
   return {
     tubesDetected,
@@ -801,7 +809,15 @@ function estimateChemistryFromColors(dominantColors, baseConfidence) {
     }
   }
   
-  return parameters;
+  console.log('Final parameters object being returned:', JSON.stringify(parameters, null, 2));
+  
+  return {
+    tubesDetected,
+    imageQuality,
+    lightingConditions,
+    confidence,
+    parameters
+  };
 }
 
 
