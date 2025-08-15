@@ -690,6 +690,15 @@ export default function WaterChemistry() {
                                 pointerEvents: 'auto',
                                 zIndex: 10
                               }}
+                              onMouseDown={(e) => {
+                                console.log('Top-left handle clicked directly!');
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setIsResizing(true);
+                                setResizeHandle('top-left');
+                                setDragStart({ x: 0, y: 0 });
+                                console.log('Set resizing state to true, handle to top-left');
+                              }}
                             />
                             {/* Bottom-right resize handle */}
                             <div
@@ -703,6 +712,15 @@ export default function WaterChemistry() {
                                 bottom: '-12px',
                                 pointerEvents: 'auto',
                                 zIndex: 10
+                              }}
+                              onMouseDown={(e) => {
+                                console.log('Bottom-right handle clicked directly!');
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setIsResizing(true);
+                                setResizeHandle('bottom-right');
+                                setDragStart({ x: 0, y: 0 });
+                                console.log('Set resizing state to true, handle to bottom-right');
                               }}
                             />
                             {/* Center drag indicator */}
