@@ -67,6 +67,7 @@ export default function WaterChemistry() {
           headers: {
             'Content-Type': 'application/json',
           },
+          credentials: 'include', // Include cookies for authentication
           body: JSON.stringify({
             imageData: base64Data,
             filename: selectedImage.name
@@ -76,6 +77,7 @@ export default function WaterChemistry() {
         if (!response.ok) {
           const errorText = await response.text();
           console.error('API Error:', response.status, errorText);
+          console.error('Response headers:', response.headers);
           throw new Error(`Analysis failed: ${response.status}`);
         }
 
