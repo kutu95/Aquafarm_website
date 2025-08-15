@@ -146,21 +146,21 @@ export default function WaterChemistry() {
           if (pattern.source.includes('20\\d{2}')) {
             if (pattern.source.startsWith('(20\\d{2})')) {
               // YYYYMMDD format (e.g., 20250518)
-              [_, year, month, day] = match;
+              const [, year, month, day] = match;
               console.log('YYYYMMDD format detected:', { year, month, day });
             } else if (pattern.source.endsWith('(20\\d{2})')) {
               // DDMMYYYY format
-              [_, day, month, year] = match;
+              const [, day, month, year] = match;
               console.log('DDMMYYYY format detected:', { day, month, year });
             }
           } else if (pattern.source.includes('YYYY')) {
             if (pattern.source.startsWith('(\\d{4})')) {
               // YYYY-MM-DD format
-              [_, year, month, day] = match;
+              const [, year, month, day] = match;
               console.log('YYYY-MM-DD format detected:', { year, month, day });
             } else if (pattern.source.startsWith('(\\d{2})')) {
               // DD-MM-YYYY or MM-DD-YYYY format
-              [_, first, second, year] = match;
+              const [, first, second, year] = match;
               // Try to determine if it's DD-MM or MM-DD by checking ranges
               if (parseInt(first) <= 12 && parseInt(second) <= 31) {
                 // Likely MM-DD format
