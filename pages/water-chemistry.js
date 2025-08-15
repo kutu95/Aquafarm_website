@@ -10,7 +10,7 @@ export default function WaterChemistry() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [results, setResults] = useState(null);
   const [error, setError] = useState(null);
-  const [aiStatus, setAiStatus] = useState('checking'); // 'checking', 'real', 'simulation'
+  const [aiStatus, setAiStatus] = useState('checking'); // 'checking', 'chatgpt', 'google', 'error'
   const fileInputRef = useRef(null);
 
   // Check AI status when component mounts
@@ -480,7 +480,7 @@ export default function WaterChemistry() {
                     Current Mode: {
                       aiStatus === 'chatgpt' ? 'Expert AI Analysis (ChatGPT)' :
                       aiStatus === 'google' ? 'Basic AI Analysis (Google Vision)' :
-                      'Enhanced Simulation'
+                      'AI Analysis'
                     }
                   </span>
                 </div>
