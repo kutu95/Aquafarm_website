@@ -101,24 +101,92 @@ export default function WaterChemistry() {
           displayHeight: img.height
         });
         
-        // Set initial crop area to center of displayed image (not natural size)
-        const centerX = Math.max(0, (img.width - 200) / 2);
-        const centerY = Math.max(0, (img.height - 200) / 2);
-        const initialWidth = Math.min(200, img.width);
-        const initialHeight = Math.min(200, img.height);
-        
-        console.log('Setting initial crop area:', { centerX, centerY, initialWidth, initialHeight });
-        
+        // Set initial crop area to center of image
+        const centerX = (img.width - 200) / 2;
+        const centerY = (img.height - 200) / 2;
         setCropArea({
-          x: centerX,
-          y: centerY,
-          width: initialWidth,
-          height: initialHeight
+          x: Math.max(0, centerX),
+          y: Math.max(0, centerY),
+          width: Math.min(200, img.width),
+          height: Math.min(200, img.height)
         });
       };
       img.src = e.target.result;
     };
     reader.readAsDataURL(file);
+  };
+
+  // Touch event handlers for mobile
+  const handleTouchStart = (e) => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    const rect = imageRef.current.getBoundingClientRect();
+    const x = touch.clientX - rect.left;
+    const y = touch.clientY - rect.top;
+    
+    // Check if touch is on crop area
+    if (x >= cropArea.x && x <= cropArea.x + cropArea.width &&
+        y >= cropArea.y && y <= cropArea.y + cropArea.height) {
+      setIsDragging(true);
+      setDragStart({ x: x - cropArea.x, y: y - cropArea.y });
+    }
+    
+    // Check if touch is on resize handle
+    const handleSize = 20;
+    const rightEdge = cropArea.x + cropArea.width;
+    const bottomEdge = cropArea.y + cropArea.height;
+    
+    if (x >= rightEdge - handleSize && x <= rightEdge + handleSize &&
+        y >= bottomEdge - handleSize && y <= bottomEdge + handleSize) {
+      setIsResizing(true);
+      setResizeHandle('bottom-right');
+    }
+  };
+
+  const handleTouchMove = (e) => {
+    e.preventDefault();
+    if (!isDragging && !isResizing) return;
+    
+    const touch = e.touches[0];
+    const rect = imageRef.current.getBoundingClientRect();
+    const x = touch.clientX - rect.left;
+    const y = touch.clientY - rect.top;
+    
+    if (isDragging) {
+      const newX = x - dragStart.x;
+      const newY = y - dragStart.y;
+      
+      // Constrain to image bounds
+      const maxX = imageRef.current.width - cropArea.width;
+      const maxY = imageRef.current.height - cropArea.height;
+      
+      setCropArea(prev => ({
+        ...prev,
+        x: Math.max(0, Math.min(newX, maxX)),
+        y: Math.max(0, Math.min(newY, maxY))
+      }));
+    } else if (isResizing) {
+      const newWidth = x - cropArea.x;
+      const newHeight = y - cropArea.y;
+      
+      // Maintain minimum size and constrain to image bounds
+      const minSize = 50;
+      const maxWidth = imageRef.current.width - cropArea.x;
+      const maxHeight = imageRef.current.height - cropArea.y;
+      
+      setCropArea(prev => ({
+        ...prev,
+        width: Math.max(minSize, Math.min(newWidth, maxWidth)),
+        height: Math.max(minSize, Math.min(newHeight, maxHeight))
+      }));
+    }
+  };
+
+  const handleTouchEnd = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    setIsResizing(false);
+    setResizeHandle(null);
   };
 
   const startCrop = () => {
@@ -723,6 +791,9 @@ export default function WaterChemistry() {
                             onMouseUp={handleMouseUp}
                             onMouseLeave={handleMouseUp}
                             onClick={() => console.log('Image clicked at:', { x: cropArea.x, y: cropArea.y })}
+                            onTouchStart={handleTouchStart}
+                            onTouchMove={handleTouchMove}
+                            onTouchEnd={handleTouchEnd}
                             draggable={false}
                           />
                           {/* Crop overlay */}
@@ -735,8 +806,14 @@ export default function WaterChemistry() {
                               top: cropArea.y,
                               width: cropArea.width,
                               height: cropArea.height,
-                              pointerEvents: 'none'
+                              pointerEvents: 'auto'
                             }}
+                            onMouseDown={handleMouseDown}
+                            onMouseMove={handleMouseMove}
+                            onMouseUp={handleMouseUp}
+                            onTouchStart={handleTouchStart}
+                            onTouchMove={handleTouchMove}
+                            onTouchEnd={handleTouchEnd}
                           >
                             {/* Top-left resize handle */}
                             <div
@@ -785,6 +862,41 @@ export default function WaterChemistry() {
                                 document.addEventListener('mousemove', handleMouseMove);
                                 document.addEventListener('mouseup', handleMouseUp);
                               }}
+                              onTouchStart={(e) => {
+                                console.log('Top-left handle touched!');
+                                e.preventDefault();
+                                e.stopPropagation();
+                                
+                                // Get current crop area values
+                                const currentCropArea = { ...cropArea };
+                                
+                                const handleTouchMove = (moveEvent) => {
+                                  const touch = moveEvent.touches[0];
+                                  const rect = imageRef.current.getBoundingClientRect();
+                                  const x = touch.clientX - rect.left;
+                                  const y = touch.clientY - rect.top;
+                                  
+                                  const newX = Math.max(0, Math.min(x, currentCropArea.x + currentCropArea.width - 50));
+                                  const newY = Math.max(0, Math.min(y, currentCropArea.y + currentCropArea.height - 50));
+                                  const newWidth = currentCropArea.x + currentCropArea.width - newX;
+                                  const newHeight = currentCropArea.y + currentCropArea.height - newY;
+                                  
+                                  setCropArea({ x: newX, y: newY, width: newWidth, height: newHeight });
+                                };
+                                
+                                const handleTouchEnd = () => {
+                                  setIsResizing(false);
+                                  setResizeHandle(null);
+                                  document.removeEventListener('touchmove', handleTouchMove);
+                                  document.removeEventListener('touchend', handleTouchEnd);
+                                };
+                                
+                                setIsResizing(true);
+                                setResizeHandle('top-left');
+                                
+                                document.addEventListener('touchmove', handleTouchMove);
+                                document.addEventListener('touchend', handleTouchEnd);
+                              }}
                             />
                             {/* Bottom-right resize handle */}
                             <div
@@ -830,6 +942,39 @@ export default function WaterChemistry() {
                                 
                                 document.addEventListener('mousemove', handleMouseMove);
                                 document.addEventListener('mouseup', handleMouseUp);
+                              }}
+                              onTouchStart={(e) => {
+                                console.log('Bottom-right handle touched!');
+                                e.preventDefault();
+                                e.stopPropagation();
+                                
+                                // Get current crop area values
+                                const currentCropArea = { ...cropArea };
+                                
+                                const handleTouchMove = (moveEvent) => {
+                                  const touch = moveEvent.touches[0];
+                                  const rect = imageRef.current.getBoundingClientRect();
+                                  const x = touch.clientX - rect.left;
+                                  const y = touch.clientY - rect.top;
+                                  
+                                  const newWidth = Math.max(50, x - currentCropArea.x);
+                                  const newHeight = Math.max(50, y - currentCropArea.y);
+                                  
+                                  setCropArea(prev => ({ ...prev, width: newWidth, height: newHeight }));
+                                };
+                                
+                                const handleTouchEnd = () => {
+                                  setIsResizing(false);
+                                  setResizeHandle(null);
+                                  document.removeEventListener('touchmove', handleTouchMove);
+                                  document.removeEventListener('touchend', handleTouchEnd);
+                                };
+                                
+                                setIsResizing(true);
+                                setResizeHandle('bottom-right');
+                                
+                                document.addEventListener('touchmove', handleTouchMove);
+                                document.addEventListener('touchend', handleTouchEnd);
                               }}
                             />
                             {/* Center drag indicator */}
