@@ -72,12 +72,12 @@ export default async function handler(req, res) {
     // Debug: Check if API keys are available
     console.log('Environment check:', {
       hasGoogleKey: !!process.env.GOOGLE_CLOUD_VISION_API_KEY,
-      hasChatGPTKey: !!process.env.OPENAI_API_KEY,
+      hasChatGPTKey: !!process.env.OPEN_AI_KEY,
       googleKeyLength: process.env.GOOGLE_CLOUD_VISION_API_KEY ? process.env.GOOGLE_CLOUD_VISION_API_KEY.length : 0,
-      chatGPTKeyLength: process.env.OPENAI_API_KEY ? process.env.OPENAI_API_KEY.length : 0
+      chatGPTKeyLength: process.env.OPEN_AI_KEY ? process.env.OPEN_AI_KEY.length : 0
     });
     
-    if (process.env.OPENAI_API_KEY) {
+    if (process.env.OPEN_AI_KEY) {
       console.log('Using ChatGPT for expert AI analysis');
       // Use ChatGPT for superior analysis
       analysisResults = await analyzeWithChatGPT(imageData, filename);
@@ -165,7 +165,7 @@ Return your response as a JSON object with this exact structure:
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+        'Authorization': `Bearer ${process.env.OPEN_AI_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
