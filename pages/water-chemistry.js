@@ -461,14 +461,8 @@ export default function WaterChemistry() {
       console.log('Analysis results received:', analysisResults);
       
       if (analysisResults.success) {
-        // Transform the API results to match our display format
-        const transformedResults = {
-          pH: analysisResults.parameters.pH,
-          ammonia: analysisResults.parameters.ammonia,
-          nitrite: analysisResults.parameters.nitrite,
-          nitrate: analysisResults.parameters.nitrate
-        };
-        setResults(transformedResults);
+        // Use the API results directly - no transformation needed
+        setResults(analysisResults);
       } else {
         throw new Error('Analysis failed');
       }
@@ -986,6 +980,7 @@ export default function WaterChemistry() {
                 )}
                 <div>Success: {results.success?.toString()}</div>
                 <div>Confidence: {results.confidence}</div>
+                <div>Has imageAnalysis: {results.imageAnalysis ? 'Yes' : 'No'}</div>
               </div>
               
               {/* Results Grid */}
