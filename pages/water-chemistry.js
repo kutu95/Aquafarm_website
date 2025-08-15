@@ -309,6 +309,8 @@ export default function WaterChemistry() {
     setResults(null);
 
     try {
+      console.log('Starting analysis with selectedImage:', selectedImage);
+      
       // Get the image data - either from original file or cropped data URL
       let imageData;
       let filename;
@@ -319,7 +321,9 @@ export default function WaterChemistry() {
         filename = selectedImage.name;
         console.log('Using cropped image data:', {
           dataUrlLength: imageData.length,
-          filename: filename
+          filename: filename,
+          dataUrlPrefix: imageData.substring(0, 100) + '...',
+          hasDataUrlPrefix: imageData.startsWith('data:image')
         });
       } else {
         // This is an original file, convert to data URL
@@ -332,23 +336,37 @@ export default function WaterChemistry() {
         filename = selectedImage.name;
         console.log('Converted original file to data URL:', {
           dataUrlLength: imageData.length,
-          filename: filename
+          filename: filename,
+          dataUrlPrefix: imageData.substring(0, 100) + '...',
+          hasDataUrlPrefix: imageData.startsWith('data:image')
         });
       }
       
-      // Send the image data directly to the API
+      console.log('About to send to API:', {
+        imageDataLength: imageData.length,
+        filename: filename,
+        useChatGPT: useChatGPT
+      });
+      
+      // Send the image data directly to the API with timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+      
       const response = await fetch('/api/water-chemistry/analyze', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include', // Include cookies for authentication
+        signal: controller.signal,
         body: JSON.stringify({
           imageData: imageData,
           filename: filename,
           useChatGPT: useChatGPT
         }),
       });
+
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -358,6 +376,7 @@ export default function WaterChemistry() {
       }
 
       const analysisResults = await response.json();
+      console.log('Analysis results received:', analysisResults);
       
       if (analysisResults.success) {
         // Transform the API results to match our display format
@@ -374,7 +393,11 @@ export default function WaterChemistry() {
       
     } catch (error) {
       console.error('Error analyzing image:', error);
-      setError(`Failed to analyze image: ${error.message}`);
+      if (error.name === 'AbortError') {
+        setError('Analysis timed out after 30 seconds. Please try again.');
+      } else {
+        setError(`Failed to analyze image: ${error.message}`);
+      }
     } finally {
       setIsAnalyzing(false);
     }
