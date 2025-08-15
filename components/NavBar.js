@@ -16,8 +16,8 @@ export default function NavBar() {
   const [isAdminMenuOpen, setIsAdminMenuOpen] = useState(false);
   const [isProductsMenuOpen, setIsProductsMenuOpen] = useState(false);
   const [isMobileProductsMenuOpen, setIsMobileProductsMenuOpen] = useState(false);
-  const [isVolunteeringMenuOpen, setIsVolunteeringMenuOpen] = useState(false);
   const [isMobileVolunteeringMenuOpen, setIsMobileVolunteeringMenuOpen] = useState(false);
+  const [isMobileWaterChemistryMenuOpen, setIsMobileWaterChemistryMenuOpen] = useState(false);
   const [isMobileAdminMenuOpen, setIsMobileAdminMenuOpen] = useState(false);
   const [openSubmenu, setOpenSubmenu] = useState(null);
   const [isGreenhouseMode, setIsGreenhouseMode] = useState(false);
@@ -509,6 +509,13 @@ export default function NavBar() {
                   >
                     🧪 Water Chemistry
                   </Link>
+                  <Link
+                    href="/water-chemistry-records"
+                    className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    📊 Water Chemistry Records
+                  </Link>
                 </>
               );
             } else {
@@ -524,6 +531,16 @@ export default function NavBar() {
                     { title: 'About Volunteering', href: '/volunteer' },
                     { title: 'What to Expect', href: '/volunteering-description' },
                     { title: 'Apply to Volunteer', href: '/volunteer-application' }
+                  ]
+                },
+                {
+                  id: 'water-chemistry',
+                  title: 'Water Chemistry',
+                  priority: 5,
+                  type: 'submenu',
+                  items: [
+                    { title: 'New Test', href: '/water-chemistry' },
+                    { title: 'View Records', href: '/water-chemistry-records' }
                   ]
                 },
                 // Add Products submenu if there are product pages
@@ -560,9 +577,11 @@ export default function NavBar() {
               if (item.type === 'submenu') {
                 const isOpen = item.id === 'volunteering' ? isMobileVolunteeringMenuOpen : 
                                item.id === 'products' ? isMobileProductsMenuOpen :
+                               item.id === 'water-chemistry' ? isMobileWaterChemistryMenuOpen :
                                item.id === 'admin' ? isMobileAdminMenuOpen : false;
                 const setIsOpen = item.id === 'volunteering' ? setIsMobileVolunteeringMenuOpen : 
                                  item.id === 'products' ? setIsMobileProductsMenuOpen :
+                                 item.id === 'water-chemistry' ? setIsMobileWaterChemistryMenuOpen :
                                  item.id === 'admin' ? setIsMobileAdminMenuOpen : () => {};
                 
                 return (
