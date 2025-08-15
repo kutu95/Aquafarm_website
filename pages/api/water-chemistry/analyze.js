@@ -46,6 +46,43 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Image data and filename are required' });
     }
 
+    // Validate image data length early
+    if (imageData.length < 1000) {
+      console.error('Image data too small:', {
+        filename,
+        imageDataLength: imageData.length,
+        imageDataPrefix: imageData.substring(0, 100)
+      });
+      return res.status(400).json({ 
+        error: 'Image data is too small', 
+        details: `Received ${imageData.length} characters, expected at least 1000. This usually means the image wasn't properly loaded or cropped.`,
+        suggestion: 'Please try uploading the image again or check if the cropping tool is working properly.'
+      });
+    }
+
+    // Additional validation for data URLs
+    if (imageData.startsWith('data:image')) {
+      const base64Part = imageData.split(',')[1];
+      if (!base64Part || base64Part.length < 100) {
+        console.error('Invalid data URL format:', {
+          filename,
+          hasDataUrlPrefix: true,
+          base64PartLength: base64Part ? base64Part.length : 0
+        });
+        return res.status(400).json({ 
+          error: 'Invalid image data format', 
+          details: 'The image appears to be corrupted or empty.',
+          suggestion: 'Please try uploading the image again.'
+        });
+      }
+      console.log('Data URL validation passed:', {
+        filename,
+        totalLength: imageData.length,
+        base64Length: base64Part.length,
+        mimeType: imageData.split(';')[0]
+      });
+    }
+
     // Debug: Log the request details
     console.log('Request details:', {
       filename,

@@ -348,6 +348,24 @@ export default function WaterChemistry() {
         useChatGPT: useChatGPT
       });
       
+      // Validate image data before sending to API
+      if (imageData.length < 1000) {
+        throw new Error(`Image data is too small (${imageData.length} characters). This usually means the image wasn't properly loaded or cropped. Please try uploading the image again.`);
+      }
+      
+      // Additional validation for data URLs
+      if (imageData.startsWith('data:image')) {
+        const base64Part = imageData.split(',')[1];
+        if (!base64Part || base64Part.length < 100) {
+          throw new Error(`Invalid image data format. The image appears to be corrupted or empty. Please try again.`);
+        }
+        console.log('Data URL validation passed:', {
+          totalLength: imageData.length,
+          base64Length: base64Part.length,
+          mimeType: imageData.split(';')[0]
+        });
+      }
+      
       // Send the image data directly to the API with timeout
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
