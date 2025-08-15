@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import Layout from '../components/Layout';
+import { useState, useEffect, useContext } from 'react';
+import { AuthContext } from '@/pages/_app';
+import Layout from '@/components/Layout';
 
 export default function WaterChemistryRecords() {
-  const { user, loading } = useAuth();
+  const { user, loading } = useContext(AuthContext);
   const [records, setRecords] = useState([]);
   const [loadingRecords, setLoadingRecords] = useState(true);
   const [editingRecord, setEditingRecord] = useState(null);
