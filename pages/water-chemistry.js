@@ -42,7 +42,7 @@ export default function WaterChemistry() {
         });
       }
       
-      // Ensure crop area is within image bounds
+      // Ensure crop area is within image bounds (using display dimensions)
       const img = imageRef.current;
       if (img && img.width > 0 && img.height > 0) {
         const maxX = img.width - cropArea.width;
@@ -72,9 +72,14 @@ export default function WaterChemistry() {
       // Wait for image to load before setting crop area
       const img = new Image();
       img.onload = () => {
-        console.log('Image loaded:', { width: img.width, height: img.height });
+        console.log('Image loaded:', { 
+          naturalWidth: img.naturalWidth, 
+          naturalHeight: img.naturalHeight,
+          displayWidth: img.width,
+          displayHeight: img.height
+        });
         
-        // Set initial crop area to center of image
+        // Set initial crop area to center of displayed image (not natural size)
         const centerX = Math.max(0, (img.width - 200) / 2);
         const centerY = Math.max(0, (img.height - 200) / 2);
         const initialWidth = Math.min(200, img.width);
@@ -107,32 +112,21 @@ export default function WaterChemistry() {
     
     // Get the image's actual position and size
     const rect = imageRef.current.getBoundingClientRect();
-    const computedStyle = window.getComputedStyle(imageRef.current);
     
-    // Account for any CSS transforms or scaling
-    const transform = computedStyle.transform;
-    let scaleX = 1, scaleY = 1;
-    
-    if (transform && transform !== 'none') {
-      const matrix = new DOMMatrix(transform);
-      scaleX = matrix.a;
-      scaleY = matrix.d;
-    }
-    
-    // Calculate coordinates relative to the image's natural size
-    const x = (e.clientX - rect.left) / scaleX;
-    const y = (e.clientY - rect.top) / scaleY;
+    // Calculate coordinates relative to the displayed image (not natural size)
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
     
     console.log('Mouse down:', { 
       clientX: e.clientX, 
       clientY: e.clientY, 
       rectLeft: rect.left, 
       rectTop: rect.top,
-      scaleX, 
-      scaleY,
       x, 
       y, 
-      cropArea 
+      cropArea,
+      imageWidth: imageRef.current.width,
+      imageHeight: imageRef.current.height
     });
     
     // Check if clicking on resize handles with larger click area
@@ -174,32 +168,21 @@ export default function WaterChemistry() {
     
     // Get the image's actual position and size
     const rect = imageRef.current.getBoundingClientRect();
-    const computedStyle = window.getComputedStyle(imageRef.current);
     
-    // Account for any CSS transforms or scaling
-    const transform = computedStyle.transform;
-    let scaleX = 1, scaleY = 1;
-    
-    if (transform && transform !== 'none') {
-      const matrix = new DOMMatrix(transform);
-      scaleX = matrix.a;
-      scaleY = matrix.d;
-    }
-    
-    // Calculate coordinates relative to the image's natural size
-    const x = (e.clientX - rect.left) / scaleX;
-    const y = (e.clientY - rect.top) / scaleY;
+    // Calculate coordinates relative to the displayed image (not natural size)
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
     
     if (isDragging) {
-      const newX = Math.max(0, Math.min(x - dragStart.x, imageRef.current.naturalWidth - cropArea.width));
-      const newY = Math.max(0, Math.min(y - dragStart.y, imageRef.current.naturalHeight - cropArea.height));
-      console.log('Dragging to:', { newX, newY, naturalWidth: imageRef.current.naturalWidth, naturalHeight: imageRef.current.naturalHeight });
+      const newX = Math.max(0, Math.min(x - dragStart.x, imageRef.current.width - cropArea.width));
+      const newY = Math.max(0, Math.min(y - dragStart.y, imageRef.current.height - cropArea.height));
+      console.log('Dragging to:', { newX, newY, imageWidth: imageRef.current.width, imageHeight: imageRef.current.height });
       setCropArea(prev => ({ ...prev, x: newX, y: newY }));
     } else if (isResizing) {
       if (resizeHandle === 'bottom-right') {
         // Allow flexible aspect ratio - no square constraint
-        const newWidth = Math.max(30, Math.min(x - cropArea.x, imageRef.current.naturalWidth - cropArea.x));
-        const newHeight = Math.max(30, Math.min(y - cropArea.y, imageRef.current.naturalHeight - cropArea.y));
+        const newWidth = Math.max(30, Math.min(x - cropArea.x, imageRef.current.width - cropArea.x));
+        const newHeight = Math.max(30, Math.min(y - cropArea.y, imageRef.current.height - cropArea.y));
         console.log('Resizing bottom-right to:', { newWidth, newHeight });
         setCropArea(prev => ({ ...prev, width: newWidth, height: newHeight }));
       } else if (resizeHandle === 'top-left') {
