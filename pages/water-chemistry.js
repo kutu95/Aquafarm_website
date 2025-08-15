@@ -299,7 +299,7 @@ export default function WaterChemistry() {
     );
     
     // Convert to data URL (same format both APIs expect)
-    const croppedImageData = canvas.toDataURL('image/png', 0.95);
+    const croppedImageData = canvas.toDataURL('image/jpeg', 0.8); // Use JPEG with 80% quality for smaller size
     
     console.log('=== CROP DEBUG START ===');
     console.log('Canvas dimensions:', `${canvas.width}x${canvas.height}`);
@@ -310,7 +310,7 @@ export default function WaterChemistry() {
     
     // Store the cropped image data directly
     setImagePreview(croppedImageData);
-    setSelectedImage({ dataUrl: croppedImageData, name: 'cropped_image.png' });
+    setSelectedImage({ dataUrl: croppedImageData, name: 'cropped_image.jpg' });
     
     console.log('Cropped image created successfully:', {
       dataUrlLength: croppedImageData.length,

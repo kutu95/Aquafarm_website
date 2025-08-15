@@ -102,7 +102,7 @@ export default async function handler(req, res) {
 
     // Check payload size (base64 data can be large)
     const payloadSize = JSON.stringify(req.body).length;
-    const maxSize = 10 * 1024 * 1024; // 10MB limit
+    const maxSize = 50 * 1024 * 1024; // 50MB limit to match Next.js config
     
     console.log('API Request received:', {
       filename,
