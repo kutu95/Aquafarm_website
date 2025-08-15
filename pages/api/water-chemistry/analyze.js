@@ -76,6 +76,10 @@ export default async function handler(req, res) {
     // Check if this is a status check request
     if (filename === 'status-check.png') {
       console.log('Status check request detected, returning service availability');
+      console.log('Status check environment variables:');
+      console.log('- OPEN_AI_KEY:', process.env.OPEN_AI_KEY ? 'SET' : 'NOT SET');
+      console.log('- GOOGLE_CLOUD_VISION_API_KEY:', process.env.GOOGLE_CLOUD_VISION_API_KEY ? 'SET' : 'NOT SET');
+      
       // Return status information without processing
       return res.status(200).json({
         status: 'ready',
@@ -100,6 +104,12 @@ export default async function handler(req, res) {
       googleKeyLength: process.env.GOOGLE_CLOUD_VISION_API_KEY ? process.env.GOOGLE_CLOUD_VISION_API_KEY.length : 0,
       chatGPTKeyLength: process.env.OPEN_AI_KEY ? process.env.OPEN_AI_KEY.length : 0
     });
+    
+    // Additional debugging
+    console.log('Raw environment variables:');
+    console.log('- GOOGLE_CLOUD_VISION_API_KEY:', process.env.GOOGLE_CLOUD_VISION_API_KEY ? 'SET' : 'NOT SET');
+    console.log('- OPEN_AI_KEY:', process.env.OPEN_AI_KEY ? 'SET' : 'NOT SET');
+    console.log('- OPEN_AI_KEY first 10 chars:', process.env.OPEN_AI_KEY ? process.env.OPEN_AI_KEY.substring(0, 10) + '...' : 'NOT SET');
     
     if (process.env.OPEN_AI_KEY) {
       console.log('Using ChatGPT for expert AI analysis');
