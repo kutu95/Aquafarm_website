@@ -482,6 +482,13 @@ export default function NavBar() {
                   >
                     Map
                   </Link>
+                  <Link
+                    href="/water-chemistry"
+                    className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    🧪 Water Chemistry
+                  </Link>
                 </>
               );
             } else {

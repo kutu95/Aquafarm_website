@@ -1037,34 +1037,108 @@ export default function Growbeds() {
                 <h3 className="text-lg font-semibold text-gray-900">Current</h3>
                 <div className="text-sm text-gray-600 mt-2 sm:mt-0">
                   Active Growbeds Only
+                  {(filters.type || filters.status) && (
+                    <span className="block text-xs text-gray-500">
+                      (Based on current filters)
+                    </span>
+                  )}
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div className="text-center">
                   <div className="text-3xl font-bold text-blue-600">
-                    {growbeds.filter(growbed => growbed.status === 'active').reduce((total, growbed) => total + growbed.holes, 0)}
+                    {filteredGrowbeds.filter(growbed => growbed.status === 'active').reduce((total, growbed) => total + growbed.holes, 0)}
                   </div>
                   <div className="text-sm text-gray-600">Active Holes</div>
                 </div>
                 <div className="text-center">
                   <div className="text-3xl font-bold text-green-600">
-                    {growbeds.filter(growbed => growbed.status === 'active').reduce((total, growbed) => total + (growbed.area || 0), 0).toFixed(1)}
+                    {filteredGrowbeds.filter(growbed => growbed.status === 'active').reduce((total, growbed) => total + (growbed.area || 0), 0).toFixed(1)}
                   </div>
                   <div className="text-sm text-gray-600">Active Area</div>
                 </div>
                 <div className="text-center">
                   <div className="text-3xl font-bold text-cyan-600">
-                    {growbeds.filter(growbed => growbed.status === 'active').reduce((total, growbed) => total + (growbed.volume || 0), 0).toFixed(1)}
+                    {filteredGrowbeds.filter(growbed => growbed.status === 'active').reduce((total, growbed) => total + (growbed.volume || 0), 0).toFixed(1)}
                   </div>
                   <div className="text-sm text-gray-600">Active Volume</div>
                 </div>
                 <div className="text-center">
                   <div className="text-3xl font-bold text-purple-600">
-                    {growbeds.filter(growbed => growbed.status === 'active').reduce((total, growbed) => total + growbed.flowrate, 0).toFixed(1)}
+                    {filteredGrowbeds.filter(growbed => growbed.status === 'active').reduce((total, growbed) => total + growbed.flowrate, 0).toFixed(1)}
                   </div>
                   <div className="text-sm text-gray-600">Active Flow Rate</div>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* DWC to Media Bed Ratio Section - Only shown when no type filter is applied */}
+          {growbeds.length > 0 && !filters.type && (
+            <div className="mt-6 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Growbed Type Balance</h3>
+                <div className="text-sm text-gray-600 mt-2 sm:mt-0">
+                  DWC to Media Bed Ratio
+                </div>
+              </div>
+              {(() => {
+                // Calculate areas for each type
+                const dwcArea = growbeds
+                  .filter(growbed => growbed.status === 'active' && growbed.type === 'DWC')
+                  .reduce((total, growbed) => total + (growbed.area || 0), 0);
+                
+                const mediaArea = growbeds
+                  .filter(growbed => growbed.status === 'active' && growbed.type === 'Media bed')
+                  .reduce((total, growbed) => total + (growbed.area || 0), 0);
+                
+                // Calculate ratio (DWC:Media)
+                let ratio = 0;
+                let ratioText = '0:0';
+                let isHealthy = true;
+                
+                if (mediaArea > 0) {
+                  ratio = dwcArea / mediaArea;
+                  ratioText = `${ratio.toFixed(1)}:1`;
+                  isHealthy = ratio <= 6;
+                } else if (dwcArea > 0) {
+                  ratioText = '∞:1';
+                  isHealthy = false;
+                }
+                
+                return (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-blue-600">
+                        {dwcArea.toFixed(1)}m²
+                      </div>
+                      <div className="text-sm text-gray-600">DWC Area</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-green-600">
+                        {mediaArea.toFixed(1)}m²
+                      </div>
+                      <div className="text-sm text-gray-600">Media Bed Area</div>
+                    </div>
+                    <div className="text-center">
+                      <div className={`text-3xl font-bold ${isHealthy ? 'text-green-600' : 'text-red-600'}`}>
+                        {ratioText}
+                      </div>
+                      <div className="text-sm text-gray-600">Ratio (DWC:Media)</div>
+                      {!isHealthy && (
+                        <div className="text-xs text-red-600 mt-1 font-medium">
+                          ⚠️ Above recommended 6:1 ratio
+                        </div>
+                      )}
+                      {isHealthy && mediaArea > 0 && (
+                        <div className="text-xs text-green-600 mt-1 font-medium">
+                          ✅ Within recommended ratio
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           )}
         </div>
