@@ -969,6 +969,16 @@ export default function WaterChemistry() {
               {/* Recommendations */}
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <h3 className="font-medium text-blue-900 mb-3">💡 AI Recommendations</h3>
+                
+                {/* Debug recommendations */}
+                <div className="bg-yellow-100 border border-yellow-300 rounded-lg p-2 mb-3 text-xs">
+                  <div className="font-medium">Debug: Recommendations Data</div>
+                  <div>Has recommendations: {results.recommendations ? 'Yes' : 'No'}</div>
+                  <div>Type: {typeof results.recommendations}</div>
+                  <div>Length: {results.recommendations?.length || 'N/A'}</div>
+                  <div>Raw data: {JSON.stringify(results.recommendations)}</div>
+                </div>
+                
                 {results.recommendations && results.recommendations.length > 0 ? (
                   <ul className="space-y-2">
                     {results.recommendations.map((recommendation, index) => (

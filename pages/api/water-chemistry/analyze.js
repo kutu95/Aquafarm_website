@@ -446,6 +446,7 @@ RESPOND WITH ONLY THIS JSON STRUCTURE - NO OTHER TEXT:
       success: true,
       confidence: analysis.confidence || 0.9,
       parameters: parameters,
+      recommendations: analysis.recommendations || [],
       imageAnalysis: {
         tubesDetected: analysis.imageAnalysis?.tubesDetected || 4,
         imageQuality: analysis.imageAnalysis?.imageQuality || 'good',
