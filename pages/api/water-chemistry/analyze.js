@@ -210,14 +210,45 @@ export default async function handler(req, res) {
   }
 }
 
+// Function to get the embedded API Freshwater Master Test Kit color chart
+async function getEmbeddedColorChart() {
+  try {
+    // Read the embedded color chart from the public directory
+    const fs = require('fs');
+    const path = require('path');
+    
+    const chartPath = path.join(process.cwd(), 'public', 'api-color-chart.png');
+    const chartBuffer = fs.readFileSync(chartPath);
+    const base64Chart = chartBuffer.toString('base64');
+    
+    return {
+      filename: 'api-freshwater-master-test-kit-color-chart.png',
+      dataUrl: `data:image/png;base64,${base64Chart}`,
+      description: 'API Freshwater Master Test Kit color chart with standardized color scales for pH, ammonia, nitrite, and nitrate'
+    };
+  } catch (error) {
+    console.error('Error reading embedded color chart:', error);
+    // Fallback to a simple description if chart can't be loaded
+    return {
+      filename: 'api-freshwater-master-test-kit-color-chart.png',
+      dataUrl: null,
+      description: 'API Freshwater Master Test Kit color chart with standardized color scales for pH, ammonia, nitrite, and nitrate'
+    };
+  }
+}
+
 async function analyzeWithChatGPT(imageData, filename) {
   try {
     console.log('Starting ChatGPT expert analysis...');
+    
+    // Get the embedded color chart
+    const colorChart = await getEmbeddedColorChart();
     
     // The imageData is already a data URL from the frontend
     const testTubesDataUrl = imageData;
     
     console.log('ChatGPT analysis setup:', {
+      hasColorChart: !!colorChart.dataUrl,
       imageDataLength: imageData.length,
       imageDataPrefix: imageData.substring(0, 100),
       filename: filename
@@ -229,30 +260,40 @@ async function analyzeWithChatGPT(imageData, filename) {
         type: 'text',
         text: `You are an expert aquaponics water chemistry analyst. Analyze this image of water test kit tubes to determine the pH, ammonia, nitrite, and nitrate levels.
 
-IMPORTANT: This is an API Freshwater Master Test Kit. Use the color chart knowledge you have to interpret the test tube colors accurately.
+IMPORTANT: This is an API Freshwater Master Test Kit. You will see TWO images:
+1. The user's test tube image (water chemistry test tubes from an aquaponics system)
+2. The official API Freshwater Master Test Kit color chart (with standardized color scales)
 
-Please provide:
-1. pH level (6.0-8.5 range)
-2. Ammonia level (0-8 ppm range) 
-3. Nitrite level (0-5 ppm range)
-4. Nitrate level (0-160 ppm range)
+CRITICAL: You MUST respond with ONLY valid JSON. No explanations, no additional text, no markdown formatting.
+
+Compare the colors in the test tubes to the exact colors on the color chart to determine precise readings.
 
 For each parameter, provide:
-- The exact value detected
-- Status: good, warning, or danger
-- Confidence level (0.0-1.0)
-- Specific notes about the reading
-- Recommended actions if levels are concerning
+- The value/level based on the closest color match to the chart
+- The status (good, warning, or danger) based on the color intensity
+- Your confidence level (0-1)
+- Brief notes about what color you see and how it matches the chart
 
-Format your response as a JSON object with this structure:
+Focus ONLY on the test tube colors compared to the chart colors. Ignore background elements.
+
+RESPOND WITH ONLY THIS JSON STRUCTURE - NO OTHER TEXT:
 {
-  "pH": {"value": 7.2, "status": "good", "confidence": 0.9, "notes": "Neutral pH, ideal for most fish"},
-  "ammonia": {"value": 0.0, "status": "good", "confidence": 0.95, "notes": "No ammonia detected"},
-  "nitrite": {"value": 0.0, "status": "good", "confidence": 0.95, "notes": "No nitrite detected"},
-  "nitrate": {"value": 10.0, "status": "good", "confidence": 0.85, "notes": "Low nitrate, safe level"}
-}
-
-Be precise and use your knowledge of the API Freshwater Master Test Kit color chart.`
+  "success": true,
+  "confidence": 0.95,
+  "parameters": {
+    "pH": {"value": 6.0, "status": "warning", "confidence": 0.9, "color": "#FFFF00", "notes": "Yellow color matches chart at 6.0"},
+    "ammonia": {"value": 2.0, "status": "danger", "confidence": 0.85, "color": "#008000", "notes": "Green color matches chart at 2.0 ppm"},
+    "nitrite": {"value": 0.0, "status": "good", "confidence": 0.88, "color": "#ADD8E6", "notes": "Light blue color matches chart at 0.0 ppm"},
+    "nitrate": {"value": 80.0, "status": "danger", "confidence": 0.87, "color": "#FF0000", "notes": "Red color matches chart at 80.0 ppm"}
+  },
+  "imageAnalysis": {
+    "tubesDetected": 4,
+    "imageQuality": "good",
+    "lightingConditions": "natural",
+    "processingNotes": "Dual-image analysis: test tubes compared to API color chart",
+    "aiModel": "gpt-4o"
+  }
+}`
       },
       {
         type: 'image_url',
@@ -261,6 +302,16 @@ Be precise and use your knowledge of the API Freshwater Master Test Kit color ch
         }
       }
     ];
+
+    // Add color chart if available
+    if (colorChart.dataUrl) {
+      contentArray.push({
+        type: 'image_url',
+        image_url: {
+          url: colorChart.dataUrl
+        }
+      });
+    }
 
     // Send images to ChatGPT
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
