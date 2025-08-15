@@ -70,6 +70,18 @@ export default function WaterChemistry() {
 
   // Cropping functions
   const handleImageSelect = (file) => {
+    console.log('handleImageSelect called with file:', {
+      name: file.name,
+      size: file.size,
+      type: file.type
+    });
+    
+    // Reset any previous state
+    setSelectedImage(null);
+    setImagePreview(null);
+    setResults(null);
+    setError(null);
+    
     const reader = new FileReader();
     reader.onload = (e) => {
       setSelectedImage(file);
@@ -309,7 +321,21 @@ export default function WaterChemistry() {
   };
 
   const analyzeWaterChemistry = async () => {
-    if (!selectedImage) return;
+    if (!selectedImage) {
+      setError('No image selected. Please upload an image first.');
+      return;
+    }
+
+    // Additional validation
+    if (selectedImage.dataUrl && selectedImage.dataUrl.length < 1000) {
+      setError('Selected image data is corrupted or too small. Please try uploading the image again.');
+      return;
+    }
+    
+    if (!selectedImage.dataUrl && (!selectedImage.size || selectedImage.size < 1000)) {
+      setError('Selected image file is too small or corrupted. Please try uploading the image again.');
+      return;
+    }
 
     setIsAnalyzing(true);
     setError(null);
@@ -317,6 +343,11 @@ export default function WaterChemistry() {
 
     try {
       console.log('Starting analysis with selectedImage:', selectedImage);
+      console.log('selectedImage type:', typeof selectedImage);
+      console.log('selectedImage keys:', Object.keys(selectedImage || {}));
+      console.log('selectedImage size:', selectedImage?.size);
+      console.log('selectedImage name:', selectedImage?.name);
+      console.log('selectedImage dataUrl length:', selectedImage?.dataUrl?.length);
       
       // Get the image data - either from original file or cropped data URL
       let imageData;
