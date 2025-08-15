@@ -28,6 +28,9 @@ export default function WaterChemistry() {
     checkAiStatus();
   }, []);
 
+  // Track if user has made a manual selection
+  const [userHasSelectedService, setUserHasSelectedService] = useState(false);
+
   // Update AI status when user toggles between services
   useEffect(() => {
     if (useChatGPT) {
@@ -523,33 +526,49 @@ export default function WaterChemistry() {
           console.log('Processing notes found:', data.processingNotes);
           if (data.processingNotes.includes('ChatGPT')) {
             console.log('Setting status to chatgpt');
-            setAiStatus('chatgpt');
+            if (!userHasSelectedService) {
+              setAiStatus('chatgpt');
+            }
           } else if (data.processingNotes.includes('Google Vision')) {
             console.log('Setting status to google');
-            setAiStatus('google');
+            if (!userHasSelectedService) {
+              setAiStatus('google');
+            }
           } else {
             console.log('Setting status to error - unknown processing notes');
-            setAiStatus('error');
+            if (!userHasSelectedService) {
+              setAiStatus('error');
+            }
           }
         }
         // Check if the response indicates real AI analysis (for actual image uploads)
         else if (data.imageAnalysis?.processingNotes?.includes('ChatGPT') || data.imageAnalysis?.aiModel === 'gpt-4o') {
           console.log('Setting status to chatgpt from image analysis');
-          setAiStatus('chatgpt');
+          if (!userHasSelectedService) {
+            setAiStatus('chatgpt');
+          }
         } else if (data.imageAnalysis?.processingNotes?.includes('Google Cloud Vision')) {
           console.log('Setting status to google from image analysis');
-          setAiStatus('google');
+          if (!userHasSelectedService) {
+            setAiStatus('google');
+          }
         } else {
           console.log('Setting status to error - no matching AI service found');
-          setAiStatus('error');
+          if (!userHasSelectedService) {
+            setAiStatus('error');
+          }
         }
       } else {
         console.log('Response not ok, setting status to error');
-        setAiStatus('error');
+        if (!userHasSelectedService) {
+          setAiStatus('error');
+        }
       }
     } catch (error) {
       console.log('Error checking AI status:', error);
-      setAiStatus('error');
+      if (!userHasSelectedService) {
+        setAiStatus('error');
+      }
     }
   };
 
@@ -651,7 +670,10 @@ export default function WaterChemistry() {
                       name="aiService"
                       value="chatgpt"
                       checked={useChatGPT}
-                      onChange={() => setUseChatGPT(true)}
+                      onChange={() => {
+                        setUseChatGPT(true);
+                        setUserHasSelectedService(true);
+                      }}
                       className="mr-2 text-blue-600"
                     />
                     <span className="text-sm font-medium text-gray-700">
@@ -669,7 +691,10 @@ export default function WaterChemistry() {
                       name="aiService"
                       value="google"
                       checked={!useChatGPT}
-                      onChange={() => setUseChatGPT(false)}
+                      onChange={() => {
+                        setUseChatGPT(false);
+                        setUserHasSelectedService(true);
+                      }}
                       className="mr-2 text-blue-600"
                     />
                     <span className="text-sm font-medium text-gray-700">
