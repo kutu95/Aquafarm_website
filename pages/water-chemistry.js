@@ -545,23 +545,26 @@ export default function WaterChemistry() {
   const getRecommendations = (results) => {
     const recommendations = [];
     
-    if (results.pH.status === 'warning') {
-      if (results.pH.value < 6.5) {
+    // Check if we have the new API structure with parameters nested
+    const params = results.parameters || results;
+    
+    if (params.pH && params.pH.status === 'warning') {
+      if (params.pH.value < 6.5) {
         recommendations.push('pH is low. Consider adding crushed coral or limestone to raise pH gradually.');
-      } else if (results.pH.value > 8.5) {
+      } else if (params.pH.value > 8.5) {
         recommendations.push('pH is high. Consider adding driftwood or peat moss to lower pH gradually.');
       }
     }
     
-    if (results.ammonia.status === 'warning' || results.ammonia.status === 'danger') {
+    if (params.ammonia && (params.ammonia.status === 'warning' || params.ammonia.status === 'danger')) {
       recommendations.push('Ammonia detected! Perform immediate water change and check for overfeeding or dead fish.');
     }
     
-    if (results.nitrite.status === 'warning' || results.nitrite.status === 'danger') {
+    if (params.nitrite && (params.nitrite.status === 'warning' || params.nitrite.status === 'danger')) {
       recommendations.push('Nitrite detected! Your tank may not be fully cycled. Perform water changes and add beneficial bacteria.');
     }
     
-    if (results.nitrate.status === 'warning' || results.nitrate.status === 'danger') {
+    if (params.nitrate && (params.nitrate.status === 'warning' || params.nitrate.status === 'danger')) {
       recommendations.push('Nitrate levels are high. Perform water change and check your filtration system.');
     }
     
