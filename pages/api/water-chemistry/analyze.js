@@ -620,6 +620,12 @@ function analyzeWaterChemistryFromVision(dominantColors, objects, labels) {
   let lightingConditions = 'natural';
   let confidence = 0.85;
   
+  console.log('Starting analyzeWaterChemistryFromVision with:', {
+    dominantColorsCount: dominantColors.length,
+    objectsCount: objects.length,
+    labelsCount: labels.length
+  });
+  
   // Enhanced test tube detection based on object analysis
   const testTubeObjects = objects.filter(obj => {
     const name = obj.name.toLowerCase();
@@ -666,13 +672,18 @@ function analyzeWaterChemistryFromVision(dominantColors, objects, labels) {
   
   console.log('Final parameters object being returned:', JSON.stringify(parameters, null, 2));
   
-  return {
-    tubesDetected,
-    imageQuality,
-    lightingConditions,
-    confidence,
-    parameters
+  // Ensure all variables are defined before returning
+  const result = {
+    tubesDetected: tubesDetected || 0,
+    imageQuality: imageQuality || 'good',
+    lightingConditions: lightingConditions || 'natural',
+    confidence: confidence || 0.85,
+    parameters: parameters || {}
   };
+  
+  console.log('Final result object being returned from analyzeWaterChemistryFromVision:', JSON.stringify(result, null, 2));
+  
+  return result;
 }
 
 function estimateChemistryFromColors(dominantColors, baseConfidence) {

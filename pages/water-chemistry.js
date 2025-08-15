@@ -846,26 +846,7 @@ export default function WaterChemistry() {
                               <div className="w-2 h-2 bg-white rounded-full opacity-50"></div>
                             </div>
                           </div>
-                          {/* Instructions */}
-                          <div className="absolute top-2 left-2 bg-black bg-opacity-75 text-white text-xs p-2 rounded max-w-xs">
-                            <div className="font-medium mb-1">How to crop:</div>
-                            <div>• Drag the blue box to move</div>
-                            <div>• Drag corners to resize</div>
-                            <div>• Click "Crop & Analyze" when ready</div>
-                            {isResizing && (
-                              <div className="mt-2 text-yellow-300 font-medium">
-                                ✨ Resizing from {resizeHandle} corner
-                              </div>
-                            )}
-                            {isDragging && (
-                              <div className="mt-2 text-yellow-300 font-medium">
-                                ✨ Dragging crop area
-                              </div>
-                            )}
-                            <div className="mt-2 text-blue-300 text-xs">
-                              💡 Click anywhere on image to test coordinates
-                            </div>
-                          </div>
+
                           
 
                           
