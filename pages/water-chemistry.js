@@ -978,11 +978,7 @@ export default function WaterChemistry() {
                       </li>
                     ))}
                   </ul>
-                ) : (
-                  <p className="text-blue-700 text-sm italic">
-                    No specific recommendations available. Your water parameters appear to be within normal ranges.
-                  </p>
-                )}
+                ) : null}
               </div>
 
               {/* Disclaimer */}
