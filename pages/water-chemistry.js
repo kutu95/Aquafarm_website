@@ -677,24 +677,21 @@ export default function WaterChemistry() {
                                 console.log('Top-left handle clicked directly!');
                                 e.preventDefault();
                                 e.stopPropagation();
-                                setIsResizing(true);
-                                setResizeHandle('top-left');
-                                console.log('Set resizing state to true, handle to top-left');
                                 
-                                // Add global mouse event listeners for this handle
+                                // Get current crop area values
+                                const currentCropArea = { ...cropArea };
+                                
                                 const handleMouseMove = (moveEvent) => {
-                                  if (isResizing && resizeHandle === 'top-left') {
-                                    const rect = imageRef.current.getBoundingClientRect();
-                                    const x = moveEvent.clientX - rect.left;
-                                    const y = moveEvent.clientY - rect.top;
-                                    
-                                    const newX = Math.max(0, Math.min(x, cropArea.x + cropArea.width - 50));
-                                    const newY = Math.max(0, Math.min(y, cropArea.y + cropArea.height - 50));
-                                    const newWidth = cropArea.x + cropArea.width - newX;
-                                    const newHeight = cropArea.y + cropArea.height - newY;
-                                    
-                                    setCropArea({ x: newX, y: newY, width: newWidth, height: newHeight });
-                                  }
+                                  const rect = imageRef.current.getBoundingClientRect();
+                                  const x = moveEvent.clientX - rect.left;
+                                  const y = moveEvent.clientY - rect.top;
+                                  
+                                  const newX = Math.max(0, Math.min(x, currentCropArea.x + currentCropArea.width - 50));
+                                  const newY = Math.max(0, Math.min(y, currentCropArea.y + currentCropArea.height - 50));
+                                  const newWidth = currentCropArea.x + currentCropArea.width - newX;
+                                  const newHeight = currentCropArea.y + currentCropArea.height - newY;
+                                  
+                                  setCropArea({ x: newX, y: newY, width: newWidth, height: newHeight });
                                 };
                                 
                                 const handleMouseUp = () => {
@@ -703,6 +700,9 @@ export default function WaterChemistry() {
                                   document.removeEventListener('mousemove', handleMouseMove);
                                   document.removeEventListener('mouseup', handleMouseUp);
                                 };
+                                
+                                setIsResizing(true);
+                                setResizeHandle('top-left');
                                 
                                 document.addEventListener('mousemove', handleMouseMove);
                                 document.addEventListener('mouseup', handleMouseUp);
@@ -725,22 +725,19 @@ export default function WaterChemistry() {
                                 console.log('Bottom-right handle clicked directly!');
                                 e.preventDefault();
                                 e.stopPropagation();
-                                setIsResizing(true);
-                                setResizeHandle('bottom-right');
-                                console.log('Set resizing state to true, handle to bottom-right');
                                 
-                                // Add global mouse event listeners for this handle
+                                // Get current crop area values
+                                const currentCropArea = { ...cropArea };
+                                
                                 const handleMouseMove = (moveEvent) => {
-                                  if (isResizing && resizeHandle === 'bottom-right') {
-                                    const rect = imageRef.current.getBoundingClientRect();
-                                    const x = moveEvent.clientX - rect.left;
-                                    const y = moveEvent.clientY - rect.top;
-                                    
-                                    const newWidth = Math.max(50, x - cropArea.x);
-                                    const newHeight = Math.max(50, y - cropArea.y);
-                                    
-                                    setCropArea(prev => ({ ...prev, width: newWidth, height: newHeight }));
-                                  }
+                                  const rect = imageRef.current.getBoundingClientRect();
+                                  const x = moveEvent.clientX - rect.left;
+                                  const y = moveEvent.clientY - rect.top;
+                                  
+                                  const newWidth = Math.max(50, x - currentCropArea.x);
+                                  const newHeight = Math.max(50, y - currentCropArea.y);
+                                  
+                                  setCropArea(prev => ({ ...prev, width: newWidth, height: newHeight }));
                                 };
                                 
                                 const handleMouseUp = () => {
@@ -749,6 +746,9 @@ export default function WaterChemistry() {
                                   document.removeEventListener('mousemove', handleMouseMove);
                                   document.removeEventListener('mouseup', handleMouseUp);
                                 };
+                                
+                                setIsResizing(true);
+                                setResizeHandle('bottom-right');
                                 
                                 document.addEventListener('mousemove', handleMouseMove);
                                 document.addEventListener('mouseup', handleMouseUp);
