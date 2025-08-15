@@ -494,21 +494,22 @@ async function analyzeWithGoogleVision(imageData) {
               maxResults: 10  // Get suggestions for important areas
             }
           ],
-          // Add context about what we're analyzing
+          // Add specific context about API Freshwater Master Test Kit
           imageContext: {
             languageHints: ['en'],
             productSearchParams: {
-              productCategories: ['test-tubes', 'laboratory-equipment', 'water-testing'],
-              filter: 'test tubes, water chemistry, pH testing, ammonia testing'
+              productCategories: ['water-testing-kits', 'aquarium-supplies', 'laboratory-equipment'],
+              filter: 'API Freshwater Master Test Kit, water chemistry testing, pH ammonia nitrite nitrate'
             }
           }
         }
       ]
     };
 
-    console.log('Sending image to Google Cloud Vision:', {
+    console.log('Sending image to Google Cloud Vision for API Freshwater Master Test Kit analysis:', {
       base64DataLength: base64Data.length,
-      requestSize: JSON.stringify(visionRequest).length
+      requestSize: JSON.stringify(visionRequest).length,
+      context: 'API Freshwater Master Test Kit water chemistry analysis'
     });
 
     // Call Google Cloud Vision API
@@ -750,20 +751,20 @@ function analyzeWaterChemistryFromVision(dominantColors, objects, labels) {
 }
 
 function estimateChemistryFromColors(dominantColors, baseConfidence) {
-  // Analyze actual colors from Google Cloud Vision to estimate chemistry
-  console.log('Estimating chemistry from colors:', dominantColors.length, 'colors detected');
+  // Analyze actual colors from Google Cloud Vision for API Freshwater Master Test Kit
+  console.log('Estimating chemistry from colors for API Freshwater Master Test Kit:', dominantColors.length, 'colors detected');
   
   if (dominantColors.length === 0) {
     console.log('No colors detected - cannot estimate chemistry');
     return {
-      pH: { value: null, status: 'unknown', confidence: 0, color: '#999999', notes: 'No color data available' },
-      ammonia: { value: null, status: 'unknown', confidence: 0, color: '#999999', notes: 'No color data available' },
-      nitrite: { value: null, status: 'unknown', confidence: 0, color: '#999999', notes: 'No color data available' },
-      nitrate: { value: null, status: 'unknown', confidence: 0, color: '#999999', notes: 'No color data available' }
+      pH: { value: null, status: 'unknown', confidence: 0, color: '#999999', notes: 'No color data available from API Freshwater Master Test Kit' },
+      ammonia: { value: null, status: 'unknown', confidence: 0, color: '#999999', notes: 'No color data available from API Freshwater Master Test Kit' },
+      nitrite: { value: null, status: 'unknown', confidence: 0, color: '#999999', notes: 'No color data available from API Freshwater Master Test Kit' },
+      nitrate: { value: null, status: 'unknown', confidence: 0, color: '#999999', notes: 'No color data available from API Freshwater Master Test Kit' }
     };
   }
   
-  console.log('Analyzing dominant colors for chemistry...');
+  console.log('Analyzing dominant colors for API Freshwater Master Test Kit chemistry...');
   
   // Log all detected colors for debugging
   console.log('All detected colors:', dominantColors.map((color, i) => ({
@@ -798,29 +799,29 @@ function estimateChemistryFromColors(dominantColors, baseConfidence) {
   if (relevantColors.length === 0) {
     console.log('No relevant colors found after filtering');
     return {
-      pH: { value: null, status: 'unknown', confidence: 0, color: '#999999', notes: 'No relevant colors detected' },
-      ammonia: { value: null, status: 'unknown', confidence: 0, color: '#999999', notes: 'No relevant colors detected' },
-      nitrite: { value: null, status: 'unknown', confidence: 0, color: '#999999', notes: 'No relevant colors detected' },
-      nitrate: { value: null, status: 'unknown', confidence: 0, color: '#999999', notes: 'No relevant colors detected' }
+      pH: { value: null, status: 'unknown', confidence: 0, color: '#999999', notes: 'No relevant colors detected for API Freshwater Master Test Kit analysis' },
+      ammonia: { value: null, status: 'unknown', confidence: 0, color: '#999999', notes: 'No relevant colors detected for API Freshwater Master Test Kit analysis' },
+      nitrite: { value: null, status: 'unknown', confidence: 0, color: '#999999', notes: 'No relevant colors detected for API Freshwater Master Test Kit analysis' },
+      nitrate: { value: null, status: 'unknown', confidence: 0, color: '#999999', notes: 'No relevant colors detected for API Freshwater Master Test Kit analysis' }
     };
   }
   
   // Log the relevant colors being analyzed
-  console.log('Relevant colors being analyzed:', relevantColors.map(color => ({
+  console.log('Relevant colors being analyzed for API Freshwater Master Test Kit:', relevantColors.map(color => ({
     rgb: color.color,
     score: color.score,
     pixelFraction: color.pixelFraction
   })));
   
-  // Enhanced water chemistry analysis based on API Freshwater Master Test Kit color patterns
+  // Initialize parameters for API Freshwater Master Test Kit analysis
   const parameters = {
-    pH: { value: null, status: 'unknown', confidence: 0, color: '#999999', notes: 'Enhanced color analysis in progress' },
-    ammonia: { value: null, status: 'unknown', confidence: 0, color: '#999999', notes: 'Enhanced color analysis in progress' },
-    nitrite: { value: null, status: 'unknown', confidence: 0, color: '#999999', notes: 'Enhanced color analysis in progress' },
-    nitrate: { value: null, status: 'unknown', confidence: 0, color: '#999999', notes: 'Enhanced color analysis in progress' }
+    pH: { value: null, status: 'unknown', confidence: 0, color: '#999999', notes: 'Color analysis for API Freshwater Master Test Kit in progress' },
+    ammonia: { value: null, status: 'unknown', confidence: 0, color: '#999999', notes: 'Color analysis for API Freshwater Master Test Kit in progress' },
+    nitrite: { value: null, status: 'unknown', confidence: 0, color: '#999999', notes: 'Color analysis for API Freshwater Master Test Kit in progress' },
+    nitrate: { value: null, status: 'unknown', confidence: 0, color: '#999999', notes: 'Color analysis for API Freshwater Master Test Kit in progress' }
   };
   
-  // Advanced color-based estimation using API Freshwater Master Test Kit color knowledge
+  // Analyze colors in the context of API Freshwater Master Test Kit
   if (relevantColors.length > 0) {
     const primaryColor = relevantColors[0]; // Most dominant relevant color
     const rgb = primaryColor.color;
@@ -828,115 +829,50 @@ function estimateChemistryFromColors(dominantColors, baseConfidence) {
     const green = rgb.green;
     const blue = rgb.blue;
     
-    console.log('Analyzing primary color for water chemistry:', { red, green, blue, score: primaryColor.score });
+    console.log('Analyzing primary color for API Freshwater Master Test Kit:', { red, green, blue, score: primaryColor.score });
     
-    // Enhanced pH estimation based on API Freshwater Master Test Kit color patterns
-    if (red > 180 && green < 100 && blue < 100) {
-      // Strong red - likely very acidic (pH 6.0 or lower)
-      parameters.pH.value = 6.0;
-      parameters.pH.status = 'danger';
-      parameters.pH.confidence = baseConfidence * 0.8;
-      parameters.pH.color = '#D32F2F';
-      parameters.pH.notes = 'Strong red color suggests very acidic pH (6.0 or lower) - immediate attention needed';
-    } else if (red > 140 && green < 80 && blue < 80) {
-      // Medium red - likely acidic (pH 6.0-6.5)
-      parameters.pH.value = 6.25;
-      parameters.pH.status = 'warning';
-      parameters.pH.confidence = baseConfidence * 0.75;
-      parameters.pH.color = '#F44336';
-      parameters.pH.notes = 'Red color suggests acidic pH (6.0-6.5) - consider pH adjustment';
-    } else if (red > 100 && green > 100 && blue < 80) {
-      // Yellow/orange - likely neutral to slightly acidic (pH 6.5-7.0)
-      parameters.pH.value = 6.75;
-      parameters.pH.status = 'good';
-      parameters.pH.confidence = baseConfidence * 0.8;
-      parameters.pH.color = '#FF9800';
-      parameters.pH.notes = 'Yellow/orange color suggests neutral to slightly acidic pH (6.5-7.0)';
-    } else if (green > 120 && red < 100 && blue < 100) {
-      // Green - likely neutral (pH 7.0-7.5)
-      parameters.pH.value = 7.25;
-      parameters.pH.status = 'good';
-      parameters.pH.confidence = baseConfidence * 0.85;
-      parameters.pH.color = '#4CAF50';
-      parameters.pH.notes = 'Green color suggests neutral pH (7.0-7.5) - ideal for most fish';
-    } else if (blue > 120 && red < 80 && green < 120) {
-      // Blue - likely alkaline (pH 7.5-8.0)
-      parameters.pH.value = 7.75;
-      parameters.pH.status = 'good';
-      parameters.pH.confidence = baseConfidence * 0.8;
-      parameters.pH.color = '#2196F3';
-      parameters.pH.notes = 'Blue color suggests alkaline pH (7.5-8.0) - good for African cichlids';
-    } else if (blue > 150 && red < 60 && green < 100) {
-      // Strong blue - likely very alkaline (pH 8.0+)
-      parameters.pH.value = 8.25;
-      parameters.pH.status = 'warning';
-      parameters.pH.confidence = baseConfidence * 0.75;
-      parameters.pH.color = '#1976D2';
-      parameters.pH.notes = 'Strong blue color suggests very alkaline pH (8.0+) - monitor closely';
-    }
+    // Note: We're not making assumptions about specific color values
+    // Instead, we're providing the raw color data and asking Google Vision
+    // to analyze it in the context of the API Freshwater Master Test Kit
     
-    // Enhanced ammonia detection based on API Freshwater Master Test Kit
-    if (green > 140 && red > 100 && red < 160 && blue < 80) {
-      // Yellow-green - likely ammonia present
-      parameters.ammonia.value = 0.5;
-      parameters.ammonia.status = 'warning';
-      parameters.ammonia.confidence = baseConfidence * 0.7;
-      parameters.ammonia.color = '#FF9800';
-      parameters.ammonia.notes = 'Yellow-green color suggests ammonia presence (0.5 ppm) - perform water change';
-    } else if (green > 160 && red > 120 && blue < 100) {
-      // Strong yellow-green - likely high ammonia
-      parameters.ammonia.value = 1.0;
-      parameters.ammonia.status = 'danger';
-      parameters.ammonia.confidence = baseConfidence * 0.75;
-      parameters.ammonia.color = '#F57C00';
-      parameters.ammonia.notes = 'Strong yellow-green suggests high ammonia (1.0+ ppm) - immediate action required';
-    }
+    // For now, provide the detected color information and let the user interpret
+    // This is more honest than guessing based on made-up patterns
     
-    // Enhanced nitrite detection based on API Freshwater Master Test Kit
-    if (red > 150 && blue > 80 && blue < 140) {
-      // Pink/red - likely nitrite present
-      parameters.nitrite.value = 0.25;
-      parameters.nitrite.status = 'warning';
-      parameters.nitrite.confidence = baseConfidence * 0.7;
-      parameters.nitrite.color = '#E91E63';
-      parameters.nitrite.notes = 'Pink/red color suggests nitrite presence (0.25 ppm) - tank may not be fully cycled';
-    } else if (red > 180 && blue > 100 && blue < 160) {
-      // Strong pink/red - likely high nitrite
-      parameters.nitrite.value = 0.5;
-      parameters.nitrite.status = 'danger';
-      parameters.nitrite.confidence = baseConfidence * 0.75;
-      parameters.nitrite.color = '#C2185B';
-      parameters.nitrite.notes = 'Strong pink/red suggests high nitrite (0.5+ ppm) - perform water change immediately';
-    }
+    parameters.pH.value = 'Color detected';
+    parameters.pH.status = 'unknown';
+    parameters.pH.confidence = baseConfidence * 0.5;
+    parameters.pH.color = `rgb(${red}, ${green}, ${blue})`;
+    parameters.pH.notes = `Detected color: RGB(${red}, ${green}, ${blue}). Please compare with your API Freshwater Master Test Kit color chart for accurate pH reading.`;
     
-    // Enhanced nitrate detection based on API Freshwater Master Test Kit
-    if (red > 160 && green > 80 && green < 140 && blue < 80) {
-      // Orange/red - likely elevated nitrate
-      parameters.nitrate.value = 20.0;
-      parameters.nitrate.status = 'warning';
-      parameters.nitrate.confidence = baseConfidence * 0.7;
-      parameters.nitrate.color = '#FF5722';
-      parameters.nitrate.notes = 'Orange/red color suggests elevated nitrate (20+ ppm) - perform water change';
-    } else if (red > 180 && green > 100 && green < 160 && blue < 60) {
-      // Strong orange/red - likely high nitrate
-      parameters.nitrate.value = 40.0;
-      parameters.nitrate.status = 'danger';
-      parameters.nitrate.confidence = baseConfidence * 0.75;
-      parameters.nitrate.color = '#D84315';
-      parameters.nitrate.notes = 'Strong orange/red suggests high nitrate (40+ ppm) - immediate water change needed';
-    }
+    parameters.ammonia.value = 'Color detected';
+    parameters.ammonia.status = 'unknown';
+    parameters.ammonia.confidence = baseConfidence * 0.5;
+    parameters.ammonia.color = `rgb(${red}, ${green}, ${blue})`;
+    parameters.ammonia.notes = `Detected color: RGB(${red}, ${green}, ${blue}). Please compare with your API Freshwater Master Test Kit color chart for accurate ammonia reading.`;
+    
+    parameters.nitrite.value = 'Color detected';
+    parameters.nitrite.status = 'unknown';
+    parameters.nitrite.confidence = baseConfidence * 0.5;
+    parameters.nitrite.color = `rgb(${red}, ${green}, ${blue})`;
+    parameters.nitrite.notes = `Detected color: RGB(${red}, ${green}, ${blue}). Please compare with your API Freshwater Master Test Kit color chart for accurate nitrite reading.`;
+    
+    parameters.nitrate.value = 'Color detected';
+    parameters.nitrate.status = 'unknown';
+    parameters.nitrate.confidence = baseConfidence * 0.5;
+    parameters.nitrate.color = `rgb(${red}, ${green}, ${blue})`;
+    parameters.nitrate.notes = `Detected color: RGB(${red}, ${green}, ${blue}). Please compare with your API Freshwater Master Test Kit color chart for accurate nitrate reading.`;
     
     // If we have multiple relevant colors, analyze them for additional insights
     if (relevantColors.length > 1) {
       const secondaryColor = relevantColors[1];
-      console.log('Analyzing secondary color:', secondaryColor.color);
+      console.log('Analyzing secondary color for API Freshwater Master Test Kit:', secondaryColor.color);
       
       // Additional analysis based on secondary colors
       // This could help identify multiple test tubes or confirm readings
     }
   }
   
-  console.log('Enhanced chemistry analysis completed');
+  console.log('API Freshwater Master Test Kit color analysis completed');
   console.log('Final parameters object being returned:', JSON.stringify(parameters, null, 2));
   
   return parameters;
