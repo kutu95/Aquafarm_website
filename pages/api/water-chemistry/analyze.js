@@ -1,5 +1,15 @@
 import { createServerClient } from '@supabase/ssr';
 
+// Configure Next.js API to handle large request bodies
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '50mb', // Allow up to 50MB for large image data
+    },
+    responseLimit: false, // No response size limit
+  },
+};
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
