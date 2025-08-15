@@ -995,24 +995,36 @@ export default function WaterChemistry() {
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">📊 Analysis Results</h2>
               
+              {/* Debug Results Structure */}
+              <div className="bg-gray-100 border border-gray-300 rounded-lg p-4 mb-4 text-xs">
+                <div className="font-medium mb-2">🔍 Debug: Results Structure</div>
+                <div>Results keys: {Object.keys(results).join(', ')}</div>
+                <div>Has parameters: {results.parameters ? 'Yes' : 'No'}</div>
+                {results.parameters && (
+                  <div>Parameter keys: {Object.keys(results.parameters).join(', ')}</div>
+                )}
+                <div>Success: {results.success?.toString()}</div>
+                <div>Confidence: {results.confidence}</div>
+              </div>
+              
               {/* Results Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                {Object.entries(results).map(([parameter, data]) => (
+                {Object.entries(results.parameters || {}).map(([parameter, data]) => (
                   <div key={parameter} className="border border-gray-200 rounded-lg p-4 text-center">
                     <div className="text-2xl font-bold text-gray-900 mb-1">
                       {parameter.toUpperCase()}
                     </div>
                     <div className={`text-3xl font-bold mb-2 ${getStatusColor(data.status).split(' ')[0]}`}>
-                      {data.value}
+                      {data.value || 'N/A'}
                     </div>
                     <div className="text-sm text-gray-600 mb-2">
-                      {referenceRanges[parameter].unit}
+                      {referenceRanges[parameter]?.unit || ''}
                     </div>
                     <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(data.status)}`}>
                       {getStatusIcon(data.status)} {data.status.charAt(0).toUpperCase() + data.status.slice(1)}
                     </div>
                     <div className="text-xs text-gray-500 mt-2">
-                      Confidence: {Math.round(data.confidence * 100)}%
+                      Confidence: {Math.round((data.confidence || 0) * 100)}%
                     </div>
                   </div>
                 ))}
