@@ -26,10 +26,28 @@ export default async function handler(req, res) {
             return req.cookies[name];
           },
           set(name, value, options) {
-            res.setHeader('Set-Cookie', `${name}=${value}; Path=/`);
+            const isProduction = process.env.NODE_ENV === 'production';
+            const domain = isProduction ? '.aquafarm.au' : undefined;
+            const secure = isProduction;
+            const sameSite = isProduction ? 'none' : 'lax';
+            
+            let cookieString = `${name}=${value}; Path=/; HttpOnly; SameSite=${sameSite}`;
+            if (domain) cookieString += `; Domain=${domain}`;
+            if (secure) cookieString += '; Secure';
+            
+            res.setHeader('Set-Cookie', cookieString);
           },
           remove(name) {
-            res.setHeader('Set-Cookie', `${name}=; Path=/; Max-Age=0`);
+            const isProduction = process.env.NODE_ENV === 'production';
+            const domain = isProduction ? '.aquafarm.au' : undefined;
+            const secure = isProduction;
+            const sameSite = isProduction ? 'none' : 'lax';
+            
+            let cookieString = `${name}=; Path=/; HttpOnly; SameSite=${sameSite}; Max-Age=0`;
+            if (domain) cookieString += `; Domain=${domain}`;
+            if (secure) cookieString += '; Secure';
+            
+            res.setHeader('Set-Cookie', cookieString);
           },
         },
       }
@@ -38,6 +56,10 @@ export default async function handler(req, res) {
     // Get the user session from cookies
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
     
+    // Debug: Log cookie and session information
+    console.log('API Request cookies:', Object.keys(req.cookies));
+    console.log('API Request session result:', { hasSession: !!session, sessionError, userId: session?.user?.id });
+    
     if (sessionError) {
       console.error('Session error:', sessionError);
       return res.status(401).json({ error: 'Authentication error', details: sessionError.message });
@@ -45,6 +67,7 @@ export default async function handler(req, res) {
     
     if (!session) {
       console.log('No session found in API request');
+      console.log('Available cookies:', req.cookies);
       return res.status(401).json({ error: 'Unauthorized - No valid session' });
     }
 
