@@ -168,35 +168,13 @@ async function analyzeWithChatGPT(imageData, filename) {
 
 CRITICAL: You MUST respond with ONLY valid JSON. No explanations, no additional text, no markdown formatting.
 
-You are looking at a water quality test kit with 4 test tubes. Use standard water test kit color interpretations:
-
-**pH Test (usually yellow to blue range):**
-- Yellow = 6.0-6.5 (acidic, low range)
-- Green = 7.0-7.5 (neutral)
-- Blue = 8.0-8.5 (alkaline, high range)
-
-**Ammonia Test (usually yellow to dark green/blue):**
-- Yellow = 0.0 ppm (good)
-- Light green = 0.25-0.5 ppm (warning)
-- Dark green = 1.0-4.0 ppm (danger - toxic)
-- Blue = 4.0+ ppm (very dangerous)
-
-**Nitrite Test (usually light blue to purple):**
-- Light blue/clear = 0.0 ppm (good)
-- Light purple = 0.25-0.5 ppm (warning)
-- Dark purple = 1.0+ ppm (danger)
-
-**Nitrate Test (usually light pink to deep red):**
-- Light pink = 5.0-10.0 ppm (good)
-- Pink = 20.0-40.0 ppm (warning)
-- Red = 80.0-160.0 ppm (danger)
-- Deep red = 160+ ppm (very dangerous)
+You are looking at a water quality test kit with 4 test tubes. Simply observe the colors you see and interpret them based on what you observe.
 
 For each parameter, provide:
-- The value/level based on color interpretation
-- The status (good, warning, or danger)
+- The value/level based on what you observe in the test tube
+- The status (good, warning, or danger) based on the color intensity
 - Your confidence level (0-1)
-- Brief notes about the color
+- Brief notes about what color you see
 
 Focus ONLY on the test tube colors. Ignore background elements.
 
@@ -206,7 +184,7 @@ RESPOND WITH ONLY THIS JSON STRUCTURE - NO OTHER TEXT:
   "confidence": 0.95,
   "parameters": {
     "pH": {"value": 6.0, "status": "warning", "confidence": 0.9, "color": "#FFFF00", "notes": "Yellow color observed"},
-    "ammonia": {"value": 3.0, "status": "danger", "confidence": 0.85, "color": "#006400", "notes": "Dark green color observed"},
+    "ammonia": {"value": 2.5, "status": "danger", "confidence": 0.85, "color": "#006400", "notes": "Dark green color observed"},
     "nitrite": {"value": 0.0, "status": "good", "confidence": 0.88, "color": "#ADD8E6", "notes": "Light blue color observed"},
     "nitrate": {"value": 160.0, "status": "danger", "confidence": 0.87, "color": "#8B0000", "notes": "Deep red color observed"}
   },
