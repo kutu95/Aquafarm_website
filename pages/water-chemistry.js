@@ -182,7 +182,10 @@ export default function WaterChemistry() {
   };
 
   const handleMouseMove = (e) => {
-    if (!isDragging && !isResizing) return;
+    if (!isDragging && !isResizing) {
+      console.log('Mouse move - no action:', { isDragging, isResizing, resizeHandle });
+      return;
+    }
     
     e.preventDefault();
     e.stopPropagation();
@@ -196,17 +199,27 @@ export default function WaterChemistry() {
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     
+    console.log('Mouse move - action:', { 
+      isDragging, 
+      isResizing, 
+      resizeHandle, 
+      x, 
+      y, 
+      cropArea 
+    });
+    
     if (isDragging) {
       const newX = Math.max(0, Math.min(x - dragStart.x, imageRef.current.width - cropArea.width));
       const newY = Math.max(0, Math.min(y - dragStart.y, imageRef.current.height - cropArea.height));
       console.log('Dragging to:', { newX, newY, imageWidth: imageRef.current.width, imageHeight: imageRef.current.height });
       setCropArea(prev => ({ ...prev, x: newX, y: newY }));
     } else if (isResizing) {
+      console.log('Resizing with handle:', resizeHandle);
       if (resizeHandle === 'bottom-right') {
         // Allow flexible aspect ratio - no square constraint
         const newWidth = Math.max(30, Math.min(x - cropArea.x, imageRef.current.width - cropArea.x));
         const newHeight = Math.max(30, Math.min(y - cropArea.y, imageRef.current.height - cropArea.y));
-        console.log('Resizing bottom-right to:', { newWidth, newHeight });
+        console.log('Resizing bottom-right to:', { newWidth, newHeight, x, y, cropArea });
         setCropArea(prev => ({ ...prev, width: newWidth, height: newHeight }));
       } else if (resizeHandle === 'top-left') {
         // Allow flexible aspect ratio - no square constraint
@@ -214,7 +227,7 @@ export default function WaterChemistry() {
         const newHeight = Math.max(30, cropArea.y + cropArea.height - y);
         const newX = Math.max(0, Math.min(x, cropArea.x + cropArea.width - 30));
         const newY = Math.max(0, Math.min(y, cropArea.y + cropArea.height - 30));
-        console.log('Resizing top-left to:', { newX, newY, newWidth, newHeight });
+        console.log('Resizing top-left to:', { newX, newY, newWidth, newHeight, x, y, cropArea });
         setCropArea(prev => ({ 
           x: newX, 
           y: newY, 
@@ -719,6 +732,17 @@ export default function WaterChemistry() {
                             <div className="mt-2 text-yellow-300">
                               Click areas: 25px around handles
                             </div>
+                            <button 
+                              onClick={() => {
+                                console.log('Test button clicked');
+                                setIsResizing(true);
+                                setResizeHandle('bottom-right');
+                                console.log('Set resizing to true, handle to bottom-right');
+                              }}
+                              className="mt-2 px-2 py-1 bg-blue-600 text-white text-xs rounded"
+                            >
+                              Test Resize State
+                            </button>
                           </div>
                           
                           {/* Crop area dimensions */}
