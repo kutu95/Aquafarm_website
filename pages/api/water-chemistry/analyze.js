@@ -358,21 +358,48 @@ RESPOND WITH ONLY THIS JSON STRUCTURE - NO OTHER TEXT:
       const jsonMatch = analysisText.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         analysis = JSON.parse(jsonMatch[0]);
+        console.log('Parsed JSON analysis:', JSON.stringify(analysis, null, 2));
       } else {
         throw new Error('No JSON found in response');
       }
     } catch (parseError) {
       console.error('Error parsing ChatGPT response:', parseError);
+      console.error('Raw response that failed to parse:', analysisText);
       throw new Error(`Failed to parse ChatGPT analysis: ${parseError.message}`);
     }
 
-    // Validate the analysis structure
+    // Check if the response has the expected structure
+    console.log('Analysis structure check:', {
+      hasSuccess: 'success' in analysis,
+      hasParameters: 'parameters' in analysis,
+      hasDirectParams: ['pH', 'ammonia', 'nitrite', 'nitrate'].some(p => p in analysis),
+      topLevelKeys: Object.keys(analysis)
+    });
+
+    // Handle different response formats from ChatGPT
+    let parameters;
+    if (analysis.parameters && typeof analysis.parameters === 'object') {
+      // Format: { success: true, parameters: { pH: {...}, ammonia: {...} } }
+      parameters = analysis.parameters;
+      console.log('Using parameters from analysis.parameters');
+    } else if (['pH', 'ammonia', 'nitrite', 'nitrate'].some(p => p in analysis)) {
+      // Format: { pH: {...}, ammonia: {...}, nitrite: {...}, nitrate: {...} }
+      parameters = analysis;
+      console.log('Using direct parameters from analysis root');
+    } else {
+      console.error('Unexpected analysis structure:', JSON.stringify(analysis, null, 2));
+      throw new Error('Analysis response does not contain expected parameter structure');
+    }
+
+    // Validate the parameters structure
     const requiredParams = ['pH', 'ammonia', 'nitrite', 'nitrate'];
     for (const param of requiredParams) {
-      if (!analysis[param] || typeof analysis[param] !== 'object') {
+      if (!parameters[param] || typeof parameters[param] !== 'object') {
+        console.error(`Missing or invalid ${param} parameter:`, parameters[param]);
         throw new Error(`Missing or invalid ${param} parameter in analysis`);
       }
-      if (typeof analysis[param].value === 'undefined') {
+      if (typeof parameters[param].value === 'undefined') {
+        console.error(`Missing value for ${param} parameter:`, parameters[param]);
         throw new Error(`Missing value for ${param} parameter`);
       }
     }
@@ -380,13 +407,13 @@ RESPOND WITH ONLY THIS JSON STRUCTURE - NO OTHER TEXT:
     // Create the final result structure
     const result = {
       success: true,
-      confidence: 0.9, // High confidence for ChatGPT analysis
-      parameters: analysis,
+      confidence: analysis.confidence || 0.9,
+      parameters: parameters,
       imageAnalysis: {
-        tubesDetected: 4, // Assuming 4 test tubes for pH, ammonia, nitrite, nitrate
-        imageQuality: 'good',
-        lightingConditions: 'natural',
-        processingNotes: 'Expert AI analysis using ChatGPT with API Freshwater Master Test Kit knowledge',
+        tubesDetected: analysis.imageAnalysis?.tubesDetected || 4,
+        imageQuality: analysis.imageAnalysis?.imageQuality || 'good',
+        lightingConditions: analysis.imageAnalysis?.lightingConditions || 'natural',
+        processingNotes: analysis.imageAnalysis?.processingNotes || 'Expert AI analysis using ChatGPT with API Freshwater Master Test Kit knowledge',
         aiModel: 'gpt-4o',
         analysisMethod: 'ChatGPT expert interpretation'
       }
