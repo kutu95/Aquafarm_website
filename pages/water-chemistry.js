@@ -10,6 +10,7 @@ export default function WaterChemistry() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [results, setResults] = useState(null);
   const [error, setError] = useState(null);
+  const [useChatGPT, setUseChatGPT] = useState(true); // Toggle for AI service choice
   const [aiStatus, setAiStatus] = useState('checking'); // 'checking', 'chatgpt', 'google', 'error'
   const fileInputRef = useRef(null);
 
@@ -78,7 +79,8 @@ export default function WaterChemistry() {
           credentials: 'include', // Include cookies for authentication
           body: JSON.stringify({
             imageData: base64Data,
-            filename: selectedImage.name
+            filename: selectedImage.name,
+            useChatGPT: useChatGPT
           }),
         });
 
@@ -324,6 +326,49 @@ export default function WaterChemistry() {
                 </ul>
               </div>
 
+              {/* AI Service Selection */}
+              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  🤖 Choose AI Analysis Service
+                </label>
+                <div className="flex items-center space-x-4">
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="aiService"
+                      value="chatgpt"
+                      checked={useChatGPT}
+                      onChange={() => setUseChatGPT(true)}
+                      className="mr-2 text-blue-600"
+                    />
+                    <span className="text-sm font-medium text-gray-700">
+                      ChatGPT + Color Chart (Recommended)
+                    </span>
+                    <span className="ml-2 text-xs text-blue-600">
+                      Uses embedded API color chart for accuracy
+                    </span>
+                  </label>
+                </div>
+                <div className="flex items-center space-x-4 mt-2">
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="aiService"
+                      value="google"
+                      checked={!useChatGPT}
+                      onChange={() => setUseChatGPT(false)}
+                      className="mr-2 text-blue-600"
+                    />
+                    <span className="text-sm font-medium text-gray-700">
+                      Google Cloud Vision
+                    </span>
+                    <span className="ml-2 text-xs text-gray-600">
+                      Traditional computer vision analysis
+                    </span>
+                  </label>
+                </div>
+              </div>
+
               {/* File Upload */}
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
                 <input
@@ -396,10 +441,10 @@ export default function WaterChemistry() {
                     {isAnalyzing ? (
                       <>
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mx-auto mb-2"></div>
-                        Analyzing...
+                        Analyzing with {useChatGPT ? 'ChatGPT + Color Chart' : 'Google Vision'}...
                       </>
                     ) : (
-                      '🔬 Analyze Water Chemistry'
+                      `🔬 Analyze with ${useChatGPT ? 'ChatGPT + Color Chart' : 'Google Vision'}`
                     )}
                   </button>
                 </div>

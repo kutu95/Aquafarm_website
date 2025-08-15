@@ -40,7 +40,7 @@ export default async function handler(req, res) {
 
     console.log('API Request authenticated for user:', session.user.id);
 
-    const { imageData, filename } = req.body;
+    const { imageData, filename, useChatGPT: userPrefersChatGPT } = req.body;
 
     if (!imageData || !filename) {
       return res.status(400).json({ error: 'Image data and filename are required' });
@@ -111,13 +111,49 @@ export default async function handler(req, res) {
     console.log('- OPEN_AI_KEY:', process.env.OPEN_AI_KEY ? 'SET' : 'NOT SET');
     console.log('- OPEN_AI_KEY first 10 chars:', process.env.OPEN_AI_KEY ? process.env.OPEN_AI_KEY.substring(0, 10) + '...' : 'NOT SET');
     
-    if (process.env.OPEN_AI_KEY) {
-      console.log('Using ChatGPT for expert AI analysis');
-      // Use ChatGPT for superior analysis
-      analysisResults = await analyzeWithChatGPT(imageData, filename);
-    } else if (process.env.GOOGLE_CLOUD_VISION_API_KEY) {
-      console.log('No ChatGPT key found, using Google Cloud Vision API as fallback');
-      // Fallback to Google Cloud Vision API
+    // Check user preference and available services
+    const hasChatGPT = !!process.env.OPEN_AI_KEY;
+    const hasGoogleVision = !!process.env.GOOGLE_CLOUD_VISION_API_KEY;
+    
+    console.log('User preference:', userPrefersChatGPT ? 'ChatGPT' : 'Google Vision');
+    console.log('Available services - ChatGPT:', hasChatGPT, 'Google Vision:', hasGoogleVision);
+    
+    // If user prefers ChatGPT and it's available
+    if (userPrefersChatGPT && hasChatGPT) {
+      console.log('Using ChatGPT for expert AI analysis (user preference)');
+      try {
+        analysisResults = await analyzeWithChatGPT(imageData, filename);
+      } catch (error) {
+        console.error('ChatGPT analysis error:', error);
+        if (hasGoogleVision) {
+          console.log('ChatGPT failed, falling back to Google Cloud Vision...');
+          analysisResults = await analyzeWithGoogleVision(imageData);
+        } else {
+          throw error; // No fallback available
+        }
+      }
+    } 
+    // If user prefers Google Vision and it's available
+    else if (!userPrefersChatGPT && hasGoogleVision) {
+      console.log('Using Google Cloud Vision API (user preference)');
+      analysisResults = await analyzeWithGoogleVision(imageData);
+    }
+    // If user preference not available, use what's available
+    else if (hasChatGPT) {
+      console.log('Using ChatGPT (fallback to available service)');
+      try {
+        analysisResults = await analyzeWithChatGPT(imageData, filename);
+      } catch (error) {
+        console.error('ChatGPT analysis error:', error);
+        if (hasGoogleVision) {
+          console.log('ChatGPT failed, falling back to Google Cloud Vision...');
+          analysisResults = await analyzeWithGoogleVision(imageData);
+        } else {
+          throw error;
+        }
+      }
+    } else if (hasGoogleVision) {
+      console.log('Using Google Cloud Vision API (fallback to available service)');
       analysisResults = await analyzeWithGoogleVision(imageData);
     } else {
       console.log('No AI API keys found');
