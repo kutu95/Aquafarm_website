@@ -301,6 +301,13 @@ export default function WaterChemistry() {
     // Convert to data URL (same format both APIs expect)
     const croppedImageData = canvas.toDataURL('image/png', 0.95);
     
+    console.log('=== CROP DEBUG START ===');
+    console.log('Canvas dimensions:', `${canvas.width}x${canvas.height}`);
+    console.log('Cropped image data length:', croppedImageData.length);
+    console.log('Cropped image data prefix:', croppedImageData.substring(0, 100));
+    console.log('Has data URL prefix:', croppedImageData.startsWith('data:image'));
+    console.log('=== CROP DEBUG END ===');
+    
     // Store the cropped image data directly
     setImagePreview(croppedImageData);
     setSelectedImage({ dataUrl: croppedImageData, name: 'cropped_image.png' });
@@ -342,12 +349,15 @@ export default function WaterChemistry() {
     setResults(null);
 
     try {
+      console.log('=== ANALYSIS DEBUG START ===');
       console.log('Starting analysis with selectedImage:', selectedImage);
       console.log('selectedImage type:', typeof selectedImage);
       console.log('selectedImage keys:', Object.keys(selectedImage || {}));
       console.log('selectedImage size:', selectedImage?.size);
       console.log('selectedImage name:', selectedImage?.name);
       console.log('selectedImage dataUrl length:', selectedImage?.dataUrl?.length);
+      console.log('selectedImage dataUrl prefix:', selectedImage?.dataUrl?.substring(0, 100));
+      console.log('=== ANALYSIS DEBUG END ===');
       
       // Get the image data - either from original file or cropped data URL
       let imageData;
