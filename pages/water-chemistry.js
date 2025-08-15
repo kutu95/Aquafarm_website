@@ -111,8 +111,8 @@ export default function WaterChemistry() {
     
     console.log('Mouse down:', { x, y, cropArea, rect });
     
-    // Check if clicking on resize handles
-    const handleSize = 15;
+    // Check if clicking on resize handles with larger click area
+    const handleSize = 20; // Increased from 15 to 20 for easier clicking
     const right = cropArea.x + cropArea.width;
     const bottom = cropArea.y + cropArea.height;
     
@@ -161,15 +161,17 @@ export default function WaterChemistry() {
       setCropArea(prev => ({ ...prev, x: newX, y: newY }));
     } else if (isResizing) {
       if (resizeHandle === 'bottom-right') {
-        const newWidth = Math.max(50, Math.min(x - cropArea.x, imageRef.current.width - cropArea.x));
-        const newHeight = Math.max(50, Math.min(y - cropArea.y, imageRef.current.height - cropArea.y));
+        // Allow flexible aspect ratio - no square constraint
+        const newWidth = Math.max(30, Math.min(x - cropArea.x, imageRef.current.width - cropArea.x));
+        const newHeight = Math.max(30, Math.min(y - cropArea.y, imageRef.current.height - cropArea.y));
         console.log('Resizing bottom-right to:', { newWidth, newHeight });
         setCropArea(prev => ({ ...prev, width: newWidth, height: newHeight }));
       } else if (resizeHandle === 'top-left') {
-        const newWidth = Math.max(50, cropArea.x + cropArea.width - x);
-        const newHeight = Math.max(50, cropArea.y + cropArea.height - y);
-        const newX = Math.max(0, Math.min(x, cropArea.x + cropArea.width - 50));
-        const newY = Math.max(0, Math.min(y, cropArea.y + cropArea.height - 50));
+        // Allow flexible aspect ratio - no square constraint
+        const newWidth = Math.max(30, cropArea.x + cropArea.width - x);
+        const newHeight = Math.max(30, cropArea.y + cropArea.height - y);
+        const newX = Math.max(0, Math.min(x, cropArea.x + cropArea.width - 30));
+        const newY = Math.max(0, Math.min(y, cropArea.y + cropArea.height - 30));
         console.log('Resizing top-left to:', { newX, newY, newWidth, newHeight });
         setCropArea(prev => ({ 
           x: newX, 
@@ -607,23 +609,27 @@ export default function WaterChemistry() {
                           >
                             {/* Top-left resize handle */}
                             <div
-                              className={`absolute w-4 h-4 bg-blue-600 border-2 border-white rounded-full ${
-                                isResizing && resizeHandle === 'top-left' ? 'cursor-nw-resize' : 'cursor-nw-resize'
+                              className={`absolute w-5 h-5 bg-blue-600 border-2 border-white rounded-full transition-all duration-150 ${
+                                isResizing && resizeHandle === 'top-left' 
+                                  ? 'scale-125 bg-blue-700 shadow-lg' 
+                                  : 'hover:scale-110 hover:bg-blue-700'
                               }`}
                               style={{
-                                left: '-8px',
-                                top: '-8px',
+                                left: '-10px',
+                                top: '-10px',
                                 pointerEvents: 'auto'
                               }}
                             />
                             {/* Bottom-right resize handle */}
                             <div
-                              className={`absolute w-4 h-4 bg-blue-600 border-2 border-white rounded-full ${
-                                isResizing && resizeHandle === 'bottom-right' ? 'cursor-se-resize' : 'cursor-se-resize'
+                              className={`absolute w-5 h-5 bg-blue-600 border-2 border-white rounded-full transition-all duration-150 ${
+                                isResizing && resizeHandle === 'bottom-right' 
+                                  ? 'scale-125 bg-blue-700 shadow-lg' 
+                                  : 'hover:scale-110 hover:bg-blue-700'
                               }`}
                               style={{
-                                right: '-8px',
-                                bottom: '-8px',
+                                right: '-10px',
+                                bottom: '-10px',
                                 pointerEvents: 'auto'
                               }}
                             />
@@ -638,6 +644,16 @@ export default function WaterChemistry() {
                             <div>• Drag the blue box to move</div>
                             <div>• Drag corners to resize</div>
                             <div>• Click "Crop & Analyze" when ready</div>
+                            {isResizing && (
+                              <div className="mt-2 text-yellow-300 font-medium">
+                                ✨ Resizing from {resizeHandle} corner
+                              </div>
+                            )}
+                            {isDragging && (
+                              <div className="mt-2 text-yellow-300 font-medium">
+                                ✨ Dragging crop area
+                              </div>
+                            )}
                           </div>
                           
                           {/* Debug info */}
