@@ -204,7 +204,7 @@ export default function WaterChemistry() {
           } else if (data.processingNotes.includes('Google Vision')) {
             setAiStatus('google');
           } else {
-            setAiStatus('simulation');
+            setAiStatus('error');
           }
         }
         // Check if the response indicates real AI analysis (for actual image uploads)
@@ -213,14 +213,14 @@ export default function WaterChemistry() {
         } else if (data.imageAnalysis?.processingNotes?.includes('Google Cloud Vision')) {
           setAiStatus('google');
         } else {
-          setAiStatus('simulation');
+          setAiStatus('error');
         }
       } else {
-        setAiStatus('simulation');
+        setAiStatus('error');
       }
     } catch (error) {
       console.log('Error checking AI status:', error);
-      setAiStatus('simulation');
+      setAiStatus('error');
     }
   };
 
@@ -493,13 +493,13 @@ export default function WaterChemistry() {
                     ? 'The system is using expert AI analysis with ChatGPT for superior accuracy! 🧠✨'
                     : aiStatus === 'google'
                     ? 'The system is using basic AI analysis with Google Cloud Vision.'
-                    : 'The system is currently using enhanced simulation mode. Enable AI APIs for real analysis!'
+                    : 'The system encountered an error with AI services. Please check your configuration.'
                   }
                 </p>
               </div>
 
               {/* Setup Instructions */}
-              {aiStatus === 'simulation' ? (
+              {aiStatus === 'error' ? (
                 <div className="bg-gradient-to-r from-purple-50 to-green-50 border border-purple-200 rounded-lg p-4">
                   <h3 className="font-medium text-purple-900 mb-2">🚀 Enable AI Analysis</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -563,26 +563,21 @@ export default function WaterChemistry() {
                 </div>
               )}
 
-              {/* Features Comparison */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-2">Current (Simulation)</h4>
-                  <ul className="space-y-1 text-gray-600">
-                    <li>• Basic water chemistry simulation</li>
-                    <li>• Consistent results for testing</li>
-                    <li>• No external API calls</li>
-                    <li>• Good for development</li>
-                  </ul>
-                </div>
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-2">With Real AI</h4>
-                  <ul className="space-y-1 text-gray-600">
-                    <li>• Test tube detection & analysis</li>
-                    <li>• Real color extraction & correction</li>
-                    <li>• AI-powered confidence scoring</li>
-                    <li>• Production-ready accuracy</li>
-                  </ul>
-                </div>
+              {/* Error Information */}
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <h4 className="font-medium text-red-900 mb-2">⚠️ AI Service Issue</h4>
+                <p className="text-sm text-red-800 mb-3">
+                  The system is unable to connect to AI services. This could be due to:
+                </p>
+                <ul className="text-sm text-red-700 space-y-1">
+                  <li>• Missing or invalid API keys</li>
+                  <li>• Network connectivity issues</li>
+                  <li>• AI service outages</li>
+                  <li>• Configuration errors</li>
+                </ul>
+                <p className="text-sm text-red-800 mt-3">
+                  Please check your API configuration and try again.
+                </p>
               </div>
             </div>
           </div>

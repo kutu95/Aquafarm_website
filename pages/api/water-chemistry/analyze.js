@@ -86,7 +86,7 @@ export default async function handler(req, res) {
         },
         processingNotes: process.env.OPEN_AI_KEY ? 'ChatGPT Expert Mode Enabled' : 
                         process.env.GOOGLE_CLOUD_VISION_API_KEY ? 'Google Vision Mode Enabled' : 
-                        'Simulation Mode (No API Keys)'
+                        'No AI Services Available'
       });
     }
 
@@ -110,9 +110,12 @@ export default async function handler(req, res) {
       // Fallback to Google Cloud Vision API
       analysisResults = await analyzeWithGoogleVision(imageData);
     } else {
-      console.log('No AI API keys found, using enhanced simulation');
-      // Fallback to enhanced simulation for development
-      analysisResults = await enhancedSimulation(imageData);
+      console.log('No AI API keys found');
+      return res.status(503).json({ 
+        error: 'No AI services available',
+        message: 'Please configure either ChatGPT or Google Cloud Vision API keys',
+        details: 'Add OPEN_AI_KEY or GOOGLE_CLOUD_VISION_API_KEY to your environment variables'
+      });
     }
 
     // Store the analysis in the database for future reference
@@ -253,21 +256,15 @@ Return your response as a JSON object with this exact structure:
       console.error('Failed to parse ChatGPT JSON response:', parseError);
       console.log('Raw ChatGPT response:', content);
       
-      // Fallback to enhanced simulation if parsing fails
-      console.log('Falling back to enhanced simulation due to parsing error');
-      return await enhancedSimulation(imageData);
+      // Return error if parsing fails
+      console.log('ChatGPT response parsing failed');
+      throw new Error('ChatGPT returned invalid JSON format');
     }
     
   } catch (error) {
     console.error('ChatGPT analysis error:', error);
-    // Fallback to Google Vision or simulation
-    if (process.env.GOOGLE_CLOUD_VISION_API_KEY) {
-      console.log('Falling back to Google Vision API');
-      return await analyzeWithGoogleVision(imageData);
-    } else {
-      console.log('Falling back to enhanced simulation');
-      return await enhancedSimulation(imageData);
-    }
+    // Return error - no fallbacks to simulation
+    throw new Error(`ChatGPT analysis failed: ${error.message}`);
   }
 }
 
@@ -327,8 +324,7 @@ async function analyzeWithGoogleVision(imageData) {
     
   } catch (error) {
     console.error('Google Cloud Vision error:', error);
-    // Fallback to enhanced simulation
-    return await enhancedSimulation(imageData);
+    throw new Error(`Google Cloud Vision API failed: ${error.message}`);
   }
 }
 
@@ -599,54 +595,4 @@ function estimateChemistryFromColors(dominantColors, baseConfidence) {
   return parameters;
 }
 
-async function enhancedSimulation(imageData) {
-  // Enhanced simulation that mimics real AI analysis
-  console.log('Using enhanced simulation (Google Cloud Vision not configured)');
-  
-  // Simulate processing time
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  
-  // Simulate AI analysis results with more realistic data
-  const analysisResults = {
-    success: true,
-    confidence: 0.85,
-    parameters: {
-      pH: {
-        value: 7.2,
-        status: 'good',
-        confidence: 0.88,
-        color: '#4CAF50',
-        notes: 'Simulated AI analysis - configure Google Cloud Vision for real results'
-      },
-      ammonia: {
-        value: 0.1,
-        status: 'warning',
-        confidence: 0.82,
-        color: '#FF9800',
-        notes: 'Simulated AI analysis - configure Google Cloud Vision for real results'
-      },
-      nitrite: {
-        value: 0.0,
-        status: 'good',
-        confidence: 0.95,
-        color: '#4CAF50',
-        notes: 'Simulated AI analysis - configure Google Cloud Vision for real results'
-      },
-      nitrate: {
-        value: 15.0,
-        status: 'good',
-        confidence: 0.87,
-        color: '#4CAF50',
-        notes: 'Simulated AI analysis - configure Google Cloud Vision for real results'
-      }
-    },
-    imageAnalysis: {
-      tubesDetected: 4,
-      imageQuality: 'good',
-      lightingConditions: 'natural',
-      processingNotes: 'Enhanced simulation - configure Google Cloud Vision API key for real AI analysis'
-    }
-  };
 
-  return analysisResults;
-}
