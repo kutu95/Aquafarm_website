@@ -46,6 +46,13 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Image data and filename are required' });
     }
 
+    // Debug: Log the request details
+    console.log('Request details:', {
+      filename,
+      imageDataLength: imageData ? imageData.length : 0,
+      isStatusCheck: filename === 'status-check.png'
+    });
+
     // Check payload size (base64 data can be large)
     const payloadSize = JSON.stringify(req.body).length;
     const maxSize = 10 * 1024 * 1024; // 10MB limit
@@ -67,7 +74,8 @@ export default async function handler(req, res) {
     }
 
     // Check if this is a status check request
-    if (filename === 'status-check.png' && imageData.length < 100) {
+    if (filename === 'status-check.png') {
+      console.log('Status check request detected, returning service availability');
       // Return status information without processing
       return res.status(200).json({
         status: 'ready',
