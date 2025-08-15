@@ -705,7 +705,7 @@ function analyzeWaterChemistryFromVision(dominantColors, objects, labels) {
   
   console.log('Final parameters object being returned:', JSON.stringify(parameters, null, 2));
   
-  // Ensure all variables are defined before returning
+  // Create the complete result object with all required properties
   const result = {
     tubesDetected: tubesDetected || 0,
     imageQuality: imageQuality || 'good',
@@ -858,13 +858,7 @@ function estimateChemistryFromColors(dominantColors, baseConfidence) {
   
   console.log('Final parameters object being returned:', JSON.stringify(parameters, null, 2));
   
-  return {
-    tubesDetected,
-    imageQuality,
-    lightingConditions,
-    confidence,
-    parameters
-  };
+  return parameters;
 }
 
 
