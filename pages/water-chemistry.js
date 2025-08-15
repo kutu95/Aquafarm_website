@@ -577,22 +577,24 @@ export default function WaterChemistry() {
                 </div>
               )}
 
-              {/* Error Information */}
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <h4 className="font-medium text-red-900 mb-2">⚠️ AI Service Issue</h4>
-                <p className="text-sm text-red-800 mb-3">
-                  The system is unable to connect to AI services. This could be due to:
-                </p>
-                <ul className="text-sm text-red-700 space-y-1">
-                  <li>• Missing or invalid API keys</li>
-                  <li>• Network connectivity issues</li>
-                  <li>• AI service outages</li>
-                  <li>• Configuration errors</li>
-                </ul>
-                <p className="text-sm text-red-800 mt-3">
-                  Please check your API configuration and try again.
-                </p>
-              </div>
+              {/* Error Information - Only show when there's an error */}
+              {aiStatus === 'error' && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <h4 className="font-medium text-red-900 mb-2">⚠️ AI Service Issue</h4>
+                  <p className="text-sm text-red-800 mb-3">
+                    The system is unable to connect to AI services. This could be due to:
+                  </p>
+                  <ul className="text-sm text-red-700 space-y-1">
+                    <li>• Missing or invalid API keys</li>
+                    <li>• Network connectivity issues</li>
+                    <li>• AI service outages</li>
+                    <li>• Configuration errors</li>
+                  </ul>
+                  <p className="text-sm text-red-800 mt-3">
+                    Please check your API configuration and try again.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>
