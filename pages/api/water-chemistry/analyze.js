@@ -130,16 +130,16 @@ async function analyzeWithGoogleVision(imageData) {
           },
           features: [
             {
-              type: 'LABEL_DETECTION',
-              maxResults: 10
-            },
-            {
               type: 'IMAGE_PROPERTIES',
-              maxResults: 1
+              maxResults: 20  // Get more colors for better analysis
             },
             {
               type: 'OBJECT_LOCALIZATION',
-              maxResults: 10
+              maxResults: 20  // Find more objects (test tubes)
+            },
+            {
+              type: 'LABEL_DETECTION',
+              maxResults: 15  // Identify what we're looking at
             }
           ]
         }
@@ -179,7 +179,10 @@ function processVisionResults(visionData, imageData) {
   try {
     console.log('Processing Google Cloud Vision results...');
     
-    // Extract image properties (colors, lighting)
+    // Debug: Log the full response structure
+    console.log('Full Vision API response structure:', JSON.stringify(visionData, null, 2));
+    
+    // Extract image properties (colors, lighting) - FIXED: Get more colors
     const imageProperties = visionData.responses[0]?.imagePropertiesAnnotation;
     const dominantColors = imageProperties?.dominantColors?.colors || [];
     
@@ -189,11 +192,36 @@ function processVisionResults(visionData, imageData) {
     // Extract labels (what the AI sees in the image)
     const labels = visionData.responses[0]?.labelAnnotations || [];
     
-    console.log('Vision analysis found:', {
-      dominantColors: dominantColors.length,
-      objects: objects.length,
-      labels: labels.map(l => l.description).slice(0, 5)
-    });
+    // Log detailed information for debugging
+    console.log('Detailed Vision analysis:');
+    console.log('- Dominant colors found:', dominantColors.length);
+    if (dominantColors.length > 0) {
+      console.log('- Color details:', dominantColors.map((color, i) => ({
+        index: i,
+        color: color.color,
+        score: color.score,
+        pixelFraction: color.pixelFraction
+      })));
+    }
+    
+    console.log('- Objects detected:', objects.length);
+    if (objects.length > 0) {
+      console.log('- Object details:', objects.map((obj, i) => ({
+        index: i,
+        name: obj.name,
+        confidence: obj.score,
+        boundingPoly: obj.boundingPoly
+      })));
+    }
+    
+    console.log('- Labels found:', labels.length);
+    if (labels.length > 0) {
+      console.log('- Label details:', labels.map((label, i) => ({
+        index: i,
+        description: label.description,
+        confidence: label.score
+      })));
+    }
 
     // Analyze the image for test tubes and colors
     const analysis = analyzeWaterChemistryFromVision(dominantColors, objects, labels);
@@ -210,7 +238,17 @@ function processVisionResults(visionData, imageData) {
         visionData: {
           dominantColors: dominantColors.length,
           objectsDetected: objects.length,
-          labelsFound: labels.length
+          labelsFound: labels.length,
+          // Add detailed color information
+          colorDetails: dominantColors.map(color => ({
+            rgb: color.color,
+            score: color.score,
+            pixelFraction: color.pixelFraction
+          })),
+          objectDetails: objects.map(obj => ({
+            name: obj.name,
+            confidence: obj.score
+          }))
         }
       }
     };
@@ -230,14 +268,29 @@ function analyzeWaterChemistryFromVision(dominantColors, objects, labels) {
   let lightingConditions = 'natural';
   let confidence = 0.85;
   
-  // Detect test tubes based on object analysis
-  const testTubeObjects = objects.filter(obj => 
-    obj.name.toLowerCase().includes('bottle') || 
-    obj.name.toLowerCase().includes('tube') ||
-    obj.name.toLowerCase().includes('container')
-  );
+  // Enhanced test tube detection based on object analysis
+  const testTubeObjects = objects.filter(obj => {
+    const name = obj.name.toLowerCase();
+    return name.includes('bottle') || 
+           name.includes('tube') ||
+           name.includes('container') ||
+           name.includes('vial') ||
+           name.includes('flask') ||
+           name.includes('beaker');
+  });
   
   tubesDetected = testTubeObjects.length;
+  
+  // Log test tube detection details
+  if (testTubeObjects.length > 0) {
+    console.log('Test tubes detected:', testTubeObjects.map(obj => ({
+      name: obj.name,
+      confidence: obj.score,
+      boundingBox: obj.boundingPoly
+    })));
+  } else {
+    console.log('No test tubes detected in objects');
+  }
   
   // Analyze lighting conditions
   if (dominantColors.length > 0) {
@@ -269,8 +322,10 @@ function analyzeWaterChemistryFromVision(dominantColors, objects, labels) {
 }
 
 function estimateChemistryFromColors(dominantColors, baseConfidence) {
-  // Simplified chemistry estimation based on dominant colors
-  // In production, this would use calibrated color-to-chemistry mappings
+  // Enhanced chemistry estimation based on actual color analysis
+  // This uses the real colors detected by Google Vision API
+  
+  console.log('Estimating chemistry from colors:', dominantColors.length, 'colors detected');
   
   const parameters = {
     pH: { value: 7.0, status: 'good', confidence: baseConfidence * 0.9, color: '#4CAF50', notes: 'Estimated from image analysis' },
@@ -279,21 +334,87 @@ function estimateChemistryFromColors(dominantColors, baseConfidence) {
     nitrate: { value: 10.0, status: 'good', confidence: baseConfidence * 0.87, color: '#4CAF50', notes: 'Estimated from image analysis' }
   };
   
-  // Adjust based on dominant colors if available
+  // Analyze each dominant color for chemistry clues
   if (dominantColors.length > 0) {
-    const primaryColor = dominantColors[0].color;
-    const red = primaryColor.red;
-    const green = primaryColor.green;
-    const blue = primaryColor.blue;
+    console.log('Analyzing dominant colors for chemistry...');
     
-    // Simple color-based adjustments (this would be much more sophisticated in production)
-    if (red > green && red > blue) {
-      parameters.pH.value = 6.8;
-      parameters.pH.notes = 'Slightly acidic - detected from image colors';
-    } else if (blue > red && blue > green) {
-      parameters.pH.value = 7.2;
-      parameters.pH.notes = 'Slightly alkaline - detected from image colors';
+    // Sort colors by pixel fraction (most prominent first)
+    const sortedColors = [...dominantColors].sort((a, b) => b.pixelFraction - a.pixelFraction);
+    
+    // Analyze the most prominent colors
+    for (let i = 0; i < Math.min(sortedColors.length, 5); i++) {
+      const color = sortedColors[i];
+      const rgb = color.color;
+      const red = rgb.red;
+      const green = rgb.green;
+      const blue = rgb.blue;
+      
+      console.log(`Color ${i + 1}: RGB(${red}, ${green}, ${blue}) - Score: ${color.score}, Pixels: ${color.pixelFraction}`);
+      
+      // pH estimation based on color analysis
+      if (i === 0) { // Most prominent color
+        if (red > green + 50 && red > blue + 50) {
+          // Red dominant - likely acidic
+          parameters.pH.value = 6.2;
+          parameters.pH.status = 'warning';
+          parameters.pH.notes = 'Acidic pH detected from dominant red color';
+          parameters.pH.color = '#FF5722';
+        } else if (blue > red + 50 && blue > green + 50) {
+          // Blue dominant - likely alkaline
+          parameters.pH.value = 8.1;
+          parameters.pH.status = 'warning';
+          parameters.pH.notes = 'Alkaline pH detected from dominant blue color';
+          parameters.pH.color = '#2196F3';
+        } else if (green > red + 30 && green > blue + 30) {
+          // Green dominant - likely neutral
+          parameters.pH.value = 7.0;
+          parameters.pH.notes = 'Neutral pH detected from dominant green color';
+        }
+      }
+      
+      // Ammonia detection (yellow/green colors often indicate ammonia)
+      if (green > red && green > blue && green > 150) {
+        if (red > 100 && red < 200) { // Yellow-green range
+          parameters.ammonia.value = 0.5;
+          parameters.ammonia.status = 'warning';
+          parameters.ammonia.notes = 'Potential ammonia detected from yellow-green color';
+          parameters.ammonia.color = '#FF9800';
+        }
+      }
+      
+      // Nitrite detection (pink/red colors often indicate nitrite)
+      if (red > green + 50 && red > blue + 50 && red > 180) {
+        if (blue > 100 && blue < 180) { // Pink range
+          parameters.nitrite.value = 0.25;
+          parameters.nitrite.status = 'warning';
+          parameters.nitrite.notes = 'Potential nitrite detected from pink color';
+          parameters.nitrite.color = '#E91E63';
+        }
+      }
+      
+      // Nitrate detection (orange/red colors often indicate nitrate)
+      if (red > 200 && green > 100 && green < 180 && blue < 100) {
+        parameters.nitrate.value = 20.0;
+        parameters.nitrate.status = 'warning';
+        parameters.nitrate.notes = 'Elevated nitrate detected from orange color';
+        parameters.nitrate.color = '#FF9800';
+      }
     }
+    
+    // Adjust confidence based on color analysis quality
+    if (dominantColors.length >= 3) {
+      parameters.pH.confidence *= 1.1;
+      parameters.ammonia.confidence *= 1.1;
+      parameters.nitrite.confidence *= 1.1;
+      parameters.nitrate.confidence *= 1.1;
+    }
+  } else {
+    console.log('No dominant colors detected - using default values');
+    // Reduce confidence when no colors are detected
+    parameters.pH.confidence *= 0.7;
+    parameters.ammonia.confidence *= 0.7;
+    parameters.nitrite.confidence *= 0.7;
+    parameters.nitrate.confidence *= 0.7;
   }
   
   return parameters;
