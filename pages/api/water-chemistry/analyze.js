@@ -396,15 +396,15 @@ async function analyzeWithGoogleVision(imageData) {
   try {
     console.log('Starting Google Cloud Vision analysis...');
     
-    // Convert base64 to buffer for Google Cloud Vision
-    const imageBuffer = Buffer.from(imageData, 'base64');
+    // The imageData is already base64, use it directly
+    // No need to convert to buffer and back to base64
     
     // Prepare the request for Google Cloud Vision API
     const visionRequest = {
       requests: [
         {
           image: {
-            content: imageBuffer.toString('base64')
+            content: imageData  // Use the base64 data directly
           },
           features: [
             {
@@ -424,6 +424,12 @@ async function analyzeWithGoogleVision(imageData) {
       ]
     };
 
+    console.log('Sending image to Google Cloud Vision:', {
+      imageDataLength: imageData.length,
+      imageDataPrefix: imageData.substring(0, 50) + '...',
+      requestSize: JSON.stringify(visionRequest).length
+    });
+
     // Call Google Cloud Vision API
     const response = await fetch(
       `https://vision.googleapis.com/v1/images:annotate?key=${process.env.GOOGLE_CLOUD_VISION_API_KEY}`,
@@ -437,7 +443,9 @@ async function analyzeWithGoogleVision(imageData) {
     );
 
     if (!response.ok) {
-      throw new Error(`Google Cloud Vision API error: ${response.status}`);
+      const errorText = await response.text();
+      console.error('Google Cloud Vision API error:', response.status, errorText);
+      throw new Error(`Google Cloud Vision API error: ${response.status} - ${errorText}`);
     }
 
     const visionData = await response.json();
