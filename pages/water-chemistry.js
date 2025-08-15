@@ -639,27 +639,9 @@ export default function WaterChemistry() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="mb-8">
-            <div className="flex justify-between items-center">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">Water Chemistry Analyzer</h1>
-                <p className="mt-2 text-gray-600">Upload an image of your water test tubes for AI-powered analysis</p>
-              </div>
-              <div className="flex space-x-3">
-                <Link
-                  href="/water-chemistry-records"
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
-                >
-                  <span>📊</span>
-                  <span>View Records</span>
-                </Link>
-                <Link
-                  href="/water-chemistry-records"
-                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors flex items-center space-x-2"
-                >
-                  <span>🏠</span>
-                  <span>Back to Records</span>
-                </Link>
-              </div>
+            <div className="text-center">
+              <h1 className="text-3xl font-bold text-gray-900">Water Chemistry Analyzer</h1>
+              <p className="mt-2 text-gray-600">Upload an image of your water test tubes for AI-powered analysis</p>
             </div>
           </div>
 
