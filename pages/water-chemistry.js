@@ -28,6 +28,39 @@ export default function WaterChemistry() {
     checkAiStatus();
   }, []);
 
+  // Ensure crop area is always visible when cropper is shown
+  useEffect(() => {
+    if (showCropper && imageRef.current) {
+      // If crop area is not visible, set a default one
+      if (cropArea.width === 0 || cropArea.height === 0) {
+        console.log('Setting fallback crop area');
+        setCropArea({
+          x: 50,
+          y: 50,
+          width: 200,
+          height: 200
+        });
+      }
+      
+      // Ensure crop area is within image bounds
+      const img = imageRef.current;
+      if (img && img.width > 0 && img.height > 0) {
+        const maxX = img.width - cropArea.width;
+        const maxY = img.height - cropArea.height;
+        
+        if (cropArea.x < 0 || cropArea.x > maxX || cropArea.y < 0 || cropArea.y > maxY) {
+          console.log('Crop area out of bounds, adjusting...');
+          setCropArea(prev => ({
+            x: Math.max(0, Math.min(prev.x, maxX)),
+            y: Math.max(0, Math.min(prev.y, maxY)),
+            width: prev.width,
+            height: prev.height
+          }));
+        }
+      }
+    }
+  }, [showCropper, cropArea.width, cropArea.height, cropArea.x, cropArea.y]);
+
   // Cropping functions
   const handleImageSelect = (file) => {
     const reader = new FileReader();
@@ -35,16 +68,25 @@ export default function WaterChemistry() {
       setSelectedImage(file);
       setImagePreview(e.target.result);
       setShowCropper(true);
-      // Initialize crop area to center of image
+      
+      // Wait for image to load before setting crop area
       const img = new Image();
       img.onload = () => {
-        const centerX = (img.width - 200) / 2;
-        const centerY = (img.height - 200) / 2;
+        console.log('Image loaded:', { width: img.width, height: img.height });
+        
+        // Set initial crop area to center of image
+        const centerX = Math.max(0, (img.width - 200) / 2);
+        const centerY = Math.max(0, (img.height - 200) / 2);
+        const initialWidth = Math.min(200, img.width);
+        const initialHeight = Math.min(200, img.height);
+        
+        console.log('Setting initial crop area:', { centerX, centerY, initialWidth, initialHeight });
+        
         setCropArea({
-          x: Math.max(0, centerX),
-          y: Math.max(0, centerY),
-          width: Math.min(200, img.width),
-          height: Math.min(200, img.height)
+          x: centerX,
+          y: centerY,
+          width: initialWidth,
+          height: initialHeight
         });
       };
       img.src = e.target.result;
@@ -573,6 +615,13 @@ export default function WaterChemistry() {
                             <div>• Drag the blue box to move</div>
                             <div>• Drag corners to resize</div>
                             <div>• Click "Crop & Analyze" when ready</div>
+                          </div>
+                          
+                          {/* Debug info */}
+                          <div className="absolute top-2 right-2 bg-red-500 bg-opacity-75 text-white text-xs p-2 rounded">
+                            <div className="font-medium">Debug:</div>
+                            <div>Show: {showCropper ? 'Yes' : 'No'}</div>
+                            <div>Area: {JSON.stringify(cropArea)}</div>
                           </div>
                           
                           {/* Crop area dimensions */}
