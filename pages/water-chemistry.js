@@ -302,16 +302,6 @@ export default function WaterChemistry() {
     const targetWidth = 800;
     const targetHeight = Math.round((scaledHeight * targetWidth) / scaledWidth);
     
-    console.log('=== CROP DEBUG START ===');
-    console.log('Original crop dimensions:', `${scaledWidth}x${scaledHeight}`);
-    console.log('Compressed dimensions:', `${targetWidth}x${targetHeight}`);
-    console.log('Aspect ratio preserved:', `${(scaledWidth / scaledHeight).toFixed(2)}:1 → ${(targetWidth / targetHeight).toFixed(2)}:1`);
-    console.log('Compression ratio:', `${((targetWidth * targetHeight) / (scaledWidth * scaledHeight) * 100).toFixed(1)}%`);
-    console.log('Cropped image data length:', croppedImageData.length);
-    console.log('Cropped image data prefix:', croppedImageData.substring(0, 100));
-    console.log('Has data URL prefix:', croppedImageData.startsWith('data:image'));
-    console.log('=== CROP DEBUG END ===');
-    
     // Create a new compressed canvas
     const compressedCanvas = document.createElement('canvas');
     const compressedCtx = compressedCanvas.getContext('2d');
@@ -327,6 +317,7 @@ export default function WaterChemistry() {
     console.log('=== CROP DEBUG START ===');
     console.log('Original crop dimensions:', `${scaledWidth}x${scaledHeight}`);
     console.log('Compressed dimensions:', `${targetWidth}x${targetHeight}`);
+    console.log('Aspect ratio preserved:', `${(scaledWidth / scaledHeight).toFixed(2)}:1 → ${(targetWidth / targetHeight).toFixed(2)}:1`);
     console.log('Compression ratio:', `${((targetWidth * targetHeight) / (scaledWidth * scaledHeight) * 100).toFixed(1)}%`);
     console.log('Cropped image data length:', croppedImageData.length);
     console.log('Cropped image data prefix:', croppedImageData.substring(0, 100));
