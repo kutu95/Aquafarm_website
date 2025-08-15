@@ -530,39 +530,6 @@ export default function WaterChemistry() {
     }
   };
 
-  const getRecommendations = (results) => {
-    const recommendations = [];
-    
-    // Check if we have the new API structure with parameters nested
-    const params = results.parameters || results;
-    
-    if (params.pH && params.pH.status === 'warning') {
-      if (params.pH.value < 6.5) {
-        recommendations.push('pH is low. Consider adding crushed coral or limestone to raise pH gradually.');
-      } else if (params.pH.value > 8.5) {
-        recommendations.push('pH is high. Consider adding driftwood or peat moss to lower pH gradually.');
-      }
-    }
-    
-    if (params.ammonia && (params.ammonia.status === 'warning' || params.ammonia.status === 'danger')) {
-      recommendations.push('Ammonia detected! Perform immediate water change and check for overfeeding or dead fish.');
-    }
-    
-    if (params.nitrite && (params.nitrite.status === 'warning' || params.nitrite.status === 'danger')) {
-      recommendations.push('Nitrite detected! Your tank may not be fully cycled. Perform water changes and add beneficial bacteria.');
-    }
-    
-    if (params.nitrate && (params.nitrate.status === 'warning' || params.nitrate.status === 'danger')) {
-      recommendations.push('Nitrate levels are high. Perform water change and check your filtration system.');
-    }
-    
-    if (recommendations.length === 0) {
-      recommendations.push('Your water parameters look good! Continue with regular maintenance.');
-    }
-    
-    return recommendations;
-  };
-
   if (loading) {
     return (
       <Layout>
@@ -1001,15 +968,21 @@ export default function WaterChemistry() {
 
               {/* Recommendations */}
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h3 className="font-medium text-blue-900 mb-3">💡 Recommendations</h3>
-                <ul className="space-y-2">
-                  {getRecommendations(results).map((recommendation, index) => (
-                    <li key={index} className="text-blue-800 text-sm flex items-start">
-                      <span className="mr-2">•</span>
-                      {recommendation}
-                    </li>
-                  ))}
-                </ul>
+                <h3 className="font-medium text-blue-900 mb-3">💡 AI Recommendations</h3>
+                {results.recommendations && results.recommendations.length > 0 ? (
+                  <ul className="space-y-2">
+                    {results.recommendations.map((recommendation, index) => (
+                      <li key={index} className="text-blue-800 text-sm flex items-start">
+                        <span className="mr-2">•</span>
+                        {recommendation}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-blue-700 text-sm italic">
+                    No specific recommendations available. Your water parameters appear to be within normal ranges.
+                  </p>
+                )}
               </div>
 
               {/* Disclaimer */}

@@ -275,6 +275,8 @@ For each parameter, provide:
 
 Focus ONLY on the test tube colors compared to the chart colors. Ignore background elements.
 
+Additionally, provide personalized recommendations based on the water chemistry values for an aquaponics system.
+
 RESPOND WITH ONLY THIS JSON STRUCTURE - NO OTHER TEXT:
 {
   "success": true,
@@ -285,6 +287,12 @@ RESPOND WITH ONLY THIS JSON STRUCTURE - NO OTHER TEXT:
     "nitrite": {"value": 0.0, "status": "good", "confidence": 0.88, "color": "#ADD8E6", "notes": "Light blue color matches chart at 0.0 ppm"},
     "nitrate": {"value": 80.0, "status": "danger", "confidence": 0.87, "color": "#FF0000", "notes": "Red color matches chart at 80.0 ppm"}
   },
+  "recommendations": [
+    "pH is low (6.0) - Consider adding crushed coral or limestone to raise pH gradually to 6.5-7.5 range",
+    "Ammonia is dangerously high (2.0 ppm) - Perform immediate 50% water change and check for overfeeding or dead fish",
+    "Nitrite is good (0.0 ppm) - Your tank is properly cycled for this parameter",
+    "Nitrate is very high (80.0 ppm) - Perform water change and check filtration system"
+  ],
   "imageAnalysis": {
     "tubesDetected": 4,
     "imageQuality": "good",
