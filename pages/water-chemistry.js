@@ -279,16 +279,29 @@ export default function WaterChemistry() {
       0, 0, scaledWidth, scaledHeight
     );
     
-    // Convert to base64
-    const croppedImageData = canvas.toDataURL('image/png');
-    setImagePreview(croppedImageData);
-    
-    // Convert base64 to file for upload
-    const base64Response = fetch(croppedImageData);
-    base64Response.then(res => res.blob()).then(blob => {
-      const croppedFile = new File([blob], selectedImage.name.replace(/\.[^/.]+$/, '_cropped.png'), { type: 'image/png' });
-      setSelectedImage(croppedFile);
-    });
+    // Convert canvas to blob directly (more reliable than toDataURL)
+    canvas.toBlob((blob) => {
+      if (blob) {
+        // Create a cropped file from the blob
+        const croppedFile = new File([blob], selectedImage.name.replace(/\.[^/.]+$/, '_cropped.png'), { 
+          type: 'image/png' 
+        });
+        setSelectedImage(croppedFile);
+        
+        // Also update the preview
+        const previewUrl = URL.createObjectURL(blob);
+        setImagePreview(previewUrl);
+        
+        console.log('Cropped image created successfully:', {
+          fileSize: blob.size,
+          fileName: croppedFile.name,
+          fileType: croppedFile.type,
+          canvasDimensions: `${canvas.width}x${canvas.height}`
+        });
+      } else {
+        console.error('Failed to create blob from canvas');
+      }
+    }, 'image/png', 0.95); // 95% quality for good balance
   };
 
   // Reference ranges for water chemistry tests
@@ -802,7 +815,7 @@ export default function WaterChemistry() {
                             <div className="font-medium">Debug:</div>
                             <div>Show: {showCropper ? 'Yes' : 'No'}</div>
                             <div>Area: {JSON.stringify(cropArea)}</div>
-                            <div>Dragging: {isDragging ? 'Yes' : 'No'}</div>
+                            <div>Dragging: {isDragging.toString()}</div>
                             <div>Resizing: {isResizing ? resizeHandle : 'No'}</div>
                             {imageRef.current && (
                               <>
