@@ -105,79 +105,84 @@ export default function WaterChemistry() {
   };
 
   const handleMouseDown = (e) => {
+    console.log('Mouse down event captured:', { 
+      clientX: e.clientX, 
+      clientY: e.clientY,
+      target: e.target,
+      currentTarget: e.currentTarget
+    });
+    
     e.preventDefault();
     e.stopPropagation();
     
-    if (!imageRef.current) return;
+    if (!imageRef.current) {
+      console.log('No image ref, returning');
+      return;
+    }
     
     // Get the image's actual position and size
     const rect = imageRef.current.getBoundingClientRect();
     
-    // Calculate coordinates relative to the displayed image (not natural size)
+    // Calculate coordinates relative to the displayed image
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     
-    // Calculate resize handle positions
-    const handleSize = 25; // Increased for easier clicking
-    const right = cropArea.x + cropArea.width;
-    const bottom = cropArea.y + cropArea.height;
-    
-    // Top-left handle bounds
-    const topLeftHandleX = cropArea.x - 12;
-    const topLeftHandleY = cropArea.y - 12;
-    const topLeftHandleBounds = {
-      x: topLeftHandleX - handleSize/2,
-      y: topLeftHandleY - handleSize/2,
-      width: handleSize,
-      height: handleSize
-    };
-    
-    // Bottom-right handle bounds
-    const bottomRightHandleX = right + 12;
-    const bottomRightHandleY = bottom + 12;
-    const bottomRightHandleBounds = {
-      x: bottomRightHandleX - handleSize/2,
-      y: bottomRightHandleY - handleSize/2,
-      width: handleSize,
-      height: handleSize
-    };
-    
-    console.log('Mouse down:', { 
+    console.log('Mouse down coordinates:', { 
       clientX: e.clientX, 
-      clientY: e.clientY, 
-      rectLeft: rect.left, 
+      clientY: e.clientY,
+      rectLeft: rect.left,
       rectTop: rect.top,
-      x, 
-      y, 
-      cropArea,
-      imageWidth: imageRef.current.width,
-      imageHeight: imageRef.current.height,
-      topLeftHandleBounds,
-      bottomRightHandleBounds
+      relativeX: x, 
+      relativeY: y,
+      cropArea
     });
     
     // Check if clicking on resize handles
-    // Bottom-right resize handle
-    if (x >= bottomRightHandleBounds.x && x <= bottomRightHandleBounds.x + bottomRightHandleBounds.width &&
-        y >= bottomRightHandleBounds.y && y <= bottomRightHandleBounds.y + bottomRightHandleBounds.height) {
+    const handleSize = 20;
+    
+    // Bottom-right handle
+    const bottomRightX = cropArea.x + cropArea.width;
+    const bottomRightY = cropArea.y + cropArea.height;
+    const inBottomRight = x >= bottomRightX - handleSize && x <= bottomRightX + handleSize && 
+                         y >= bottomRightY - handleSize && y <= bottomRightY + handleSize;
+    
+    // Top-left handle  
+    const topLeftX = cropArea.x;
+    const topLeftY = cropArea.y;
+    const inTopLeft = x >= topLeftX - handleSize && x <= topLeftX + handleSize && 
+                     y >= topLeftY - handleSize && y <= topLeftY + handleSize;
+    
+    console.log('Handle detection:', {
+      handleSize,
+      bottomRightX,
+      bottomRightY,
+      inBottomRight,
+      topLeftX,
+      topLeftY,
+      inTopLeft,
+      cropArea
+    });
+    
+    if (inBottomRight) {
       console.log('Bottom-right resize handle clicked!');
       setIsResizing(true);
       setResizeHandle('bottom-right');
-    }
-    // Top-left resize handle
-    else if (x >= topLeftHandleBounds.x && x <= topLeftHandleBounds.x + topLeftHandleBounds.width &&
-             y >= topLeftHandleBounds.y && y <= topLeftHandleBounds.y + topLeftHandleBounds.height) {
+      setDragStart({ x: x - cropArea.width, y: y - cropArea.height });
+      console.log('Set resizing state to true, handle to bottom-right');
+    } else if (inTopLeft) {
       console.log('Top-left resize handle clicked!');
       setIsResizing(true);
       setResizeHandle('top-left');
-    }
-    // Check if clicking inside crop area for dragging
-    else if (x >= cropArea.x && x <= right && y >= cropArea.y && y <= bottom) {
-      console.log('Crop area clicked for dragging');
+      setDragStart({ x, y });
+      console.log('Set resizing state to true, handle to top-left');
+    } else if (x >= cropArea.x && x <= cropArea.x + cropArea.width && 
+               y >= cropArea.y && y <= cropArea.y + cropArea.height) {
+      console.log('Inside crop area - starting drag');
       setIsDragging(true);
       setDragStart({ x: x - cropArea.x, y: y - cropArea.y });
+      console.log('Set dragging state to true');
     } else {
-      console.log('Clicked outside crop area and handles');
+      console.log('Outside crop area - no action');
     }
   };
 
