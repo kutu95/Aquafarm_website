@@ -12,14 +12,123 @@ export default function WaterChemistry() {
   const [error, setError] = useState(null);
   const [useChatGPT, setUseChatGPT] = useState(true); // Toggle for AI service choice
   const [aiStatus, setAiStatus] = useState('checking'); // 'checking', 'chatgpt', 'google', 'error'
+  const [showCropper, setShowCropper] = useState(false);
+  const [cropArea, setCropArea] = useState({ x: 0, y: 0, width: 200, height: 200 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [isResizing, setIsResizing] = useState(false);
+  const [resizeHandle, setResizeHandle] = useState(null);
+  
   const fileInputRef = useRef(null);
+  const imageRef = useRef();
+  const canvasRef = useRef();
 
   // Check AI status when component mounts
   useEffect(() => {
-    if (user) {
-      checkAiStatus();
+    checkAiStatus();
+  }, []);
+
+  // Cropping functions
+  const handleImageSelect = (file) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setSelectedImage(file);
+      setImagePreview(e.target.result);
+      setShowCropper(true);
+      // Initialize crop area to center of image
+      const img = new Image();
+      img.onload = () => {
+        const centerX = (img.width - 200) / 2;
+        const centerY = (img.height - 200) / 2;
+        setCropArea({
+          x: Math.max(0, centerX),
+          y: Math.max(0, centerY),
+          width: Math.min(200, img.width),
+          height: Math.min(200, img.height)
+        });
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const startCrop = () => {
+    setShowCropper(false);
+    cropImage();
+  };
+
+  const handleMouseDown = (e) => {
+    const rect = imageRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    // Check if clicking on resize handles
+    const handleSize = 10;
+    const right = cropArea.x + cropArea.width;
+    const bottom = cropArea.y + cropArea.height;
+    
+    if (x >= right - handleSize && x <= right && y >= bottom - handleSize && y <= bottom) {
+      setIsResizing(true);
+      setResizeHandle('bottom-right');
+    } else if (x >= cropArea.x && x <= right && y >= cropArea.y && y <= bottom) {
+      setIsDragging(true);
+      setDragStart({ x: x - cropArea.x, y: y - cropArea.y });
     }
-  }, [user]);
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDragging && !isResizing) return;
+    
+    const rect = imageRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    if (isDragging) {
+      const newX = Math.max(0, Math.min(x - dragStart.x, imageRef.current.width - cropArea.width));
+      const newY = Math.max(0, Math.min(y - dragStart.y, imageRef.current.height - cropArea.height));
+      setCropArea(prev => ({ ...prev, x: newX, y: newY }));
+    } else if (isResizing) {
+      const newWidth = Math.max(50, Math.min(x - cropArea.x, imageRef.current.width - cropArea.x));
+      const newHeight = Math.max(50, Math.min(y - cropArea.y, imageRef.current.height - cropArea.y));
+      setCropArea(prev => ({ ...prev, width: newWidth, height: newHeight }));
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+    setIsResizing(false);
+    setResizeHandle(null);
+  };
+
+  const cropImage = () => {
+    if (!imageRef.current || !canvasRef.current) return;
+    
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    const img = imageRef.current;
+    
+    // Set canvas size to crop area
+    canvas.width = cropArea.width;
+    canvas.height = cropArea.height;
+    
+    // Draw cropped portion
+    ctx.drawImage(
+      img,
+      cropArea.x, cropArea.y, cropArea.width, cropArea.height,
+      0, 0, cropArea.width, cropArea.height
+    );
+    
+    // Convert to base64
+    const croppedImageData = canvas.toDataURL('image/png');
+    setImagePreview(croppedImageData);
+    
+    // Convert base64 to file for upload
+    const base64Response = fetch(croppedImageData);
+    base64Response.then(res => res.blob()).then(blob => {
+      const croppedFile = new File([blob], selectedImage.name.replace(/\.[^/.]+$/, '_cropped.png'), { type: 'image/png' });
+      setSelectedImage(croppedFile);
+    });
+  };
 
   // Reference ranges for water chemistry tests
   const referenceRanges = {
@@ -27,32 +136,6 @@ export default function WaterChemistry() {
     ammonia: { min: 0, max: 0.25, unit: 'ppm', description: 'Should be 0 for healthy water' },
     nitrite: { min: 0, max: 0.5, unit: 'ppm', description: 'Should be 0 for healthy water' },
     nitrate: { min: 0, max: 40, unit: 'ppm', description: 'Low levels are acceptable' }
-  };
-
-  const handleImageSelect = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      // Validate file type
-      if (!file.type.startsWith('image/')) {
-        setError('Please select an image file');
-        return;
-      }
-      
-      // Validate file size (max 10MB)
-      if (file.size > 10 * 1024 * 1024) {
-        setError('Image file size must be less than 10MB');
-        return;
-      }
-
-      setSelectedImage(file);
-      setError(null);
-      setResults(null);
-      
-      // Create preview
-      const reader = new FileReader();
-      reader.onload = (e) => setImagePreview(e.target.result);
-      reader.readAsDataURL(file);
-    }
   };
 
   const analyzeWaterChemistry = async () => {
@@ -375,15 +458,20 @@ export default function WaterChemistry() {
                   ref={fileInputRef}
                   type="file"
                   accept="image/*"
-                  onChange={handleImageSelect}
+                  onChange={(e) => handleImageSelect(e.target.files[0])}
                   className="hidden"
                 />
                 
                 {!imagePreview ? (
-                  <div>
-                    <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
-                      <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
+                  <>
+                    <div className="text-gray-400 mb-4">
+                      <svg className="mx-auto h-12 w-12" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                        <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </div>
+                    <p className="text-lg font-medium text-gray-900 mb-2">
+                      Upload Water Chemistry Test Image
+                    </p>
                     <p className="mt-2 text-sm text-gray-600">
                       <button
                         onClick={() => fileInputRef.current?.click()}
@@ -394,34 +482,131 @@ export default function WaterChemistry() {
                       or drag and drop
                     </p>
                     <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
-                    <p className="text-xs text-blue-600 mt-1">
-                      💡 The system automatically includes the official API color chart for accurate readings
+                    <p className="text-xs text-blue-600 mt-2">
+                      💡 Tip: Crop your image to focus only on the test tubes for better accuracy and lower costs
                     </p>
-                  </div>
+                  </>
                 ) : (
-                  <div>
-                    <img src={imagePreview} alt="Test kit preview" className="mx-auto max-h-64 rounded-lg" />
-                    <div className="mt-4 space-x-2">
-                      <button
-                        onClick={() => fileInputRef.current?.click()}
-                        className="px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-500"
-                      >
-                        Change Image
-                      </button>
-                      <button
-                        onClick={() => {
-                          setSelectedImage(null);
-                          setImagePreview(null);
-                          setResults(null);
-                        }}
-                        className="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-500"
-                      >
-                        Remove
-                      </button>
+                  <div className="space-y-4">
+                    <div className="relative inline-block">
+                      {showCropper ? (
+                        <div className="relative">
+                          <img
+                            ref={imageRef}
+                            src={imagePreview}
+                            alt="Preview"
+                            className="max-w-full max-h-96 object-contain"
+                            onMouseDown={handleMouseDown}
+                            onMouseMove={handleMouseMove}
+                            onMouseUp={handleMouseUp}
+                            onMouseLeave={handleMouseUp}
+                          />
+                          {/* Crop overlay */}
+                          <div
+                            className="absolute border-2 border-blue-500 bg-blue-500 bg-opacity-20 cursor-move"
+                            style={{
+                              left: cropArea.x,
+                              top: cropArea.y,
+                              width: cropArea.width,
+                              height: cropArea.height
+                            }}
+                          >
+                            {/* Resize handle */}
+                            <div
+                              className="absolute w-3 h-3 bg-blue-600 border border-white rounded-full cursor-se-resize"
+                              style={{
+                                right: '-6px',
+                                bottom: '-6px'
+                              }}
+                            />
+                          </div>
+                          {/* Instructions */}
+                          <div className="absolute top-2 left-2 bg-black bg-opacity-75 text-white text-xs p-2 rounded">
+                            Drag to move • Drag corner to resize • Click "Crop & Analyze" when ready
+                          </div>
+                        </div>
+                      ) : (
+                        <img
+                          src={imagePreview}
+                          alt="Cropped preview"
+                          className="max-w-full max-h-96 object-contain"
+                        />
+                      )}
                     </div>
+                    
+                    {showCropper ? (
+                      <div className="space-y-2">
+                        <button
+                          onClick={startCrop}
+                          className="px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700"
+                        >
+                          ✂️ Crop & Analyze
+                        </button>
+                        <button
+                          onClick={() => {
+                            setShowCropper(false);
+                            setImagePreview(null);
+                            setSelectedImage(null);
+                          }}
+                          className="px-4 py-2 bg-gray-500 text-white font-medium rounded-lg hover:bg-gray-600 ml-2"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <button
+                          onClick={() => setShowCropper(true)}
+                          className="px-4 py-2 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600"
+                        >
+                          ✂️ Re-crop Image
+                        </button>
+                        <button
+                          onClick={() => {
+                            setImagePreview(null);
+                            setSelectedImage(null);
+                          }}
+                          className="px-4 py-2 bg-gray-500 text-white font-medium rounded-lg hover:bg-gray-600 ml-2"
+                        >
+                          Remove Image
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
+
+              {/* Hidden canvas for cropping */}
+              <canvas ref={canvasRef} className="hidden" />
+
+              {/* Cropping styles */}
+              <style jsx>{`
+                .crop-image {
+                  user-select: none;
+                  -webkit-user-select: none;
+                  -moz-user-select: none;
+                  -ms-user-select: none;
+                }
+                .crop-image img {
+                  max-width: 100%;
+                  max-height: 400px;
+                  object-fit: contain;
+                }
+                .crop-overlay {
+                  transition: all 0.1s ease;
+                }
+                .crop-overlay:hover {
+                  border-color: #3b82f6;
+                  background-color: rgba(59, 130, 246, 0.3);
+                }
+                .resize-handle {
+                  transition: all 0.1s ease;
+                }
+                .resize-handle:hover {
+                  transform: scale(1.2);
+                  background-color: #1d4ed8;
+                }
+              `}</style>
 
               {/* Error Display */}
               {error && (
@@ -431,7 +616,7 @@ export default function WaterChemistry() {
               )}
 
               {/* Analyze Button */}
-              {selectedImage && (
+              {selectedImage && !showCropper && (
                 <div className="text-center">
                   <button
                     onClick={analyzeWaterChemistry}
@@ -447,6 +632,9 @@ export default function WaterChemistry() {
                       `🔬 Analyze with ${useChatGPT ? 'ChatGPT + Color Chart' : 'Google Vision'}`
                     )}
                   </button>
+                  <p className="text-xs text-gray-600 mt-2">
+                    💰 Token cost: ~${useChatGPT ? '0.01-0.03' : '0.005-0.015'} (cropped image reduces cost)
+                  </p>
                 </div>
               )}
             </div>
