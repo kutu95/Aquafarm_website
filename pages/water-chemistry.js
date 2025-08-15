@@ -680,6 +680,32 @@ export default function WaterChemistry() {
                                 setIsResizing(true);
                                 setResizeHandle('top-left');
                                 console.log('Set resizing state to true, handle to top-left');
+                                
+                                // Add global mouse event listeners for this handle
+                                const handleMouseMove = (moveEvent) => {
+                                  if (isResizing && resizeHandle === 'top-left') {
+                                    const rect = imageRef.current.getBoundingClientRect();
+                                    const x = moveEvent.clientX - rect.left;
+                                    const y = moveEvent.clientY - rect.top;
+                                    
+                                    const newX = Math.max(0, Math.min(x, cropArea.x + cropArea.width - 50));
+                                    const newY = Math.max(0, Math.min(y, cropArea.y + cropArea.height - 50));
+                                    const newWidth = cropArea.x + cropArea.width - newX;
+                                    const newHeight = cropArea.y + cropArea.height - newY;
+                                    
+                                    setCropArea({ x: newX, y: newY, width: newWidth, height: newHeight });
+                                  }
+                                };
+                                
+                                const handleMouseUp = () => {
+                                  setIsResizing(false);
+                                  setResizeHandle(null);
+                                  document.removeEventListener('mousemove', handleMouseMove);
+                                  document.removeEventListener('mouseup', handleMouseUp);
+                                };
+                                
+                                document.addEventListener('mousemove', handleMouseMove);
+                                document.addEventListener('mouseup', handleMouseUp);
                               }}
                             />
                             {/* Bottom-right resize handle */}
@@ -702,6 +728,30 @@ export default function WaterChemistry() {
                                 setIsResizing(true);
                                 setResizeHandle('bottom-right');
                                 console.log('Set resizing state to true, handle to bottom-right');
+                                
+                                // Add global mouse event listeners for this handle
+                                const handleMouseMove = (moveEvent) => {
+                                  if (isResizing && resizeHandle === 'bottom-right') {
+                                    const rect = imageRef.current.getBoundingClientRect();
+                                    const x = moveEvent.clientX - rect.left;
+                                    const y = moveEvent.clientY - rect.top;
+                                    
+                                    const newWidth = Math.max(50, x - cropArea.x);
+                                    const newHeight = Math.max(50, y - cropArea.y);
+                                    
+                                    setCropArea(prev => ({ ...prev, width: newWidth, height: newHeight }));
+                                  }
+                                };
+                                
+                                const handleMouseUp = () => {
+                                  setIsResizing(false);
+                                  setResizeHandle(null);
+                                  document.removeEventListener('mousemove', handleMouseMove);
+                                  document.removeEventListener('mouseup', handleMouseUp);
+                                };
+                                
+                                document.addEventListener('mousemove', handleMouseMove);
+                                document.addEventListener('mouseup', handleMouseUp);
                               }}
                             />
                             {/* Center drag indicator */}
