@@ -323,12 +323,12 @@ export default function WaterChemistry() {
     });
   };
 
-  // Reference ranges for water chemistry tests
+  // Reference targets for this aquaponics system
   const referenceRanges = {
-    pH: { min: 6.5, max: 8.5, unit: '', description: 'Slightly acidic to slightly alkaline' },
-    ammonia: { min: 0, max: 0.25, unit: 'ppm', description: 'Should be 0 for healthy water' },
-    nitrite: { min: 0, max: 0.5, unit: 'ppm', description: 'Should be 0 for healthy water' },
-    nitrate: { min: 0, max: 40, unit: 'ppm', description: 'Low levels are acceptable' }
+    pH: { min: 6.4, max: 6.4, unit: '', description: 'Target pH for optimal plant and fish health' },
+    ammonia: { min: 0, max: 0.25, unit: 'ppm', description: 'Keep below 0.25 ppm' },
+    nitrite: { min: 0, max: 0, unit: 'ppm', description: 'Must be 0 ppm' },
+    nitrate: { min: 10, max: 40, unit: 'ppm', description: 'Target range for plant growth' }
   };
 
   const analyzeWaterChemistry = async () => {
@@ -951,9 +951,9 @@ export default function WaterChemistry() {
                 ))}
               </div>
 
-              {/* Reference Ranges */}
+              {/* Reference Targets */}
               <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                <h3 className="font-medium text-gray-900 mb-3">📋 Reference Ranges</h3>
+                <h3 className="font-medium text-gray-900 mb-3">📋 Reference Targets</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                   {Object.entries(referenceRanges).map(([parameter, range]) => (
                     <div key={parameter} className="flex justify-between">
