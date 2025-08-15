@@ -258,10 +258,9 @@ async function analyzeWithChatGPT(imageData, filename) {
     const contentArray = [
       {
         type: 'text',
-        text: `You are an expert aquaponics water chemistry analyst. Analyze this image of water test kit tubes to determine the pH, ammonia, nitrite, and nitrate levels.
+        text: `You are an educational assistant helping with aquaponics water quality testing. You will analyze TWO images:
 
-IMPORTANT: This is an API Freshwater Master Test Kit. You will see TWO images:
-1. The user's test tube image (water chemistry test tubes from an aquaponics system)
+1. A user's test tube image (water chemistry test tubes from an aquaponics system)
 2. The official API Freshwater Master Test Kit color chart (with standardized color scales)
 
 CRITICAL: You MUST respond with ONLY valid JSON. No explanations, no additional text, no markdown formatting.
@@ -311,7 +310,17 @@ RESPOND WITH ONLY THIS JSON STRUCTURE - NO OTHER TEXT:
           url: colorChart.dataUrl
         }
       });
+      console.log('✅ Color chart added to ChatGPT request');
+    } else {
+      console.log('❌ Color chart not available - using fallback');
     }
+
+    console.log('Final content array for ChatGPT:', {
+      textLength: contentArray[0].text.length,
+      hasTestTubesImage: contentArray[1]?.type === 'image_url',
+      hasColorChart: contentArray[2]?.type === 'image_url',
+      totalItems: contentArray.length
+    });
 
     // Send images to ChatGPT
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
