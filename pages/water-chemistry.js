@@ -43,37 +43,73 @@ export default function WaterChemistry() {
 
   // Function to extract date from image metadata or filename
   const extractDateFromImage = async (file) => {
-    try {
-      console.log('Starting date extraction for file:', file.name);
+    return new Promise((resolve) => {
+      // Add overall timeout to prevent hanging
+      const overallTimeout = setTimeout(() => {
+        console.log('Overall date extraction timed out, resolving with null');
+        setUploadStatus(`📅 Date extraction timed out, continuing without date...`);
+        resolve(null);
+      }, 8000); // 8 second overall timeout
       
-      // First try to extract date from filename (takes precedence)
-      const filenameDate = extractDateFromFilename(file.name);
-      if (filenameDate) {
-        console.log('Date extracted from filename (takes precedence):', filenameDate);
-        return filenameDate;
-      }
+      const extractDate = async () => {
+        try {
+          console.log('Starting date extraction for file:', file.name);
+          
+          // First try to extract date from filename (takes precedence)
+          setUploadStatus(`📅 Checking filename for date: ${file.name}`);
+          const filenameDate = extractDateFromFilename(file.name);
+          if (filenameDate) {
+            console.log('Date extracted from filename (takes precedence):', filenameDate);
+            setUploadStatus(`📅 Date found in filename: ${filenameDate}`);
+            clearTimeout(overallTimeout);
+            resolve(filenameDate);
+            return;
+          }
+          
+          // Fallback to EXIF metadata if no filename date found
+          setUploadStatus(`📅 No filename date, checking EXIF metadata...`);
+          const exifDate = await extractDateFromExif(file);
+          if (exifDate) {
+            console.log('Date extracted from EXIF metadata:', exifDate);
+            setUploadStatus(`📅 Date found in EXIF: ${exifDate}`);
+            clearTimeout(overallTimeout);
+            resolve(exifDate);
+            return;
+          }
+          
+          console.log('No date found in image, using today');
+          setUploadStatus(`📅 No date found, will use today's date`);
+          clearTimeout(overallTimeout);
+          resolve(null); // Will use today's date as fallback
+        } catch (error) {
+          console.error('Error extracting date from image:', error);
+          setUploadStatus(`❌ Date extraction error: ${error.message}`);
+          clearTimeout(overallTimeout);
+          resolve(null);
+        }
+      };
       
-      // Fallback to EXIF metadata if no filename date found
-      const exifDate = await extractDateFromExif(file);
-      if (exifDate) {
-        console.log('Date extracted from EXIF metadata:', exifDate);
-        return exifDate;
-      }
-      
-      console.log('No date found in image, using today');
-      return null; // Will use today's date as fallback
-    } catch (error) {
-      console.error('Error extracting date from image:', error);
-      return null;
-    }
+      extractDate();
+    });
   };
 
-  // Extract date from EXIF metadata
+  // Extract date from EXIF metadata with timeout
   const extractDateFromExif = (file) => {
     return new Promise((resolve) => {
+      // Add timeout to prevent hanging
+      const timeout = setTimeout(() => {
+        console.log('EXIF extraction timed out, resolving with null');
+        setUploadStatus(`📅 EXIF extraction timed out, continuing...`);
+        resolve(null);
+      }, 5000); // 5 second timeout
+      
       const reader = new FileReader();
+      
       reader.onload = (e) => {
         try {
+          clearTimeout(timeout);
+          console.log('EXIF reader onload triggered');
+          
           // Look for EXIF data in the image
           const arrayBuffer = e.target.result;
           const uint8Array = new Uint8Array(arrayBuffer);
@@ -88,6 +124,7 @@ export default function WaterChemistry() {
           }
           
           if (exifStart !== -1) {
+            console.log('EXIF marker found, parsing date patterns');
             // Try to find date fields in EXIF data
             const exifData = uint8Array.slice(exifStart);
             const exifString = new TextDecoder().decode(exifData);
@@ -111,6 +148,7 @@ export default function WaterChemistry() {
                 
                 const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
                 if (!isNaN(date.getTime())) {
+                  console.log('EXIF date found:', date.toISOString().split('T')[0]);
                   resolve(date.toISOString().split('T')[0]);
                   return;
                 }
@@ -118,12 +156,23 @@ export default function WaterChemistry() {
             }
           }
           
+          console.log('No EXIF date found');
           resolve(null);
         } catch (error) {
+          clearTimeout(timeout);
           console.error('Error parsing EXIF data:', error);
+          setUploadStatus(`📅 EXIF parsing error: ${error.message}`);
           resolve(null);
         }
       };
+      
+      reader.onerror = (error) => {
+        clearTimeout(timeout);
+        console.error('EXIF reader error:', error);
+        setUploadStatus(`📅 EXIF reader error: ${error.message}`);
+        resolve(null);
+      };
+      
       reader.readAsArrayBuffer(file);
     });
   };
