@@ -691,10 +691,17 @@ export default function WaterChemistry() {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
       
+      // Get the current user's access token for authentication
+      const { data: { session } } = await supabase.auth.getSession();
+      const accessToken = session?.access_token;
+      
+      console.log('About to make API call with token:', accessToken ? 'present' : 'missing');
+      
       const response = await fetch('/api/water-chemistry/analyze', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(accessToken && { 'Authorization': `Bearer ${accessToken}` }),
         },
         credentials: 'include', // Include cookies for authentication
         signal: controller.signal,

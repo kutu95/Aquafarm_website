@@ -15,6 +15,17 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  console.log('=== ANALYZE API DEBUG START ===');
+  console.log('Request method:', req.method);
+  console.log('Request URL:', req.url);
+  console.log('Request headers:', req.headers);
+  console.log('Request cookies:', req.cookies);
+  console.log('Cookie names present:', Object.keys(req.cookies));
+  console.log('NODE_ENV:', process.env.NODE_ENV);
+  console.log('SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL ? 'Set' : 'Not set');
+  console.log('SUPABASE_ANON_KEY:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'Set' : 'Not set');
+  console.log('OPEN_AI_KEY:', process.env.OPEN_AI_KEY ? 'SET' : 'NOT SET');
+
   try {
     // Create server-side Supabase client with cookie handling
     const supabase = createServerClient(
@@ -61,6 +72,7 @@ export default async function handler(req, res) {
     );
 
     // Get the user session from cookies
+    console.log('Attempting to get user session...');
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
     
     // Debug: Log cookie and session information
@@ -75,10 +87,33 @@ export default async function handler(req, res) {
     if (!session) {
       console.log('No session found in API request');
       console.log('Available cookies:', req.cookies);
-      return res.status(401).json({ error: 'Unauthorized - No valid session' });
+      
+      // Try alternative authentication method - check for Authorization header
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        console.log('Found Authorization header, attempting token-based auth...');
+        const token = authHeader.substring(7);
+        
+        try {
+          const { data: { user }, error: tokenError } = await supabase.auth.getUser(token);
+          if (user && !tokenError) {
+            console.log('Token-based authentication successful for user:', user.id);
+            // Continue with the user from token
+          } else {
+            console.error('Token-based authentication failed:', tokenError);
+            return res.status(401).json({ error: 'Invalid token' });
+          }
+        } catch (tokenAuthError) {
+          console.error('Token authentication error:', tokenAuthError);
+          return res.status(401).json({ error: 'Token authentication failed' });
+        }
+      } else {
+        console.log('No Authorization header found');
+        return res.status(401).json({ error: 'Unauthorized - No valid session' });
+      }
     }
 
-    console.log('API Request authenticated for user:', session.user.id);
+    console.log('API Request authenticated for user:', session?.user?.id || 'token-based user');
 
     // Extract request data
     const { imageData, filename } = req.body;
