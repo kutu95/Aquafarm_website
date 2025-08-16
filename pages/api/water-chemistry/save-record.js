@@ -48,6 +48,23 @@ export default async function handler(req, res) {
       }
     );
 
+    // Create a service role client for database operations (bypasses RLS)
+    const supabaseService = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY,
+      {
+        cookies: {
+          get: (name) => req.cookies[name],
+          set: (name, value, options) => {
+            // Service client doesn't need to set cookies
+          },
+          remove: (name) => {
+            // Service client doesn't need to remove cookies
+          },
+        },
+      }
+    );
+
     console.log('Supabase client created successfully');
 
     // Get user session
@@ -151,7 +168,7 @@ export default async function handler(req, res) {
 
     // Check if record already exists for this date
     console.log('Checking for existing record...');
-    const { data: existingRecord, error: checkError } = await supabase
+    const { data: existingRecord, error: checkError } = await supabaseService
       .from('water_chemistry_records')
       .select('id')
       .eq('user_id', authenticatedUser.id)
@@ -170,7 +187,7 @@ export default async function handler(req, res) {
     if (existingRecord) {
       // Update existing record
       console.log('Updating existing record with ID:', existingRecord.id);
-      const { data, error } = await supabase
+      const { data, error } = await supabaseService
         .from('water_chemistry_records')
         .update({
           ph: cleanData.ph,
@@ -197,7 +214,7 @@ export default async function handler(req, res) {
     } else {
       // Insert new record
       console.log('Inserting new record...');
-      const { data, error } = await supabase
+      const { data, error } = await supabaseService
         .from('water_chemistry_records')
         .insert({
           user_id: authenticatedUser.id,
