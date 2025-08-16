@@ -79,12 +79,18 @@ export default async function handler(req, res) {
     console.log('API Request cookies:', Object.keys(req.cookies));
     console.log('API Request session result:', { hasSession: !!session, sessionError, userId: session?.user?.id });
     
+    let authenticatedUser = null;
+    
     if (sessionError) {
       console.error('Session error:', sessionError);
       return res.status(401).json({ error: 'Authentication error', details: sessionError.message });
     }
     
-    if (!session) {
+    if (session && session.user) {
+      // Cookie-based authentication successful
+      authenticatedUser = session.user;
+      console.log('Cookie-based authentication successful for user:', authenticatedUser.id);
+    } else {
       console.log('No session found in API request');
       console.log('Available cookies:', req.cookies);
       
@@ -97,8 +103,8 @@ export default async function handler(req, res) {
         try {
           const { data: { user }, error: tokenError } = await supabase.auth.getUser(token);
           if (user && !tokenError) {
-            console.log('Token-based authentication successful for user:', user.id);
-            // Continue with the user from token
+            authenticatedUser = user;
+            console.log('Token-based authentication successful for user:', authenticatedUser.id);
           } else {
             console.error('Token-based authentication failed:', tokenError);
             return res.status(401).json({ error: 'Invalid token' });
@@ -113,7 +119,12 @@ export default async function handler(req, res) {
       }
     }
 
-    console.log('API Request authenticated for user:', session?.user?.id || 'token-based user');
+    if (!authenticatedUser) {
+      console.error('No authenticated user found after all authentication methods');
+      return res.status(401).json({ error: 'Authentication failed - no valid user' });
+    }
+
+    console.log('API Request authenticated for user:', authenticatedUser.id);
 
     // Extract request data
     const { imageData, filename } = req.body;
@@ -244,7 +255,7 @@ export default async function handler(req, res) {
     const { data: analysisRecord, error: dbError } = await supabase
       .from('water_chemistry_analyses')
       .insert({
-        user_id: session.user.id,
+        user_id: authenticatedUser.id,
         filename: filename,
         results: analysisResults,
         created_at: new Date().toISOString()
