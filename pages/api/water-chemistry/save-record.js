@@ -67,6 +67,29 @@ export default async function handler(req, res) {
       record_date, ph, ammonia, nitrite, nitrate, dissolved_oxygen, water_temperature, confidence, notes
     });
 
+    // Clean numeric fields - convert empty strings to null
+    const cleanNumericField = (value) => {
+      if (value === '' || value === undefined || value === null) {
+        return null;
+      }
+      const num = parseFloat(value);
+      return isNaN(num) ? null : num;
+    };
+
+    const cleanData = {
+      record_date,
+      ph: cleanNumericField(ph),
+      ammonia: cleanNumericField(ammonia),
+      nitrite: cleanNumericField(nitrite),
+      nitrate: cleanNumericField(nitrate),
+      dissolved_oxygen: cleanNumericField(dissolved_oxygen),
+      water_temperature: cleanNumericField(water_temperature),
+      confidence: cleanNumericField(confidence),
+      notes: notes || null
+    };
+
+    console.log('Cleaned data for database:', cleanData);
+
     // Validate required fields
     if (!record_date) {
       console.log('Validation failed: No record_date');
@@ -106,14 +129,14 @@ export default async function handler(req, res) {
       const { data, error } = await supabase
         .from('water_chemistry_records')
         .update({
-          ph,
-          ammonia,
-          nitrite,
-          nitrate,
-          dissolved_oxygen,
-          water_temperature,
-          confidence,
-          notes,
+          ph: cleanData.ph,
+          ammonia: cleanData.ammonia,
+          nitrite: cleanData.nitrite,
+          nitrate: cleanData.nitrate,
+          dissolved_oxygen: cleanData.dissolved_oxygen,
+          water_temperature: cleanData.water_temperature,
+          confidence: cleanData.confidence,
+          notes: cleanData.notes,
           updated_at: new Date().toISOString()
         })
         .eq('id', existingRecord.id)
@@ -134,15 +157,15 @@ export default async function handler(req, res) {
         .from('water_chemistry_records')
         .insert({
           user_id: session.user.id,
-          record_date,
-          ph,
-          ammonia,
-          nitrite,
-          nitrate,
-          dissolved_oxygen,
-          water_temperature,
-          confidence,
-          notes
+          record_date: cleanData.record_date,
+          ph: cleanData.ph,
+          ammonia: cleanData.ammonia,
+          nitrite: cleanData.nitrite,
+          nitrate: cleanData.nitrate,
+          dissolved_oxygen: cleanData.dissolved_oxygen,
+          water_temperature: cleanData.water_temperature,
+          confidence: cleanData.confidence,
+          notes: cleanData.notes
         })
         .select()
         .single();
