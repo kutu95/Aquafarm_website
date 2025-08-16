@@ -815,10 +815,17 @@ export default function WaterChemistry() {
       console.log('recordData keys:', Object.keys(recordData));
       console.log('recordData values:', Object.values(recordData));
       
+      // Get the current user's access token for authentication
+      const { data: { session } } = await supabase.auth.getSession();
+      const accessToken = session?.access_token;
+      
+      console.log('About to save record with token:', accessToken ? 'present' : 'missing');
+      
       const response = await fetch('/api/water-chemistry/save-record', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(accessToken && { 'Authorization': `Bearer ${accessToken}` }),
         },
         credentials: 'include',
         body: JSON.stringify(recordData)

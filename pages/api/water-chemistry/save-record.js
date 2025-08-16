@@ -56,10 +56,52 @@ export default async function handler(req, res) {
     
     console.log('Session result:', { session: !!session, error: sessionError, userId: session?.user?.id });
     
-    if (sessionError || !session) {
-      console.log('Session error or no session:', { sessionError, hasSession: !!session });
-      return res.status(401).json({ error: 'Unauthorized' });
+    let authenticatedUser = null;
+    
+    if (sessionError) {
+      console.log('Session error:', sessionError);
+      return res.status(401).json({ error: 'Authentication error', details: sessionError.message });
     }
+    
+    if (session && session.user) {
+      // Cookie-based authentication successful
+      authenticatedUser = session.user;
+      console.log('Cookie-based authentication successful for user:', authenticatedUser.id);
+    } else {
+      console.log('No session found in API request');
+      console.log('Available cookies:', req.cookies);
+      
+      // Try alternative authentication method - check for Authorization header
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        console.log('Found Authorization header, attempting token-based auth...');
+        const token = authHeader.substring(7);
+        
+        try {
+          const { data: { user }, error: tokenError } = await supabase.auth.getUser(token);
+          if (user && !tokenError) {
+            authenticatedUser = user;
+            console.log('Token-based authentication successful for user:', authenticatedUser.id);
+          } else {
+            console.error('Token-based authentication failed:', tokenError);
+            return res.status(401).json({ error: 'Invalid token' });
+          }
+        } catch (tokenAuthError) {
+          console.error('Token authentication error:', tokenAuthError);
+          return res.status(401).json({ error: 'Token authentication failed' });
+        }
+      } else {
+        console.log('No Authorization header found');
+        return res.status(401).json({ error: 'Unauthorized - No valid session' });
+      }
+    }
+
+    if (!authenticatedUser) {
+      console.error('No authenticated user found after all authentication methods');
+      return res.status(401).json({ error: 'Authentication failed - no valid user' });
+    }
+
+    console.log('API Request authenticated for user:', authenticatedUser.id);
 
     const { record_date, ph, ammonia, nitrite, nitrate, dissolved_oxygen, water_temperature, confidence, notes } = req.body;
 
@@ -110,7 +152,7 @@ export default async function handler(req, res) {
     const { data: existingRecord, error: checkError } = await supabase
       .from('water_chemistry_records')
       .select('id')
-      .eq('user_id', session.user.id)
+      .eq('user_id', authenticatedUser.id)
       .eq('record_date', record_date)
       .single();
 
@@ -156,7 +198,7 @@ export default async function handler(req, res) {
       const { data, error } = await supabase
         .from('water_chemistry_records')
         .insert({
-          user_id: session.user.id,
+          user_id: authenticatedUser.id,
           record_date: cleanData.record_date,
           ph: cleanData.ph,
           ammonia: cleanData.ammonia,
