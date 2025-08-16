@@ -2,6 +2,7 @@ import { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '@/pages/_app';
 import Layout from '@/components/Layout';
 import Link from 'next/link';
+import { createClient } from '@supabase/supabase-js';
 
 export default function WaterChemistryRecords() {
   const { user, loading } = useContext(AuthContext);
@@ -12,6 +13,12 @@ export default function WaterChemistryRecords() {
   const [filterDateEnd, setFilterDateEnd] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
 
+  // Initialize Supabase client
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  );
+
   useEffect(() => {
     if (user) {
       fetchRecords();
@@ -21,7 +28,15 @@ export default function WaterChemistryRecords() {
   const fetchRecords = async () => {
     try {
       setLoadingRecords(true);
+      
+      // Get access token for API calls
+      const { data: { session } } = await supabase.auth.getSession();
+      const accessToken = session?.access_token;
+      
       const response = await fetch('/api/water-chemistry/records', {
+        headers: {
+          ...(accessToken && { 'Authorization': `Bearer ${accessToken}` }),
+        },
         credentials: 'include'
       });
       
@@ -44,10 +59,15 @@ export default function WaterChemistryRecords() {
 
   const handleUpdate = async (updatedData) => {
     try {
+      // Get access token for API calls
+      const { data: { session } } = await supabase.auth.getSession();
+      const accessToken = session?.access_token;
+      
       const response = await fetch('/api/water-chemistry/save-record', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(accessToken && { 'Authorization': `Bearer ${accessToken}` }),
         },
         credentials: 'include',
         body: JSON.stringify(updatedData)
@@ -70,8 +90,15 @@ export default function WaterChemistryRecords() {
 
   const handleDelete = async (recordId) => {
     try {
+      // Get access token for API calls
+      const { data: { session } } = await supabase.auth.getSession();
+      const accessToken = session?.access_token;
+      
       const response = await fetch(`/api/water-chemistry/delete-record/${recordId}`, {
         method: 'DELETE',
+        headers: {
+          ...(accessToken && { 'Authorization': `Bearer ${accessToken}` }),
+        },
         credentials: 'include'
       });
 
