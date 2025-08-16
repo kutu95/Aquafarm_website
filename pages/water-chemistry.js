@@ -33,7 +33,14 @@ export default function WaterChemistry() {
     notes: ''
   });
   const [saving, setSaving] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState('');
   
+  // Clear upload status when starting new upload
+  const clearUploadStatus = () => {
+    setUploadStatus('');
+    setError(null);
+  };
+
   // Function to extract date from image metadata or filename
   const extractDateFromImage = async (file) => {
     try {
@@ -258,23 +265,27 @@ export default function WaterChemistry() {
     // Validate file
     if (!file) {
       console.error('No file provided to handleImageSelect');
+      setUploadStatus('❌ Error: No file provided');
       setError('No file selected. Please try again.');
       return;
     }
     
     if (!file.type.startsWith('image/')) {
       console.error('Invalid file type:', file.type);
+      setUploadStatus('❌ Error: Invalid file type - please select an image');
       setError('Please select an image file (PNG, JPG, GIF).');
       return;
     }
     
     if (file.size > 10 * 1024 * 1024) { // 10MB limit
       console.error('File too large:', file.size);
+      setUploadStatus('❌ Error: File too large - must be under 10MB');
       setError('File size must be less than 10MB.');
       return;
     }
     
     console.log('File validation passed, processing...');
+    setUploadStatus(`✅ File validated: ${file.name} - Processing image...`);
     
     // Reset any previous state
     setSelectedImage(null);
@@ -284,6 +295,7 @@ export default function WaterChemistry() {
     
     try {
       // Extract date from image metadata or filename
+      setUploadStatus(`📅 Extracting date from image...`);
       const extractedDate = await extractDateFromImage(file);
       
       // Update record data with extracted date if found
@@ -293,12 +305,16 @@ export default function WaterChemistry() {
           record_date: extractedDate
         }));
         console.log('Updated record date to extracted date:', extractedDate);
+        setUploadStatus(`📅 Date extracted: ${extractedDate} - Loading image...`);
+      } else {
+        setUploadStatus(`📅 No date found - Loading image...`);
       }
       
       const reader = new FileReader();
       
       reader.onload = (e) => {
         console.log('FileReader onload triggered, setting image preview');
+        setUploadStatus(`🖼️ Image loaded - Setting up crop tool...`);
         setSelectedImage(file);
         setImagePreview(e.target.result);
         setShowCropper(true);
@@ -322,10 +338,13 @@ export default function WaterChemistry() {
             width: Math.min(200, img.width),
             height: Math.min(200, img.height)
           });
+          
+          setUploadStatus(`✅ Ready to crop! Image: ${img.width}x${img.height}px`);
         };
         
         img.onerror = (error) => {
           console.error('Error loading image:', error);
+          setUploadStatus('❌ Error: Failed to load image');
           setError('Failed to load image. Please try again.');
         };
         
@@ -334,6 +353,7 @@ export default function WaterChemistry() {
       
       reader.onerror = (error) => {
         console.error('FileReader error:', error);
+        setUploadStatus('❌ Error: Failed to read image file');
         setError('Failed to read image file. Please try again.');
       };
       
@@ -341,6 +361,7 @@ export default function WaterChemistry() {
       
     } catch (error) {
       console.error('Error in handleImageSelect:', error);
+      setUploadStatus(`❌ Error: ${error.message}`);
       setError(`Error processing image: ${error.message}`);
     }
   };
@@ -1004,6 +1025,23 @@ export default function WaterChemistry() {
 
               {/* File Upload */}
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                {/* Status Display */}
+                {uploadStatus && (
+                  <div className={`mb-4 p-3 rounded-lg text-sm ${
+                    uploadStatus.includes('Error') || uploadStatus.includes('Failed') 
+                      ? 'bg-red-100 text-red-800 border border-red-300' 
+                      : uploadStatus.includes('Success') 
+                        ? 'bg-green-100 text-green-800 border border-green-300'
+                        : 'bg-blue-100 text-blue-800 border border-blue-300'
+                  }`}>
+                    <div className="flex items-center justify-center">
+                      {uploadStatus.includes('Error') || uploadStatus.includes('Failed') ? '❌' : 
+                       uploadStatus.includes('Success') ? '✅' : 'ℹ️'}
+                      <span className="ml-2">{uploadStatus}</span>
+                    </div>
+                  </div>
+                )}
+                
                 {/* Hidden file input for desktop */}
                 <input
                   ref={fileInputRef}
@@ -1019,9 +1057,12 @@ export default function WaterChemistry() {
                     if (e.target.files && e.target.files.length > 0) {
                       const file = e.target.files[0];
                       console.log('Calling handleImageSelect with file:', file);
+                      clearUploadStatus();
+                      setUploadStatus(`📁 Processing file: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB)`);
                       handleImageSelect(file);
                     } else {
                       console.log('No files selected in onChange');
+                      setUploadStatus('❌ No file selected');
                     }
                   }}
                   onClick={(e) => {
@@ -1045,9 +1086,12 @@ export default function WaterChemistry() {
                       if (e.target.files && e.target.files.length > 0) {
                         const file = e.target.files[0];
                         console.log('Calling handleImageSelect with mobile file:', file);
+                        clearUploadStatus();
+                        setUploadStatus(`📱 Processing mobile file: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB)`);
                         handleImageSelect(file);
                       } else {
                         console.log('No files selected in mobile onChange');
+                        setUploadStatus('❌ No file selected on mobile');
                       }
                     }}
                     className="hidden"
