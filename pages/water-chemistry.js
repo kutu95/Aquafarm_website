@@ -347,8 +347,27 @@ export default function WaterChemistry() {
       return;
     }
     
+    // Mobile-specific file size limits
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const mobileSizeLimit = 5 * 1024 * 1024; // 5MB for mobile
+    const desktopSizeLimit = 10 * 1024 * 1024; // 10MB for desktop
+    
+    if (isMobile && file.size > mobileSizeLimit) {
+      console.error('File too large for mobile:', file.size, 'bytes');
+      setUploadStatus(`❌ Error: File too large for mobile - ${(file.size / 1024 / 1024).toFixed(2)}MB (max 5MB)`);
+      setError(`File size ${(file.size / 1024 / 1024).toFixed(2)}MB is too large for mobile. Please use a smaller image (under 5MB) or try on desktop. Tip: Try taking a photo with lower resolution or use a smaller image from your gallery.`);
+      return;
+    }
+    
+    if (!isMobile && file.size > desktopSizeLimit) {
+      console.error('File too large for desktop:', file.size, 'bytes');
+      setUploadStatus(`❌ Error: File too large for desktop - ${(file.size / 1024 / 1024).toFixed(2)}MB (max 10MB)`);
+      setError(`File size ${(file.size / 1024 / 1024).toFixed(2)}MB is too large. Please use a smaller image (under 10MB). Tip: Try compressing the image or using a lower resolution version.`);
+      return;
+    }
+    
     console.log('File validation passed, processing...');
-    setUploadStatus(`✅ File validated: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB) - Type: ${file.type}`);
+    setUploadStatus(`✅ File validated: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB) - Type: ${file.type} - ${isMobile ? 'Mobile' : 'Desktop'} device`);
     
     // Reset any previous state
     setSelectedImage(null);
@@ -467,7 +486,7 @@ export default function WaterChemistry() {
         } catch (fallbackError) {
           console.error('Fallback method also failed:', fallbackError);
           setUploadStatus('❌ Error: All file reading methods failed');
-          setError('Unable to process this image. Please try a different file.');
+          setError(`Unable to process this image. File: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB, Type: ${file.type}). Error: ${fallbackError.message}`);
         }
       };
       
@@ -513,15 +532,15 @@ export default function WaterChemistry() {
           img.onerror = (fallbackError) => {
             console.error('Fallback image loading failed after timeout:', fallbackError);
             setUploadStatus('❌ Error: All methods failed after timeout');
-            setError('Unable to read image file after timeout. Please try a different image.');
+            setError(`Unable to read image file after timeout. File: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB, Type: ${file.type}). Error: ${fallbackError.message}`);
           };
           
           img.src = objectUrl;
           
         } catch (fallbackError) {
           console.error('Fallback method failed after timeout:', fallbackError);
-          setUploadStatus('❌ Error: All methods failed');
-          setError('Unable to process this image. Please try a different file.');
+          setUploadStatus('❌ Error: All methods failed after timeout');
+          setError(`Unable to read image file after timeout. File: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB, Type: ${file.type}). Error: ${fallbackError.message}`);
         }
       }, 10000); // 10 second timeout for FileReader
       
