@@ -102,6 +102,8 @@ export default async function handler(req, res) {
     }
 
     console.log('API Request authenticated for user:', authenticatedUser.id);
+    console.log('User ID type:', typeof authenticatedUser.id);
+    console.log('User ID value:', authenticatedUser.id);
 
     const { record_date, ph, ammonia, nitrite, nitrate, dissolved_oxygen, water_temperature, confidence, notes } = req.body;
 
