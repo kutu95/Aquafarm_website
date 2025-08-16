@@ -2,7 +2,7 @@ import { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '@/pages/_app';
 import Layout from '@/components/Layout';
 import Link from 'next/link';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabaseClient';
 
 export default function WaterChemistryRecords() {
   const { user, loading } = useContext(AuthContext);
@@ -12,12 +12,6 @@ export default function WaterChemistryRecords() {
   const [filterDate, setFilterDate] = useState('');
   const [filterDateEnd, setFilterDateEnd] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
-
-  // Initialize Supabase client
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  );
 
   useEffect(() => {
     if (user) {
@@ -29,7 +23,7 @@ export default function WaterChemistryRecords() {
     try {
       setLoadingRecords(true);
       
-      // Get access token for API calls
+      // Get access token from supabase session
       const { data: { session } } = await supabase.auth.getSession();
       const accessToken = session?.access_token;
       
@@ -59,7 +53,7 @@ export default function WaterChemistryRecords() {
 
   const handleUpdate = async (updatedData) => {
     try {
-      // Get access token for API calls
+      // Get access token from supabase session
       const { data: { session } } = await supabase.auth.getSession();
       const accessToken = session?.access_token;
       
@@ -90,7 +84,7 @@ export default function WaterChemistryRecords() {
 
   const handleDelete = async (recordId) => {
     try {
-      // Get access token for API calls
+      // Get access token from supabase session
       const { data: { session } } = await supabase.auth.getSession();
       const accessToken = session?.access_token;
       
