@@ -1374,6 +1374,109 @@ export default function WaterChemistry() {
     }
   };
 
+  // Calculate required changes to reduce ammonia toxicity
+  const calculateToxicityReduction = (currentPh, currentTemp, currentAmmonia, targetToxicityLevel) => {
+    const targetLevels = {
+      'Safe': 0.005,
+      'Low': 0.01,
+      'Moderate': 0.02,
+      'High': 0.05
+    };
+    
+    const targetUnionized = targetLevels[targetToxicityLevel];
+    if (!targetUnionized) return null;
+    
+    // Calculate current unionized ammonia
+    const currentToxicity = calculateAmmoniaToxicity(currentPh, currentAmmonia, currentTemp);
+    if (!currentToxicity) return null;
+    
+    const currentUnionized = parseFloat(currentToxicity.unionizedAmmonia);
+    
+    // If already at or below target, no changes needed
+    if (currentUnionized <= targetUnionized) {
+      return { noChangeNeeded: true, message: `Toxicity is already at or below ${targetToxicityLevel} level.` };
+    }
+    
+    // Calculate required pH reduction
+    const requiredPhReduction = calculateRequiredPhReduction(currentPh, currentTemp, currentAmmonia, targetUnionized);
+    
+    // Calculate required temperature reduction
+    const requiredTempReduction = calculateRequiredTempReduction(currentPh, currentTemp, currentAmmonia, targetUnionized);
+    
+    return {
+      currentUnionized,
+      targetUnionized,
+      requiredPhReduction,
+      requiredTempReduction,
+      recommendations: generateReductionRecommendations(requiredPhReduction, requiredTempReduction, targetToxicityLevel)
+    };
+  };
+  
+  // Calculate required pH reduction to reach target toxicity
+  const calculateRequiredPhReduction = (currentPh, currentTemp, totalAmmonia, targetUnionized) => {
+    // Find the pKa for current temperature
+    const pKaValues = {
+      0: 9.38, 5: 9.33, 10: 9.28, 15: 9.23, 20: 9.18, 25: 9.13, 30: 9.08, 35: 9.03
+    };
+    const tempKeys = Object.keys(pKaValues).map(Number);
+    const closestTemp = tempKeys.reduce((prev, curr) => 
+      Math.abs(curr - currentTemp) < Math.abs(prev - currentTemp) ? curr : prev
+    );
+    const pKa = pKaValues[closestTemp];
+    
+    // Calculate required pH using reverse formula
+    // targetUnionized = (totalAmmonia * 100) / (1 + 10^(pKa - requiredPh))
+    // Solve for requiredPh
+    const requiredPh = pKa - Math.log10((totalAmmonia * 100 / targetUnionized) - 1);
+    
+    return Math.max(6.0, requiredPh); // Don't go below pH 6.0
+  };
+  
+  // Calculate required temperature reduction to reach target toxicity
+  const calculateRequiredTempReduction = (currentPh, currentTemp, totalAmmonia, targetUnionized) => {
+    // Try different temperatures to find one that gives target unionized ammonia
+    for (let temp = currentTemp - 0.5; temp >= 0; temp -= 0.5) {
+      const pKaValues = {
+        0: 9.38, 5: 9.33, 10: 9.28, 15: 9.23, 20: 9.18, 25: 9.13, 30: 9.08, 35: 9.03
+      };
+      const tempKeys = Object.keys(pKaValues).map(Number);
+      const closestTemp = tempKeys.reduce((prev, curr) => 
+        Math.abs(curr - temp) < Math.abs(prev - temp) ? curr : prev
+      );
+      const pKa = pKaValues[closestTemp];
+      
+      const unionizedPercentage = 100 / (1 + Math.pow(10, pKa - currentPh));
+      const unionizedAmmonia = (totalAmmonia * unionizedPercentage) / 100;
+      
+      if (unionizedAmmonia <= targetUnionized) {
+        return temp;
+      }
+    }
+    
+    return null; // Temperature reduction alone cannot achieve target
+  };
+  
+  // Generate recommendations for reducing toxicity
+  const generateReductionRecommendations = (phReduction, tempReduction, targetLevel) => {
+    const recommendations = [];
+    
+    if (phReduction && phReduction < 6.5) {
+      recommendations.push(`⚠️ pH would need to drop to ${phReduction.toFixed(1)} to reach ${targetLevel} toxicity (very acidic - not recommended for aquaponics)`);
+    } else if (phReduction) {
+      recommendations.push(`📉 Lower pH to ${phReduction.toFixed(1)} to reach ${targetLevel} toxicity`);
+    }
+    
+    if (tempReduction) {
+      recommendations.push(`🌡️ Lower temperature to ${tempReduction.toFixed(1)}°C to reach ${targetLevel} toxicity`);
+    }
+    
+    if (recommendations.length === 0) {
+      recommendations.push(`⚠️ Significant changes to pH or temperature would be needed to reach ${targetLevel} toxicity`);
+    }
+    
+    return recommendations;
+  };
+
   if (loading) {
     return (
       <Layout>
@@ -1459,6 +1562,31 @@ export default function WaterChemistry() {
                     </div>
                   </div>
                 )}
+                
+                {/* Water Temperature Input */}
+                <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <label className="block text-sm font-medium text-blue-900 mb-2">
+                    🌡️ Water Temperature (Required for Ammonia Toxicity Analysis)
+                  </label>
+                  <div className="flex items-center justify-center space-x-4">
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="-10"
+                      max="50"
+                      value={recordData.water_temperature}
+                      onChange={(e) => setRecordData(prev => ({ ...prev, water_temperature: e.target.value }))}
+                      placeholder="e.g., 25.0"
+                      className="w-24 px-3 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center"
+                    />
+                    <span className="text-sm text-blue-700">
+                      °C (or °F - will auto-convert)
+                    </span>
+                  </div>
+                  <p className="text-xs text-blue-600 mt-2">
+                    💡 Enter temperature to see ammonia toxicity analysis immediately with your results
+                  </p>
+                </div>
                 
                 {/* Hidden file input for desktop */}
                 <input
@@ -2052,6 +2180,49 @@ export default function WaterChemistry() {
                             </div>
                           </div>
                           
+                          {/* Toxicity Reduction Recommendations */}
+                          {toxicity.toxicityLevel !== 'Safe' && (
+                            <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                              <h4 className="font-medium text-orange-800 mb-2">🔧 How to Reduce Ammonia Toxicity</h4>
+                              <p className="text-xs text-orange-700 mb-3">
+                                <strong>Remember:</strong> Toxicity will reduce if temperature decreases and/or pH decreases.
+                              </p>
+                              
+                              {(() => {
+                                const reduction = calculateToxicityReduction(
+                                  results.parameters.ph.value,
+                                  parseFloat(recordData.water_temperature),
+                                  results.parameters.ammonia.value,
+                                  'Safe'
+                                );
+                                
+                                if (!reduction || reduction.noChangeNeeded) {
+                                  return (
+                                    <div className="text-sm text-orange-700">
+                                      {reduction?.message || 'No changes needed to reach safe levels.'}
+                                    </div>
+                                  );
+                                }
+                                
+                                return (
+                                  <div className="space-y-2">
+                                    <div className="text-sm text-orange-700">
+                                      <strong>To reach Safe toxicity level (≤0.005 mg/L NH3-N):</strong>
+                                    </div>
+                                    <ul className="text-sm text-orange-700 space-y-1">
+                                      {reduction.recommendations.map((rec, index) => (
+                                        <li key={index} className="flex items-start">
+                                          <span className="mr-2">•</span>
+                                          {rec}
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                );
+                              })()}
+                            </div>
+                          )}
+                          
                           <div className="text-xs text-yellow-700 bg-yellow-100 rounded-lg p-2">
                             <strong>Note:</strong> Unionized ammonia (NH3) is the toxic form. Higher pH and temperature increase NH3 percentage, making the same total ammonia level more dangerous to fish.
                           </div>
@@ -2064,17 +2235,17 @@ export default function WaterChemistry() {
                         <div className="flex items-center text-yellow-800">
                           <span className="mr-2">ℹ️</span>
                           <span className="text-sm">
-                            <strong>Ready to calculate ammonia toxicity!</strong> You have pH ({results.parameters.ph.value}) and ammonia ({results.parameters.ammonia.value} ppm), but need to enter water temperature.
+                            <strong>Ready to calculate ammonia toxicity!</strong> You have pH ({results.parameters.ph.value}) and ammonia ({results.parameters.ammonia.value} ppm), but need to enter water temperature above.
                           </span>
                         </div>
                       </div>
                       
                       <div className="text-sm text-yellow-700">
-                        <p className="mb-2">To see ammonia toxicity analysis, you need to:</p>
+                        <p className="mb-2">To see ammonia toxicity analysis:</p>
                         <ol className="list-decimal list-inside space-y-1 ml-2">
-                          <li>Click "Yes, Save Results" below</li>
-                          <li>Enter the water temperature in the edit form</li>
-                          <li>View the toxicity calculation</li>
+                          <li>Enter water temperature in the blue box above</li>
+                          <li>View the toxicity calculation immediately</li>
+                          <li>See recommendations for reducing toxicity</li>
                         </ol>
                       </div>
                       
@@ -2089,7 +2260,7 @@ export default function WaterChemistry() {
                     <ul className="list-disc list-inside space-y-1 mt-2 ml-2">
                       <li>✅ pH reading from image analysis</li>
                       <li>✅ Ammonia reading from image analysis</li>
-                      <li>✅ Water temperature (to be entered)</li>
+                      <li>✅ Water temperature (enter above)</li>
                     </ul>
                   </div>
                 )}
