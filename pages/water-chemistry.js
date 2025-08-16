@@ -35,6 +35,100 @@ export default function WaterChemistry() {
   const [saving, setSaving] = useState(false);
   const [uploadStatus, setUploadStatus] = useState('');
   
+  // Get toxicity level color classes
+  const getToxicityColorClasses = (toxicityLevel) => {
+    switch (toxicityLevel) {
+      case 'Critical':
+        return 'bg-red-600 text-white';
+      case 'High':
+        return 'bg-orange-600 text-white';
+      case 'Moderate':
+        return 'bg-yellow-600 text-white';
+      case 'Low':
+        return 'bg-blue-600 text-white';
+      case 'Safe':
+        return 'bg-green-600 text-white';
+      default:
+        return 'bg-gray-600 text-white';
+    }
+  };
+  
+  // Ammonia toxicity calculator
+  const calculateAmmoniaToxicity = (ph, totalAmmonia, temperature) => {
+    if (!ph || !totalAmmonia || !temperature) {
+      return null;
+    }
+    
+    // Convert temperature to Celsius if in Fahrenheit
+    let tempC = temperature;
+    if (temperature > 50) { // Likely Fahrenheit
+      tempC = (temperature - 32) * 5/9;
+    }
+    
+    // Calculate unionized ammonia percentage using the formula:
+    // % NH3 = 100 / (1 + 10^(pKa - pH))
+    // Where pKa varies with temperature
+    
+    // pKa values for ammonia at different temperatures (approximate)
+    const pKaValues = {
+      0: 9.38,   // 0°C
+      5: 9.33,   // 5°C
+      10: 9.28,  // 10°C
+      15: 9.23,  // 15°C
+      20: 9.18,  // 20°C
+      25: 9.13,  // 25°C
+      30: 9.08,  // 30°C
+      35: 9.03   // 35°C
+    };
+    
+    // Find closest temperature for pKa
+    const tempKeys = Object.keys(pKaValues).map(Number);
+    const closestTemp = tempKeys.reduce((prev, curr) => 
+      Math.abs(curr - tempC) < Math.abs(prev - tempC) ? curr : prev
+    );
+    const pKa = pKaValues[closestTemp];
+    
+    // Calculate unionized ammonia percentage
+    const unionizedPercentage = 100 / (1 + Math.pow(10, pKa - ph));
+    
+    // Calculate unionized ammonia concentration (mg/L NH3-N)
+    const unionizedAmmonia = (totalAmmonia * unionizedPercentage) / 100;
+    
+    // Determine toxicity level
+    let toxicityLevel = 'Safe';
+    let toxicityColor = 'green';
+    let recommendation = 'Ammonia levels are safe for fish.';
+    
+    if (unionizedAmmonia >= 0.05) {
+      toxicityLevel = 'Critical';
+      toxicityColor = 'red';
+      recommendation = 'Immediate action required! High ammonia toxicity. Perform water change and check filtration.';
+    } else if (unionizedAmmonia >= 0.02) {
+      toxicityLevel = 'High';
+      toxicityColor = 'orange';
+      recommendation = 'Ammonia levels are concerning. Monitor closely and consider water change.';
+    } else if (unionizedAmmonia >= 0.01) {
+      toxicityLevel = 'Moderate';
+      toxicityColor = 'yellow';
+      recommendation = 'Ammonia levels are elevated. Monitor water quality and fish behavior.';
+    } else if (unionizedAmmonia >= 0.005) {
+      toxicityLevel = 'Low';
+      toxicityColor = 'blue';
+      recommendation = 'Ammonia levels are slightly elevated but generally safe.';
+    }
+    
+    return {
+      totalAmmonia,
+      unionizedPercentage: unionizedPercentage.toFixed(2),
+      unionizedAmmonia: unionizedAmmonia.toFixed(4),
+      temperature: tempC.toFixed(1),
+      pKa,
+      toxicityLevel,
+      toxicityColor,
+      recommendation
+    };
+  };
+  
   // Clear upload status when starting new upload
   const clearUploadStatus = () => {
     setUploadStatus('');
@@ -1899,6 +1993,72 @@ export default function WaterChemistry() {
                   ))}
                 </div>
               </div>
+
+              {/* Ammonia Toxicity Calculator */}
+              {results.parameters && results.parameters.ammonia && results.parameters.ph && recordData.water_temperature && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                  <h3 className="font-medium text-yellow-900 mb-3">🐟 Ammonia Toxicity Calculator</h3>
+                  
+                  {(() => {
+                    const toxicity = calculateAmmoniaToxicity(
+                      results.parameters.ph.value,
+                      results.parameters.ammonia.value,
+                      parseFloat(recordData.water_temperature)
+                    );
+                    
+                    if (!toxicity) return null;
+                    
+                    return (
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                          <div className="flex justify-between">
+                            <span className="font-medium">Total Ammonia:</span>
+                            <span className="text-gray-600">{toxicity.totalAmmonia} ppm</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="font-medium">Water Temperature:</span>
+                            <span className="text-gray-600">{toxicity.temperature}°C</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="font-medium">pH:</span>
+                            <span className="text-gray-600">{results.parameters.ph.value}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="font-medium">pKa (at {toxicity.temperature}°C):</span>
+                            <span className="text-gray-600">{toxicity.pKa}</span>
+                          </div>
+                        </div>
+                        
+                        <div className="border-t border-yellow-200 pt-3">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="font-medium">Unionized Ammonia (NH3):</span>
+                            <span className="text-gray-600">{toxicity.unionizedAmmonia} mg/L NH3-N</span>
+                          </div>
+                          <div className="flex justify-between items-center mb-3">
+                            <span className="font-medium">Percentage NH3:</span>
+                            <span className="text-gray-600">{toxicity.unionizedPercentage}%</span>
+                          </div>
+                          
+                          <div className={`inline-block px-3 py-1 rounded-full text-sm font-medium text-white ${getToxicityColorClasses(toxicity.toxicityLevel)}`}>
+                            {toxicity.toxicityLevel} Toxicity
+                          </div>
+                        </div>
+                        
+                        <div className="bg-white rounded-lg p-3 border border-yellow-300">
+                          <div className="flex items-start">
+                            <span className="mr-2 text-yellow-600">💡</span>
+                            <span className="text-sm text-yellow-800">{toxicity.recommendation}</span>
+                          </div>
+                        </div>
+                        
+                        <div className="text-xs text-yellow-700 bg-yellow-100 rounded-lg p-2">
+                          <strong>Note:</strong> Unionized ammonia (NH3) is the toxic form. Higher pH and temperature increase NH3 percentage, making the same total ammonia level more dangerous to fish.
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
 
               {/* Recommendations */}
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
