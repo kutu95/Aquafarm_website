@@ -1031,27 +1031,41 @@ export default function WaterChemistry() {
                 />
                 
                 {/* Mobile-visible file input */}
-                <input
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  onChange={(e) => {
-                    console.log('Mobile file input onChange triggered:', {
-                      files: e.target.files,
-                      fileCount: e.target.files?.length,
-                      firstFile: e.target.files?.[0]
-                    });
-                    
-                    if (e.target.files && e.target.files.length > 0) {
-                      const file = e.target.files[0];
-                      console.log('Calling handleImageSelect with mobile file:', file);
-                      handleImageSelect(file);
-                    } else {
-                      console.log('No files selected in mobile onChange');
-                    }
-                  }}
-                  className="block md:hidden w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                />
+                <div className="block md:hidden">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      console.log('Mobile file input onChange triggered:', {
+                        files: e.target.files,
+                        fileCount: e.target.files?.length,
+                        firstFile: e.target.files?.[0]
+                      });
+                      
+                      if (e.target.files && e.target.files.length > 0) {
+                        const file = e.target.files[0];
+                        console.log('Calling handleImageSelect with mobile file:', file);
+                        handleImageSelect(file);
+                      } else {
+                        console.log('No files selected in mobile onChange');
+                      }
+                    }}
+                    className="hidden"
+                    id="mobile-file-input"
+                  />
+                  <label
+                    htmlFor="mobile-file-input"
+                    className="block w-full p-4 border-2 border-dashed border-blue-300 rounded-lg bg-blue-50 text-center cursor-pointer hover:bg-blue-100 transition-colors"
+                  >
+                    <div className="flex flex-col items-center">
+                      <svg className="h-8 w-8 text-blue-500 mb-2" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                        <path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      <span className="text-blue-700 font-medium">📱 Tap to upload image</span>
+                      <span className="text-blue-600 text-sm mt-1">Choose from gallery or camera</span>
+                    </div>
+                  </label>
+                </div>
                 
                 {!imagePreview ? (
                   <>
@@ -1087,7 +1101,7 @@ export default function WaterChemistry() {
                     {/* Mobile-specific instructions */}
                     <div className="mt-4 p-3 bg-blue-50 rounded-lg">
                       <p className="text-xs text-blue-800">
-                        📱 <strong>Mobile users:</strong> Use the file picker above to select from gallery or take a photo
+                        📱 <strong>Mobile users:</strong> Tap the blue upload area above to select from gallery or take a photo
                       </p>
                     </div>
                   </>
