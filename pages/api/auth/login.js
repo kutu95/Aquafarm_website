@@ -21,10 +21,28 @@ export default async function handler(req, res) {
             return req.cookies[name];
           },
           set(name, value, options) {
-            res.setHeader('Set-Cookie', `${name}=${value}; Path=/`);
+            const isProduction = process.env.NODE_ENV === 'production';
+            const domain = isProduction ? '.aquafarm.au' : undefined;
+            const secure = isProduction;
+            const sameSite = isProduction ? 'none' : 'lax';
+            
+            let cookieString = `${name}=${value}; Path=/; HttpOnly; SameSite=${sameSite}`;
+            if (domain) cookieString += `; Domain=${domain}`;
+            if (secure) cookieString += '; Secure';
+            
+            res.setHeader('Set-Cookie', cookieString);
           },
           remove(name) {
-            res.setHeader('Set-Cookie', `${name}=; Path=/; Max-Age=0`);
+            const isProduction = process.env.NODE_ENV === 'production';
+            const domain = isProduction ? '.aquafarm.au' : undefined;
+            const secure = isProduction;
+            const sameSite = isProduction ? 'none' : 'lax';
+            
+            let cookieString = `${name}=; Path=/; HttpOnly; SameSite=${sameSite}; Max-Age=0`;
+            if (domain) cookieString += `; Domain=${domain}`;
+            if (secure) cookieString += '; Secure';
+            
+            res.setHeader('Set-Cookie', cookieString);
           },
         },
       }
