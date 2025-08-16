@@ -23,7 +23,9 @@ export default async function handler(req, res) {
       {
         cookies: {
           get(name) {
-            return req.cookies[name];
+            const cookie = req.cookies[name];
+            console.log(`Getting cookie ${name}:`, cookie ? 'present' : 'missing');
+            return cookie;
           },
           set(name, value, options) {
             const isProduction = process.env.NODE_ENV === 'production';
@@ -34,6 +36,9 @@ export default async function handler(req, res) {
             let cookieString = `${name}=${value}; Path=/; HttpOnly; SameSite=${sameSite}`;
             if (domain) cookieString += `; Domain=${domain}`;
             if (secure) cookieString += '; Secure';
+            
+            console.log(`Setting cookie ${name} with domain: ${domain}, secure: ${secure}, sameSite: ${sameSite}`);
+            console.log(`Full cookie string: ${cookieString}`);
             
             res.setHeader('Set-Cookie', cookieString);
           },
@@ -46,6 +51,8 @@ export default async function handler(req, res) {
             let cookieString = `${name}=; Path=/; HttpOnly; SameSite=${sameSite}; Max-Age=0`;
             if (domain) cookieString += `; Domain=${domain}`;
             if (secure) cookieString += '; Secure';
+            
+            console.log(`Removing cookie ${name} with domain: ${domain}, secure: ${secure}, sameSite: ${sameSite}`);
             
             res.setHeader('Set-Cookie', cookieString);
           },
