@@ -250,8 +250,31 @@ export default function WaterChemistry() {
     console.log('handleImageSelect called with file:', {
       name: file.name,
       size: file.size,
-      type: file.type
+      type: file.type,
+      lastModified: file.lastModified,
+      webkitRelativePath: file.webkitRelativePath
     });
+    
+    // Validate file
+    if (!file) {
+      console.error('No file provided to handleImageSelect');
+      setError('No file selected. Please try again.');
+      return;
+    }
+    
+    if (!file.type.startsWith('image/')) {
+      console.error('Invalid file type:', file.type);
+      setError('Please select an image file (PNG, JPG, GIF).');
+      return;
+    }
+    
+    if (file.size > 10 * 1024 * 1024) { // 10MB limit
+      console.error('File too large:', file.size);
+      setError('File size must be less than 10MB.');
+      return;
+    }
+    
+    console.log('File validation passed, processing...');
     
     // Reset any previous state
     setSelectedImage(null);
@@ -259,47 +282,67 @@ export default function WaterChemistry() {
     setResults(null);
     setError(null);
     
-    // Extract date from image metadata or filename
-    const extractedDate = await extractDateFromImage(file);
-    
-    // Update record data with extracted date if found
-    if (extractedDate) {
-      setRecordData(prev => ({
-        ...prev,
-        record_date: extractedDate
-      }));
-      console.log('Updated record date to extracted date:', extractedDate);
-    }
-    
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setSelectedImage(file);
-      setImagePreview(e.target.result);
-      setShowCropper(true);
+    try {
+      // Extract date from image metadata or filename
+      const extractedDate = await extractDateFromImage(file);
       
-      // Wait for image to load before setting crop area
-      const img = new Image();
-      img.onload = () => {
-        console.log('Image loaded:', { 
-          naturalWidth: img.naturalWidth, 
-          naturalHeight: img.naturalHeight,
-          displayWidth: img.width,
-          displayHeight: img.height
-        });
+      // Update record data with extracted date if found
+      if (extractedDate) {
+        setRecordData(prev => ({
+          ...prev,
+          record_date: extractedDate
+        }));
+        console.log('Updated record date to extracted date:', extractedDate);
+      }
+      
+      const reader = new FileReader();
+      
+      reader.onload = (e) => {
+        console.log('FileReader onload triggered, setting image preview');
+        setSelectedImage(file);
+        setImagePreview(e.target.result);
+        setShowCropper(true);
         
-        // Set initial crop area to center of image
-        const centerX = (img.width - 200) / 2;
-        const centerY = (img.height - 200) / 2;
-        setCropArea({
-          x: Math.max(0, centerX),
-          y: Math.max(0, centerY),
-          width: Math.min(200, img.width),
-          height: Math.min(200, img.height)
-        });
+        // Wait for image to load before setting crop area
+        const img = new Image();
+        img.onload = () => {
+          console.log('Image loaded successfully:', { 
+            naturalWidth: img.naturalWidth, 
+            naturalHeight: img.naturalHeight,
+            displayWidth: img.width,
+            displayHeight: img.height
+          });
+          
+          // Set initial crop area to center of image
+          const centerX = (img.width - 200) / 2;
+          const centerY = (img.height - 200) / 2;
+          setCropArea({
+            x: Math.max(0, centerX),
+            y: Math.max(0, centerY),
+            width: Math.min(200, img.width),
+            height: Math.min(200, img.height)
+          });
+        };
+        
+        img.onerror = (error) => {
+          console.error('Error loading image:', error);
+          setError('Failed to load image. Please try again.');
+        };
+        
+        img.src = e.target.result;
       };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
+      
+      reader.onerror = (error) => {
+        console.error('FileReader error:', error);
+        setError('Failed to read image file. Please try again.');
+      };
+      
+      reader.readAsDataURL(file);
+      
+    } catch (error) {
+      console.error('Error in handleImageSelect:', error);
+      setError(`Error processing image: ${error.message}`);
+    }
   };
 
   // Touch event handlers for mobile
@@ -961,12 +1004,53 @@ export default function WaterChemistry() {
 
               {/* File Upload */}
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                {/* Hidden file input for desktop */}
                 <input
                   ref={fileInputRef}
                   type="file"
                   accept="image/*"
-                  onChange={(e) => handleImageSelect(e.target.files[0])}
-                  className="hidden"
+                  onChange={(e) => {
+                    console.log('File input onChange triggered:', {
+                      files: e.target.files,
+                      fileCount: e.target.files?.length,
+                      firstFile: e.target.files?.[0]
+                    });
+                    
+                    if (e.target.files && e.target.files.length > 0) {
+                      const file = e.target.files[0];
+                      console.log('Calling handleImageSelect with file:', file);
+                      handleImageSelect(file);
+                    } else {
+                      console.log('No files selected in onChange');
+                    }
+                  }}
+                  onClick={(e) => {
+                    console.log('File input clicked');
+                  }}
+                  className="hidden md:block"
+                />
+                
+                {/* Mobile-visible file input */}
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={(e) => {
+                    console.log('Mobile file input onChange triggered:', {
+                      files: e.target.files,
+                      fileCount: e.target.files?.length,
+                      firstFile: e.target.files?.[0]
+                    });
+                    
+                    if (e.target.files && e.target.files.length > 0) {
+                      const file = e.target.files[0];
+                      console.log('Calling handleImageSelect with mobile file:', file);
+                      handleImageSelect(file);
+                    } else {
+                      console.log('No files selected in mobile onChange');
+                    }
+                  }}
+                  className="block md:hidden w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                 />
                 
                 {!imagePreview ? (
@@ -979,9 +1063,16 @@ export default function WaterChemistry() {
                     <p className="text-lg font-medium text-gray-900 mb-2">
                       Upload Water Chemistry Test Image
                     </p>
-                    <p className="mt-2 text-sm text-gray-600">
+                    <p className="mt-2 text-sm text-gray-600 md:block hidden">
                       <button
-                        onClick={() => fileInputRef.current?.click()}
+                        onClick={() => {
+                          console.log('Upload button clicked, triggering file input');
+                          if (fileInputRef.current) {
+                            fileInputRef.current.click();
+                          } else {
+                            console.error('File input ref not found');
+                          }
+                        }}
                         className="font-medium text-blue-600 hover:text-blue-500"
                       >
                         Click to upload
@@ -992,6 +1083,13 @@ export default function WaterChemistry() {
                     <p className="text-xs text-blue-600 mt-2">
                       💡 Tip: Crop your image to focus only on the test tubes for better accuracy and lower costs
                     </p>
+                    
+                    {/* Mobile-specific instructions */}
+                    <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                      <p className="text-xs text-blue-800">
+                        📱 <strong>Mobile users:</strong> Use the file picker above to select from gallery or take a photo
+                      </p>
+                    </div>
                   </>
                 ) : (
                   <div className="space-y-4">
