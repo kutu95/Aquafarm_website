@@ -2126,11 +2126,11 @@ export default function WaterChemistry() {
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
                 <h3 className="font-medium text-yellow-900 mb-3">🐟 Ammonia Toxicity Calculator</h3>
                 
-                {results.parameters && results.parameters.ammonia?.value !== undefined && results.parameters.ph?.value !== undefined ? (
+                {results.parameters && results.parameters.ammonia?.value !== undefined && results.parameters.pH?.value !== undefined ? (
                   recordData.water_temperature ? (
                     (() => {
                       const toxicity = calculateAmmoniaToxicity(
-                        results.parameters.ph.value,
+                        results.parameters.pH.value,
                         results.parameters.ammonia.value,
                         parseFloat(recordData.water_temperature)
                       );
@@ -2150,7 +2150,7 @@ export default function WaterChemistry() {
                             </div>
                             <div className="flex justify-between">
                               <span className="font-medium">pH:</span>
-                              <span className="text-gray-600">{results.parameters.ph.value}</span>
+                              <span className="text-gray-600">{results.parameters.pH.value}</span>
                             </div>
                             <div className="flex justify-between">
                               <span className="font-medium">pKa (at {toxicity.temperature}°C):</span>
@@ -2190,7 +2190,7 @@ export default function WaterChemistry() {
                               
                               {(() => {
                                 const reduction = calculateToxicityReduction(
-                                  results.parameters.ph.value,
+                                  results.parameters.pH.value,
                                   parseFloat(recordData.water_temperature),
                                   results.parameters.ammonia.value,
                                   'Safe'
@@ -2235,7 +2235,7 @@ export default function WaterChemistry() {
                         <div className="flex items-center text-yellow-800">
                           <span className="mr-2">ℹ️</span>
                           <span className="text-sm">
-                            <strong>Ready to calculate ammonia toxicity!</strong> You have pH ({results.parameters.ph?.value}) and ammonia ({results.parameters.ammonia?.value} ppm), but need to enter water temperature above.
+                            <strong>Ready to calculate ammonia toxicity!</strong> You have pH ({results.parameters.pH?.value}) and ammonia ({results.parameters.ammonia?.value} ppm), but need to enter water temperature above.
                           </span>
                         </div>
                       </div>
