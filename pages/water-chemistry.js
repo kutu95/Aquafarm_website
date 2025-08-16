@@ -308,7 +308,13 @@ export default function WaterChemistry() {
       size: file.size,
       type: file.type,
       lastModified: file.lastModified,
-      webkitRelativePath: file.webkitRelativePath
+      webkitRelativePath: file.webkitRelativePath,
+      // Additional debugging info
+      constructor: file.constructor.name,
+      prototype: Object.getPrototypeOf(file),
+      methods: Object.getOwnPropertyNames(file),
+      isFile: file instanceof File,
+      isBlob: file instanceof Blob
     });
     
     // Validate file
@@ -333,8 +339,16 @@ export default function WaterChemistry() {
       return;
     }
     
+    // Check if file is actually readable
+    if (file.size === 0) {
+      console.error('File is empty (0 bytes)');
+      setUploadStatus('❌ Error: File is empty (0 bytes)');
+      setError('The selected file appears to be empty. Please try a different image.');
+      return;
+    }
+    
     console.log('File validation passed, processing...');
-    setUploadStatus(`✅ File validated: ${file.name} - Processing image...`);
+    setUploadStatus(`✅ File validated: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB) - Type: ${file.type}`);
     
     // Reset any previous state
     setSelectedImage(null);
@@ -404,6 +418,115 @@ export default function WaterChemistry() {
         console.error('FileReader error:', error);
         setUploadStatus('❌ Error: Failed to read image file');
         setError('Failed to read image file. Please try again.');
+        
+        // Try alternative approach for mobile
+        console.log('Attempting alternative file reading method...');
+        setUploadStatus('🔄 Trying alternative file reading method...');
+        
+        // Fallback: try using URL.createObjectURL
+        try {
+          const objectUrl = URL.createObjectURL(file);
+          console.log('Created object URL:', objectUrl);
+          
+          setUploadStatus(`🖼️ Using alternative method - Setting up crop tool...`);
+          setSelectedImage(file);
+          setImagePreview(objectUrl);
+          setShowCropper(true);
+          
+          // Wait for image to load before setting crop area
+          const img = new Image();
+          img.onload = () => {
+            console.log('Image loaded successfully with object URL:', { 
+              naturalWidth: img.naturalWidth, 
+              naturalHeight: img.naturalHeight,
+              displayWidth: img.width,
+              displayHeight: img.height
+            });
+            
+            // Set initial crop area to center of image
+            const centerX = (img.width - 200) / 2;
+            const centerY = (img.height - 200) / 2;
+            setCropArea({
+              x: Math.max(0, centerX),
+              y: Math.max(0, centerY),
+              width: Math.min(200, img.width),
+              height: Math.min(200, img.height)
+            });
+            
+            setUploadStatus(`✅ Ready to crop! Image: ${img.width}x${img.height}px`);
+          };
+          
+          img.onerror = (fallbackError) => {
+            console.error('Fallback image loading also failed:', fallbackError);
+            setUploadStatus('❌ Error: Both file reading methods failed');
+            setError('Unable to read image file. Please try a different image or format.');
+          };
+          
+          img.src = objectUrl;
+          
+        } catch (fallbackError) {
+          console.error('Fallback method also failed:', fallbackError);
+          setUploadStatus('❌ Error: All file reading methods failed');
+          setError('Unable to process this image. Please try a different file.');
+        }
+      };
+      
+      // Add timeout to FileReader
+      const readerTimeout = setTimeout(() => {
+        console.log('FileReader timeout, attempting fallback...');
+        setUploadStatus('⏰ FileReader timed out, trying alternative method...');
+        reader.abort();
+        
+        // Try fallback method
+        try {
+          const objectUrl = URL.createObjectURL(file);
+          console.log('Created object URL after timeout:', objectUrl);
+          
+          setUploadStatus(`🖼️ Using fallback method - Setting up crop tool...`);
+          setSelectedImage(file);
+          setImagePreview(objectUrl);
+          setShowCropper(true);
+          
+          // Wait for image to load before setting crop area
+          const img = new Image();
+          img.onload = () => {
+            console.log('Image loaded successfully with fallback method:', { 
+              naturalWidth: img.naturalWidth, 
+              naturalHeight: img.naturalHeight,
+              displayWidth: img.width,
+              displayHeight: img.height
+            });
+            
+            // Set initial crop area to center of image
+            const centerX = (img.width - 200) / 2;
+            const centerY = (img.height - 200) / 2;
+            setCropArea({
+              x: Math.max(0, centerX),
+              y: Math.max(0, centerY),
+              width: Math.min(200, img.width),
+              height: Math.min(200, img.height)
+            });
+            
+            setUploadStatus(`✅ Ready to crop! Image: ${img.width}x${img.height}px`);
+          };
+          
+          img.onerror = (fallbackError) => {
+            console.error('Fallback image loading failed after timeout:', fallbackError);
+            setUploadStatus('❌ Error: All methods failed after timeout');
+            setError('Unable to read image file after timeout. Please try a different image.');
+          };
+          
+          img.src = objectUrl;
+          
+        } catch (fallbackError) {
+          console.error('Fallback method failed after timeout:', fallbackError);
+          setUploadStatus('❌ Error: All methods failed');
+          setError('Unable to process this image. Please try a different file.');
+        }
+      }, 10000); // 10 second timeout for FileReader
+      
+      reader.onloadend = () => {
+        clearTimeout(readerTimeout);
       };
       
       reader.readAsDataURL(file);
