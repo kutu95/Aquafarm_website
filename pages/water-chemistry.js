@@ -425,9 +425,19 @@ export default function WaterChemistry() {
         };
         
         img.onerror = (error) => {
-          console.error('Error loading image:', error);
+          console.error('Error loading image - detailed error:', {
+            error: error,
+            errorType: error.type,
+            errorMessage: error.message,
+            imageSrc: img.src,
+            imageWidth: img.width,
+            imageHeight: img.height,
+            imageComplete: img.complete,
+            imageNaturalWidth: img.naturalWidth,
+            imageNaturalHeight: img.naturalHeight
+          });
           setUploadStatus('❌ Error: Failed to load image');
-          setError('Failed to load image. Please try again.');
+          setError(`Image loading failed: ${error.type} - ${error.message || 'Unknown image loading error'}`);
           // Don't show crop tool if image fails to load
           setShowCropper(false);
           setImagePreview(null);
@@ -438,9 +448,17 @@ export default function WaterChemistry() {
       };
       
       reader.onerror = (error) => {
-        console.error('FileReader error:', error);
+        console.error('FileReader error details:', {
+          error: error,
+          errorType: error.type,
+          errorMessage: error.message,
+          errorTarget: error.target,
+          errorTargetReadyState: error.target?.readyState,
+          errorTargetError: error.target?.error
+        });
+        
         setUploadStatus('❌ Error: Failed to read image file');
-        setError('Failed to read image file. Please try again.');
+        setError(`FileReader failed: ${error.type} - ${error.target?.error?.message || error.message || 'Unknown error'}`);
         
         // Don't show crop tool if FileReader fails
         setShowCropper(false);
@@ -453,7 +471,9 @@ export default function WaterChemistry() {
           fileSize: file?.size,
           fileType: file?.type,
           fileValid: file instanceof File || file instanceof Blob,
-          fileReadable: file && file.size > 0
+          fileReadable: file && file.size > 0,
+          fileConstructor: file?.constructor?.name,
+          filePrototype: Object.getPrototypeOf(file)
         });
         
         // Try alternative approach for mobile
@@ -467,8 +487,9 @@ export default function WaterChemistry() {
             throw new Error('File is no longer valid or is empty');
           }
           
+          console.log('Attempting URL.createObjectURL fallback...');
           const objectUrl = URL.createObjectURL(file);
-          console.log('Created object URL:', objectUrl);
+          console.log('Successfully created object URL:', objectUrl);
           
           setUploadStatus(`🖼️ Using alternative method - Setting up crop tool...`);
           setSelectedImage(file);
@@ -499,9 +520,21 @@ export default function WaterChemistry() {
           };
           
           img.onerror = (fallbackError) => {
-            console.error('Fallback image loading also failed:', fallbackError);
+            console.error('Fallback image loading failed - detailed error:', {
+              error: fallbackError,
+              errorType: fallbackError.type,
+              errorMessage: fallbackError.message,
+              imageSrc: img.src,
+              imageWidth: img.width,
+              imageHeight: img.height,
+              imageComplete: img.complete,
+              imageNaturalWidth: img.naturalWidth,
+              imageNaturalHeight: img.naturalHeight
+            });
+            
             setUploadStatus('❌ Error: Both file reading methods failed');
-            setError(`Unable to process this image. File: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB, Type: ${file.type}). Error: ${fallbackError.message}`);
+            setError(`Image loading failed after URL.createObjectURL. File: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB, Type: ${file.type}). Image error: ${fallbackError.type} - ${fallbackError.message || 'Unknown image loading error'}`);
+            
             // Don't show crop tool if fallback also fails
             setShowCropper(false);
             setImagePreview(null);
@@ -511,9 +544,24 @@ export default function WaterChemistry() {
           img.src = objectUrl;
           
         } catch (fallbackError) {
-          console.error('Fallback method also failed:', fallbackError);
+          console.error('URL.createObjectURL fallback method failed - detailed error:', {
+            error: fallbackError,
+            errorType: fallbackError.type,
+            errorMessage: fallbackError.message,
+            errorStack: fallbackError.stack,
+            fileInfo: {
+              name: file?.name,
+              size: file?.size,
+              type: file?.type,
+              constructor: file?.constructor?.name,
+              isFile: file instanceof File,
+              isBlob: file instanceof Blob
+            }
+          });
+          
           setUploadStatus('❌ Error: All file reading methods failed');
-          setError(`Unable to process this image. File: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB, Type: ${file.type}). Error: ${fallbackError.message}`);
+          setError(`URL.createObjectURL failed. File: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB, Type: ${file.type}). Error: ${fallbackError.message || fallbackError.type || 'Unknown error'}. Stack: ${fallbackError.stack || 'No stack trace'}`);
+          
           // Don't show crop tool if fallback also fails
           setShowCropper(false);
           setImagePreview(null);
@@ -523,7 +571,20 @@ export default function WaterChemistry() {
       
       // Add timeout to FileReader
       const readerTimeout = setTimeout(() => {
-        console.log('FileReader timeout, attempting fallback...');
+        console.log('FileReader timeout occurred - detailed timeout info:', {
+          timeoutDuration: '10000ms',
+          fileInfo: {
+            name: file?.name,
+            size: file?.size,
+            type: file?.type,
+            lastModified: file?.lastModified
+          },
+          readerState: {
+            readyState: reader?.readyState,
+            error: reader?.error
+          }
+        });
+        
         setUploadStatus('⏰ FileReader timed out, trying alternative method...');
         reader.abort();
         
@@ -534,8 +595,9 @@ export default function WaterChemistry() {
         
         // Try fallback method
         try {
+          console.log('Attempting URL.createObjectURL after timeout...');
           const objectUrl = URL.createObjectURL(file);
-          console.log('Created object URL after timeout:', objectUrl);
+          console.log('Successfully created object URL after timeout:', objectUrl);
           
           setUploadStatus(`🖼️ Using fallback method - Setting up crop tool...`);
           setSelectedImage(file);
@@ -545,7 +607,7 @@ export default function WaterChemistry() {
           // Wait for image to load before setting crop area
           const img = new Image();
           img.onload = () => {
-            console.log('Image loaded successfully with fallback method:', { 
+            console.log('Image loaded successfully with fallback method after timeout:', { 
               naturalWidth: img.naturalWidth, 
               naturalHeight: img.naturalHeight,
               displayWidth: img.width,
@@ -566,9 +628,21 @@ export default function WaterChemistry() {
           };
           
           img.onerror = (fallbackError) => {
-            console.error('Fallback image loading failed after timeout:', fallbackError);
+            console.error('Fallback image loading failed after timeout - detailed error:', {
+              error: fallbackError,
+              errorType: fallbackError.type,
+              errorMessage: fallbackError.message,
+              imageSrc: img.src,
+              imageWidth: img.width,
+              imageHeight: img.height,
+              imageComplete: img.complete,
+              imageNaturalWidth: img.naturalWidth,
+              imageNaturalHeight: img.naturalHeight,
+              timeoutContext: 'FileReader timed out, then fallback failed'
+            });
+            
             setUploadStatus('❌ Error: All methods failed after timeout');
-            setError(`Unable to read image file after timeout. File: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB, Type: ${file.type}). Error: ${fallbackError.message}`);
+            setError(`Image loading failed after timeout fallback. File: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB, Type: ${file.type}). Image error: ${fallbackError.type} - ${fallbackError.message || 'Unknown image loading error'}`);
             // Don't show crop tool if fallback also fails
             setShowCropper(false);
             setImagePreview(null);
@@ -578,9 +652,24 @@ export default function WaterChemistry() {
           img.src = objectUrl;
           
         } catch (fallbackError) {
-          console.error('Fallback method failed after timeout:', fallbackError);
+          console.error('URL.createObjectURL fallback method failed after timeout - detailed error:', {
+            error: fallbackError,
+            errorType: fallbackError.type,
+            errorMessage: fallbackError.message,
+            errorStack: fallbackError.stack,
+            timeoutContext: 'FileReader timed out, then URL.createObjectURL failed',
+            fileInfo: {
+              name: file?.name,
+              size: file?.size,
+              type: file?.type,
+              constructor: file?.constructor?.name,
+              isFile: file instanceof File,
+              isBlob: file instanceof Blob
+            }
+          });
+          
           setUploadStatus('❌ Error: All methods failed after timeout');
-          setError(`Unable to read image file after timeout. File: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB, Type: ${file.type}). Error: ${fallbackError.message}`);
+          setError(`URL.createObjectURL failed after timeout. File: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB, Type: ${file.type}). Error: ${fallbackError.message || fallbackError.type || 'Unknown error'}. Stack: ${fallbackError.stack || 'No stack trace'}`);
           // Don't show crop tool if fallback also fails
           setShowCropper(false);
           setImagePreview(null);
