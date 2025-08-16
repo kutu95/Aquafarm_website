@@ -2126,7 +2126,7 @@ export default function WaterChemistry() {
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
                 <h3 className="font-medium text-yellow-900 mb-3">🐟 Ammonia Toxicity Calculator</h3>
                 
-                {results.parameters && results.parameters.ammonia && results.parameters.ph ? (
+                {results.parameters && results.parameters.ammonia?.value !== undefined && results.parameters.ph?.value !== undefined ? (
                   recordData.water_temperature ? (
                     (() => {
                       const toxicity = calculateAmmoniaToxicity(
@@ -2235,7 +2235,7 @@ export default function WaterChemistry() {
                         <div className="flex items-center text-yellow-800">
                           <span className="mr-2">ℹ️</span>
                           <span className="text-sm">
-                            <strong>Ready to calculate ammonia toxicity!</strong> You have pH ({results.parameters.ph.value}) and ammonia ({results.parameters.ammonia.value} ppm), but need to enter water temperature above.
+                            <strong>Ready to calculate ammonia toxicity!</strong> You have pH ({results.parameters.ph?.value}) and ammonia ({results.parameters.ammonia?.value} ppm), but need to enter water temperature above.
                           </span>
                         </div>
                       </div>
