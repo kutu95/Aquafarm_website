@@ -17,6 +17,8 @@ export default function Seeding() {
   const [showPopup, setShowPopup] = useState(false);
   const [exportModalData, setExportModalData] = useState(null);
   const [showExportModal, setShowExportModal] = useState(false);
+  const [editingDate, setEditingDate] = useState(null);
+  const [newDate, setNewDate] = useState('');
   const [formData, setFormData] = useState({
     seeding_date: '',
     crop_id: '',
@@ -383,6 +385,51 @@ export default function Seeding() {
     });
   };
 
+  const handleEditDate = (date) => {
+    setEditingDate(date);
+    setNewDate(date);
+  };
+
+  const handleSaveDate = async (oldDate) => {
+    if (!newDate || newDate === oldDate) {
+      setEditingDate(null);
+      setNewDate('');
+      return;
+    }
+
+    try {
+      // Update all seedings with the old date to the new date
+      const { error } = await supabase
+        .from('seeding')
+        .update({ seeding_date: newDate })
+        .eq('seeding_date', oldDate)
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('Error updating seeding dates:', error);
+        alert('Failed to update seeding dates. Please try again.');
+        return;
+      }
+
+      // Refresh the data
+      await fetchData();
+      
+      // Reset editing state
+      setEditingDate(null);
+      setNewDate('');
+      
+      alert(`Successfully updated ${seedings.filter(s => s.seeding_date === oldDate).length} seedings from ${oldDate} to ${newDate}`);
+    } catch (error) {
+      console.error('Error updating seeding dates:', error);
+      alert('Failed to update seeding dates. Please try again.');
+    }
+  };
+
+  const handleCancelDateEdit = () => {
+    setEditingDate(null);
+    setNewDate('');
+  };
+
   const handleExportDateGroup = (dateGroup) => {
     // Sort seedings alphabetically by crop name
     const sortedSeedings = [...dateGroup.seedings].sort((a, b) => {
@@ -710,14 +757,57 @@ export default function Seeding() {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                   </svg>
                                 </button>
-                                <span className="text-sm font-semibold text-blue-900">
-                                  {new Date(dateGroup.date).toLocaleDateString('en-US', {
-                                    weekday: 'long',
-                                    year: 'numeric',
-                                    month: 'long',
-                                    day: 'numeric'
-                                  })}
-                                </span>
+                                
+                                {editingDate === dateGroup.date ? (
+                                  <div className="flex items-center space-x-2">
+                                    <input
+                                      type="date"
+                                      value={newDate}
+                                      onChange={(e) => setNewDate(e.target.value)}
+                                      className="text-sm border border-blue-300 rounded px-2 py-1 text-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    />
+                                    <button
+                                      onClick={() => handleSaveDate(dateGroup.date)}
+                                      className="text-green-600 hover:text-green-800 transition-colors duration-200"
+                                      aria-label="Save new date"
+                                    >
+                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                      </svg>
+                                    </button>
+                                    <button
+                                      onClick={handleCancelDateEdit}
+                                      className="text-red-600 hover:text-red-800 transition-colors duration-200"
+                                      aria-label="Cancel date edit"
+                                    >
+                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                      </svg>
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center space-x-2">
+                                    <span className="text-sm font-semibold text-blue-900">
+                                      {new Date(dateGroup.date).toLocaleDateString('en-US', {
+                                        weekday: 'long',
+                                        year: 'numeric',
+                                        month: 'long',
+                                        day: 'numeric'
+                                      })}
+                                    </span>
+                                    {role === 'admin' && (
+                                      <button
+                                        onClick={() => handleEditDate(dateGroup.date)}
+                                        className="text-blue-600 hover:text-blue-800 transition-colors duration-200 ml-2"
+                                        aria-label="Edit date for all seedings in this group"
+                                      >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                        </svg>
+                                      </button>
+                                    )}
+                                  </div>
+                                )}
                               </div>
                               <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-4">
                                 <span className="text-sm font-semibold text-blue-700">
