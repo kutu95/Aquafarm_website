@@ -1145,22 +1145,7 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
                 {component.name}
               </text>
 
-              {/* Status indicator */}
-              <circle
-                cx={component.x_position + component.width - 0.2}
-                cy={component.y_position + 0.2}
-                r="0.15"
-                fill={getStatusColor(componentStatus)}
-                stroke="white"
-                strokeWidth="0.02"
-                style={{
-                  opacity: opacity,
-                  transition: 'opacity 0.2s ease-in-out',
-                  pointerEvents: 'auto',
-                  visibility: 'visible'
-                }}
-                onDoubleClick={() => handleEditComponent(component)}
-              />
+
 
 
 

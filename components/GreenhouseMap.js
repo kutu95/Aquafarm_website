@@ -337,15 +337,7 @@ const GreenhouseMap = forwardRef(({ onScaleChange }, ref) => {
                 {component.name}
               </text>
 
-              {/* Status indicator */}
-              <circle
-                cx={component.x_position + component.width - 0.2}
-                cy={component.y_position + 0.2}
-                r="0.15"
-                fill={getStatusColor(component.status)}
-                stroke="white"
-                strokeWidth="0.02"
-              />
+
             </g>
           ))}
         </svg>
