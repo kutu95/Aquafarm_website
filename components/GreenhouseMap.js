@@ -200,8 +200,8 @@ const GreenhouseMap = forwardRef(({ onScaleChange }, ref) => {
           {/* Render components */}
           {layoutComponents.map((component) => (
             <g key={component.id}>
-              {/* Component shape - Fish tanks are circles, others are rectangles */}
-              {component.component_type === 'fishtank' ? (
+              {/* Component shape - Fish tanks and Tanks are circles, others are rectangles */}
+              {(component.component_type === 'fishtank' || component.component_type === 'tank') ? (
                 <circle
                   cx={component.x_position + component.width / 2}
                   cy={component.y_position + component.height / 2}

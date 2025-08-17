@@ -723,6 +723,7 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
   const componentTypes = [
     { value: 'growbed', label: 'Growbed', color: '#4CAF50' },
     { value: 'fishtank', label: 'Fish Tank', color: '#2196F3' },
+    { value: 'tank', label: 'Tank', color: '#FF5722' },
     { value: 'pump', label: 'Pump', color: '#FF9800' },
     { value: 'sensor', label: 'Sensor', color: '#9C27B0' },
     { value: 'pipe', label: 'Pipe', color: '#795548' },
@@ -978,8 +979,8 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
             return (
             <g key={component.id} data-component="true">
 
-              {/* Component shape - Fish tanks are circles, others are rectangles */}
-              {component.component_type === 'fishtank' ? (
+              {/* Component shape - Fish tanks and Tanks are circles, others are rectangles */}
+              {(component.component_type === 'fishtank' || component.component_type === 'tank') ? (
                 <circle
                   cx={component.x_position + component.width / 2}
                   cy={component.y_position + component.height / 2}
@@ -1196,8 +1197,8 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
             return draggedComponent && isDragging;
           })() && (
             <g key={`dragged-${draggedComponent.id}`}>
-              {/* Component shape - Fish tanks are circles, others are rectangles */}
-              {draggedComponent.component_type === 'fishtank' ? (
+              {/* Component shape - Fish tanks and Tanks are circles, others are rectangles */}
+              {(draggedComponent.component_type === 'fishtank' || draggedComponent.component_type === 'tank') ? (
                 <circle
                   cx={draggedComponent.x_position + draggedComponent.width / 2}
                   cy={draggedComponent.y_position + draggedComponent.height / 2}
@@ -1472,6 +1473,38 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
               </div>
             </div>
 
+            {/* Tank configuration - only show if tank type is selected */}
+            {editingComponent.component_type === 'tank' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Tank Configuration</label>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">Diameter (m) *</label>
+                    <input
+                      type="number"
+                      min="0.1"
+                      step="0.1"
+                      value={editingComponent.width}
+                      onChange={(e) => {
+                        const diameter = parseFloat(e.target.value) || 0;
+                        setEditingComponent(prev => ({ 
+                          ...prev, 
+                          width: diameter,
+                          height: diameter // Tanks are always circular
+                        }));
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="e.g., 1.5"
+                      required
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Tanks are always circular. Width and height will be set to the same value.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
               <select
@@ -1619,7 +1652,7 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
               </div>
             )}
 
-            {/* Fishtank selection - only show if fishtank type is selected */}
+                        {/* Fishtank selection - only show if fishtank type is selected */}
             {newComponent.component_type === 'fishtank' && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Select Existing Fishtank *</label>
@@ -1645,8 +1678,40 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
                 ) : (
                   <div className="px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500 text-sm">
                     All fishtanks are already placed on the map
-                  </div>
+                    </div>
                 )}
+              </div>
+            )}
+
+            {/* Tank configuration - only show if tank type is selected */}
+            {newComponent.component_type === 'tank' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Tank Configuration</label>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">Diameter (m) *</label>
+                    <input
+                      type="number"
+                      min="0.1"
+                      step="0.1"
+                      value={newComponent.width}
+                      onChange={(e) => {
+                        const diameter = parseFloat(e.target.value) || 0;
+                        setNewComponent(prev => ({ 
+                          ...prev, 
+                          width: diameter,
+                          height: diameter // Tanks are always circular
+                        }));
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="e.g., 1.5"
+                      required
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Tanks are always circular. Width and height will be set to the same value.
+                    </p>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -1754,7 +1819,8 @@ export default function GreenhouseMapEditor({ onSave, onCancel }) {
               onClick={handleAddComponent}
               disabled={!newComponent.name || 
                 (newComponent.component_type === 'growbed' && !newComponent.metadata.growbed_id) ||
-                (newComponent.component_type === 'fishtank' && !newComponent.metadata.fishtank_id)
+                (newComponent.component_type === 'fishtank' && !newComponent.metadata.fishtank_id) ||
+                (newComponent.component_type === 'tank' && (!newComponent.width || newComponent.width <= 0))
               }
               className="flex-1 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
