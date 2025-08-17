@@ -58,14 +58,14 @@ export default function CropTypes() {
           .eq('id', editingCropType.id);
 
         if (error) throw error;
-        alert('Crop type updated successfully!');
+        // Crop type updated successfully - no alert needed
       } else {
         const { error } = await supabase
           .from('crop_types')
           .insert([formData]);
 
         if (error) throw error;
-        alert('Crop type created successfully!');
+        // Crop type created successfully - no alert needed
       }
 
       setShowForm(false);
@@ -97,7 +97,7 @@ export default function CropTypes() {
         .eq('id', id);
 
       if (error) throw error;
-      alert('Crop type deleted successfully!');
+              // Crop type deleted successfully - no alert needed
       fetchCropTypes();
     } catch (error) {
       console.error('Error deleting crop type:', error);

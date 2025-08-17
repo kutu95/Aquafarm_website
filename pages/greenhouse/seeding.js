@@ -437,7 +437,7 @@ export default function Seeding() {
       setEditingDate(null);
       setNewDate('');
       
-      alert(`Successfully updated ${existingSeedings.length} seedings from ${oldDate} to ${newDate}`);
+      // Successfully updated seedings - no alert needed
     } catch (error) {
       console.error('Error updating seeding dates:', error);
       alert(`Failed to update seeding dates: ${error.message}`);

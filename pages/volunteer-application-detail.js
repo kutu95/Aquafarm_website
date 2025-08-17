@@ -79,7 +79,7 @@ export default function VolunteerApplicationDetail() {
       if (error) throw error;
 
       setApplication(prev => ({ ...prev, status: newStatus }));
-      alert('Status updated successfully');
+              // Status updated successfully - no alert needed
     } catch (error) {
       console.error('Error updating status:', error);
       alert('Error updating status');

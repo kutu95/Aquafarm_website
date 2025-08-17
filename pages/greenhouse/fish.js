@@ -99,14 +99,14 @@ export default function Fish() {
           .eq('id', editingFish.id);
 
         if (error) throw error;
-        alert('Fish record updated successfully!');
+        // Fish record updated successfully - no alert needed
       } else {
         const { error } = await supabase
           .from('fish')
           .insert([fishData]);
 
         if (error) throw error;
-        alert('Fish record created successfully!');
+        // Fish record created successfully - no alert needed
       }
 
       setShowForm(false);
@@ -141,7 +141,7 @@ export default function Fish() {
         .eq('id', id);
 
       if (error) throw error;
-      alert('Fish record deleted successfully!');
+              // Fish record deleted successfully - no alert needed
       fetchData();
     } catch (error) {
       console.error('Error deleting fish record:', error);

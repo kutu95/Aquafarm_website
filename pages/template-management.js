@@ -105,7 +105,7 @@ export default function TemplateManagement() {
       // Also refresh the templates to make sure we have the latest data
       await fetchTemplates();
       
-      alert('Template updated successfully!');
+              // Template updated successfully - no alert needed
     } catch (error) {
       console.error('Error updating template:', error);
       
@@ -136,7 +136,7 @@ export default function TemplateManagement() {
         throw error;
       }
 
-      alert('Template created successfully!');
+              // Template created successfully - no alert needed
       setNewTemplate({
         name: '',
         title: '',
@@ -181,7 +181,7 @@ export default function TemplateManagement() {
         throw error;
       }
 
-      alert('Template deleted successfully!');
+              // Template deleted successfully - no alert needed
       fetchTemplates();
       
       if (selectedTemplate && selectedTemplate.id === templateId) {

@@ -70,7 +70,7 @@ export default function WaterChemistryRecords() {
       const result = await response.json();
       
       if (result.success) {
-        alert('Record updated successfully');
+        // Record updated successfully - no alert needed
         setEditingRecord(null);
         fetchRecords(); // Refresh the list
       } else {
@@ -99,7 +99,7 @@ export default function WaterChemistryRecords() {
       const result = await response.json();
       
       if (result.success) {
-        alert('Record deleted successfully');
+        // Record deleted successfully - no alert needed
         setShowDeleteConfirm(null);
         fetchRecords(); // Refresh the list
       } else {

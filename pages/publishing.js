@@ -279,7 +279,7 @@ export default function Publishing() {
       await fetchPages();
       
       trackEvent('page_updated', 'publishing', 'page_edit', 1);
-      alert('Page updated successfully!');
+              // Page updated successfully - no alert needed
     } catch (error) {
       console.error('Error updating page:', error);
       trackEvent('page_update_failed', 'publishing', 'page_edit', 0);
@@ -312,7 +312,7 @@ export default function Publishing() {
       if (error) throw error;
 
       trackEvent('page_created', 'publishing', 'page_creation', 1);
-      alert('Page created successfully!');
+              // Page created successfully - no alert needed
       
       // Reset form and refresh pages
       setNewPage({
@@ -364,7 +364,7 @@ export default function Publishing() {
       if (error) throw error;
 
       trackEvent('page_deleted', 'publishing', 'page_deletion', 1);
-      alert('Page deleted successfully!');
+              // Page deleted successfully - no alert needed
       
       if (selectedPage?.id === pageId) {
         setSelectedPage(null);

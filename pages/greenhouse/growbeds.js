@@ -190,14 +190,14 @@ export default function Growbeds() {
           .eq('id', editingGrowbed.id);
 
         if (error) throw error;
-        alert('Growbed updated successfully!');
+        // Growbed updated successfully - no alert needed
       } else {
         const { error } = await supabase
           .from('growbeds')
           .insert([growbedData]);
 
         if (error) throw error;
-        alert('Growbed created successfully!');
+        // Growbed created successfully - no alert needed
       }
 
       // If there's a selected image, upload it
@@ -256,7 +256,7 @@ export default function Growbeds() {
         .eq('id', id);
 
       if (error) throw error;
-      alert('Growbed deleted successfully!');
+              // Growbed deleted successfully - no alert needed
       fetchGrowbeds();
     } catch (error) {
       console.error('Error deleting growbed:', error);

@@ -67,14 +67,14 @@ export default function Fishtanks() {
           .eq('id', editingFishtank.id);
 
         if (error) throw error;
-        alert('Fishtank updated successfully!');
+        // Fishtank updated successfully - no alert needed
       } else {
         const { error } = await supabase
           .from('fishtanks')
           .insert([fishtankData]);
 
         if (error) throw error;
-        alert('Fishtank created successfully!');
+        // Fishtank created successfully - no alert needed
       }
 
       setShowForm(false);
@@ -109,7 +109,7 @@ export default function Fishtanks() {
         .eq('id', id);
 
       if (error) throw error;
-      alert('Fishtank deleted successfully!');
+              // Fishtank deleted successfully - no alert needed
       fetchFishtanks();
     } catch (error) {
       console.error('Error deleting fishtank:', error);

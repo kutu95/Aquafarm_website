@@ -66,7 +66,7 @@ export default function SOPs() {
       // Remove the deleted SOP from the list
       setSopPages(sopPages.filter(sop => sop.id !== deleteConfirm.sopId));
       setDeleteConfirm({ show: false, sopId: null, sopTitle: '' });
-      alert('SOP deleted successfully.');
+              // SOP deleted successfully - no alert needed
     } catch (error) {
       console.error('Error deleting SOP:', error);
       alert('Failed to delete SOP. Please try again.');

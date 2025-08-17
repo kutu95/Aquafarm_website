@@ -58,14 +58,14 @@ export default function FishTypes() {
           .eq('id', editingFishType.id);
 
         if (error) throw error;
-        alert('Fish type updated successfully!');
+        // Fish type updated successfully - no alert needed
       } else {
         const { error } = await supabase
           .from('fish_types')
           .insert([formData]);
 
         if (error) throw error;
-        alert('Fish type created successfully!');
+        // Fish type created successfully - no alert needed
       }
 
       setShowForm(false);
@@ -97,7 +97,7 @@ export default function FishTypes() {
         .eq('id', id);
 
       if (error) throw error;
-      alert('Fish type deleted successfully!');
+              // Fish type deleted successfully - no alert needed
       fetchFishTypes();
     } catch (error) {
       console.error('Error deleting fish type:', error);
