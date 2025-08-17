@@ -398,16 +398,35 @@ export default function Seeding() {
     }
 
     try {
+      // First, let's get the seedings to update to verify they exist
+      const { data: existingSeedings, error: fetchError } = await supabase
+        .from('seeding')
+        .select('id, seeding_date')
+        .eq('seeding_date', oldDate);
+
+      if (fetchError) {
+        console.error('Error fetching seedings to update:', fetchError);
+        alert('Failed to fetch seedings for update. Please try again.');
+        return;
+      }
+
+      if (!existingSeedings || existingSeedings.length === 0) {
+        alert('No seedings found for the selected date.');
+        setEditingDate(null);
+        setNewDate('');
+        return;
+      }
+
       // Update all seedings with the old date to the new date
-      const { error } = await supabase
+      const { data: updateResult, error } = await supabase
         .from('seeding')
         .update({ seeding_date: newDate })
         .eq('seeding_date', oldDate)
-        .eq('user_id', user.id);
+        .select();
 
       if (error) {
         console.error('Error updating seeding dates:', error);
-        alert('Failed to update seeding dates. Please try again.');
+        alert(`Failed to update seeding dates: ${error.message}`);
         return;
       }
 
@@ -418,10 +437,10 @@ export default function Seeding() {
       setEditingDate(null);
       setNewDate('');
       
-      alert(`Successfully updated ${seedings.filter(s => s.seeding_date === oldDate).length} seedings from ${oldDate} to ${newDate}`);
+      alert(`Successfully updated ${existingSeedings.length} seedings from ${oldDate} to ${newDate}`);
     } catch (error) {
       console.error('Error updating seeding dates:', error);
-      alert('Failed to update seeding dates. Please try again.');
+      alert(`Failed to update seeding dates: ${error.message}`);
     }
   };
 
