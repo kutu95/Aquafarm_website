@@ -976,7 +976,20 @@ export default function Seeding() {
                       Crop
                     </label>
                     <p className="text-sm text-gray-900">
-                      {crops.find(c => c.id === selectedSeeding.crop_id)?.vegetable_name || 'Unknown'}{crops.find(c => c.id === selectedSeeding.crop_id)?.pelleted ? ' *' : ''}
+                      {(() => {
+                        const crop = crops.find(c => c.id === selectedSeeding.crop_id);
+                        if (crop) {
+                          return (
+                            <Link 
+                              href={`/greenhouse/crops`}
+                              className="text-blue-600 hover:text-blue-800 underline hover:no-underline transition-colors duration-200"
+                            >
+                              {crop.vegetable_name}{crop.pelleted ? ' *' : ''}
+                            </Link>
+                          );
+                        }
+                        return 'Unknown';
+                      })()}
                     </p>
                   </div>
                   
@@ -1027,7 +1040,10 @@ export default function Seeding() {
                       const crop = crops.find(c => c.id === selectedSeeding.crop_id);
                       if (crop) {
                         return (
-                          <div className="w-full h-48 bg-gray-100 rounded-lg overflow-hidden relative">
+                          <Link 
+                            href={`/greenhouse/crops`}
+                            className="block w-full h-48 bg-gray-100 rounded-lg overflow-hidden relative hover:opacity-90 transition-opacity duration-200"
+                          >
                             {/* Loading state */}
                             <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
                               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -1059,7 +1075,7 @@ export default function Seeding() {
                                 <div>Image not available</div>
                               </div>
                             </div>
-                          </div>
+                          </Link>
                         );
                       }
                       return (
