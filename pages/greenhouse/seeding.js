@@ -981,7 +981,7 @@ export default function Seeding() {
                         if (crop) {
                           return (
                             <Link 
-                              href={`/greenhouse/crops`}
+                              href={`/greenhouse/crops?crop=${crop.id}`}
                               className="text-blue-600 hover:text-blue-800 underline hover:no-underline transition-colors duration-200"
                             >
                               {crop.vegetable_name}{crop.pelleted ? ' *' : ''}
@@ -1041,7 +1041,7 @@ export default function Seeding() {
                       if (crop) {
                         return (
                           <Link 
-                            href={`/greenhouse/crops`}
+                            href={`/greenhouse/crops?crop=${crop.id}`}
                             className="block w-full h-48 bg-gray-100 rounded-lg overflow-hidden relative hover:opacity-90 transition-opacity duration-200"
                           >
                             {/* Loading state */}

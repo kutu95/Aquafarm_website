@@ -121,6 +121,20 @@ export default function Crops() {
     }
   }, [user]);
 
+  // Check for crop query parameter to auto-open modal
+  useEffect(() => {
+    if (user && crops.length > 0 && router.query.crop) {
+      const cropId = parseInt(router.query.crop);
+      const crop = crops.find(c => c.id === cropId);
+      if (crop) {
+        setSelectedCropForModal(crop);
+        setShowCropModal(true);
+        // Clear the query parameter from the URL
+        router.replace('/greenhouse/crops', undefined, { shallow: true });
+      }
+    }
+  }, [user, crops, router.query.crop]);
+
   // Cleanup effect for object URLs
   useEffect(() => {
     return () => {
