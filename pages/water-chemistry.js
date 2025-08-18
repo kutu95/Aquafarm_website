@@ -187,6 +187,226 @@ export default function WaterChemistry() {
     });
   };
 
+  // Mobile-friendly image loading with multiple fallback methods
+  const loadImageForMobile = async (file) => {
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    console.log('=== MOBILE IMAGE LOADING DEBUG START ===');
+    console.log('Device type:', isMobile ? 'Mobile' : 'Desktop');
+    console.log('User agent:', navigator.userAgent);
+    console.log('File info:', {
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      lastModified: file.lastModified,
+      constructor: file.constructor.name,
+      isFile: file instanceof File,
+      isBlob: file instanceof Blob
+    });
+    console.log('Browser capabilities:', {
+      hasFileReader: typeof FileReader !== 'undefined',
+      hasURL: typeof URL !== 'undefined',
+      hasCreateObjectURL: typeof URL !== 'undefined' && typeof URL.createObjectURL === 'function',
+      hasCanvas: typeof HTMLCanvasElement !== 'undefined',
+      hasImage: typeof HTMLImageElement !== 'undefined'
+    });
+    console.log('=== MOBILE IMAGE LOADING DEBUG END ===');
+    
+    // Method 1: Try FileReader first (most reliable)
+    try {
+      console.log('Attempting FileReader method...');
+      const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        const timeout = setTimeout(() => {
+          reader.abort();
+          reject(new Error('FileReader timeout'));
+        }, 8000);
+        
+        reader.onload = (e) => {
+          clearTimeout(timeout);
+          resolve(e.target.result);
+        };
+        
+        reader.onerror = (error) => {
+          clearTimeout(timeout);
+          reject(new Error(`FileReader error: ${error.target?.error?.message || 'Unknown error'}`));
+        };
+        
+        reader.readAsDataURL(file);
+      });
+      
+      console.log('FileReader method successful');
+      return { success: true, dataUrl, method: 'FileReader' };
+    } catch (error) {
+      console.log('FileReader method failed:', error.message);
+    }
+    
+    // Method 2: Try URL.createObjectURL (works on most modern browsers)
+    try {
+      console.log('Attempting URL.createObjectURL method...');
+      const objectUrl = URL.createObjectURL(file);
+      
+      // Test if the object URL works by trying to load it
+      const testImg = new Image();
+      const loadPromise = new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error('Image load timeout'));
+        }, 5000);
+        
+        testImg.onload = () => {
+          clearTimeout(timeout);
+          resolve(objectUrl);
+        };
+        
+        testImg.onerror = () => {
+          clearTimeout(timeout);
+          reject(new Error('Image failed to load from object URL'));
+        };
+      });
+      
+      const result = await loadPromise;
+      console.log('URL.createObjectURL method successful');
+      return { success: true, dataUrl: result, method: 'URL.createObjectURL' };
+    } catch (error) {
+      console.log('URL.createObjectURL method failed:', error.message);
+    }
+    
+    // Method 3: Try canvas-based approach (most compatible but slower)
+    try {
+      console.log('Attempting canvas-based method...');
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      
+      const canvasPromise = new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error('Canvas method timeout'));
+        }, 10000);
+        
+        img.onload = () => {
+          clearTimeout(timeout);
+          try {
+            // Set canvas size to image size
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight;
+            
+            // Draw image to canvas
+            ctx.drawImage(img, 0, 0);
+            
+            // Convert to data URL
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+            resolve(dataUrl);
+          } catch (canvasError) {
+            reject(new Error(`Canvas processing error: ${canvasError.message}`));
+          }
+        };
+        
+        img.onerror = () => {
+          clearTimeout(timeout);
+          reject(new Error('Image failed to load for canvas method'));
+        };
+      });
+      
+      // For canvas method, we need to create a blob URL first
+      const blobUrl = URL.createObjectURL(file);
+      img.src = blobUrl;
+      
+      const result = await canvasPromise;
+      
+      // Clean up blob URL
+      URL.revokeObjectURL(blobUrl);
+      
+      console.log('Canvas-based method successful');
+      return { success: true, dataUrl: result, method: 'Canvas' };
+    } catch (error) {
+      console.log('Canvas-based method failed:', error.message);
+    }
+    
+    // Method 4: Try with reduced file size (mobile-friendly)
+    if (isMobile && file.size > 2 * 1024 * 1024) { // If file is larger than 2MB on mobile
+      try {
+        console.log('Attempting size reduction method for mobile...');
+        
+        // Create a smaller version using canvas
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+        
+        const reducePromise = new Promise((resolve, reject) => {
+          const timeout = setTimeout(() => {
+            reject(new Error('Size reduction timeout'));
+          }, 15000);
+          
+          img.onload = () => {
+            clearTimeout(timeout);
+            try {
+              // Calculate new dimensions (max 800x600 for mobile)
+              const maxWidth = 800;
+              const maxHeight = 600;
+              let { width, height } = img;
+              
+              if (width > height) {
+                if (width > maxWidth) {
+                  height = (height * maxWidth) / width;
+                  width = maxWidth;
+                }
+              } else {
+                if (height > maxHeight) {
+                  width = (width * maxHeight) / height;
+                  height = maxHeight;
+                }
+              }
+              
+              canvas.width = width;
+              canvas.height = height;
+              
+              // Draw resized image
+              ctx.drawImage(img, 0, 0, width, height);
+              
+              // Convert to compressed data URL
+              const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+              resolve(dataUrl);
+            } catch (canvasError) {
+              reject(new Error(`Size reduction error: ${canvasError.message}`));
+            }
+          };
+          
+          img.onerror = () => {
+            clearTimeout(timeout);
+            reject(new Error('Image failed to load for size reduction'));
+          };
+        });
+        
+        // Create blob URL for the image
+        const blobUrl = URL.createObjectURL(file);
+        img.src = blobUrl;
+        
+        const result = await reducePromise;
+        
+        // Clean up blob URL
+        URL.revokeObjectURL(blobUrl);
+        
+        console.log('Size reduction method successful');
+        return { success: true, dataUrl: result, method: 'SizeReduction' };
+      } catch (error) {
+        console.log('Size reduction method failed:', error.message);
+      }
+    }
+    
+    // All methods failed
+    console.error('All image loading methods failed');
+    return { 
+      success: false, 
+      error: 'All image loading methods failed. This may be due to browser compatibility issues or corrupted image data.',
+      suggestions: [
+        'Try using a different image',
+        'Try taking a new photo with your camera',
+        'Check if the image file is corrupted',
+        'Try uploading from a different device or browser'
+      ]
+    };
+  };
+
   // Extract date from EXIF metadata with timeout
   const extractDateFromExif = (file) => {
     return new Promise((resolve) => {
@@ -449,7 +669,13 @@ export default function WaterChemistry() {
     if (isMobile && file.size > mobileSizeLimit) {
       console.error('File too large for mobile:', file.size, 'bytes');
       setUploadStatus(`❌ Error: File too large for mobile - ${(file.size / 1024 / 1024).toFixed(2)}MB (max 5MB)`);
-      setError(`File size ${(file.size / 1024 / 1024).toFixed(2)}MB is too large for mobile. Please use a smaller image (under 5MB) or try on desktop. Tip: Try taking a photo with lower resolution or use a smaller image from your gallery.`);
+      setError(`File size ${(file.size / 1024 / 1024).toFixed(2)}MB is too large for mobile. Please use a smaller image (under 5MB) or try on desktop. 
+
+💡 Mobile Tips:
+• Take a photo with lower resolution
+• Use a smaller image from your gallery
+• Try the camera option instead of gallery
+• Check your camera settings for image quality`);
       return;
     }
     
@@ -486,13 +712,16 @@ export default function WaterChemistry() {
         setUploadStatus(`📅 No date found - Loading image...`);
       }
       
-      const reader = new FileReader();
+      // Use the new mobile-friendly image loading function
+      setUploadStatus(`🖼️ Loading image with mobile-optimized methods...`);
+      const imageResult = await loadImageForMobile(file);
       
-      reader.onload = (e) => {
-        console.log('FileReader onload triggered, setting image preview');
-        setUploadStatus(`🖼️ Image loaded - Setting up crop tool...`);
+      if (imageResult.success) {
+        console.log(`Image loaded successfully using method: ${imageResult.method}`);
+        setUploadStatus(`✅ Image loaded successfully using ${imageResult.method} method - Setting up crop tool...`);
+        
         setSelectedImage(file);
-        setImagePreview(e.target.result);
+        setImagePreview(imageResult.dataUrl);
         setShowCropper(true);
         
         // Wait for image to load before setting crop area
@@ -519,7 +748,7 @@ export default function WaterChemistry() {
         };
         
         img.onerror = (error) => {
-          console.error('Error loading image - detailed error:', {
+          console.error('Error loading image after successful method:', {
             error: error,
             errorType: error.type,
             errorMessage: error.message,
@@ -528,254 +757,26 @@ export default function WaterChemistry() {
             imageHeight: img.height,
             imageComplete: img.complete,
             imageNaturalWidth: img.naturalWidth,
-            imageNaturalHeight: img.naturalHeight
+            imageNaturalHeight: img.naturalHeight,
+            methodUsed: imageResult.method
           });
-          setUploadStatus('❌ Error: Failed to load image');
-          setError(`Image loading failed: ${error.type} - ${error.message || 'Unknown image loading error'}`);
-          // Don't show crop tool if image fails to load
+          setUploadStatus('❌ Error: Image loaded but failed to display');
+          setError(`Image loaded using ${imageResult.method} but failed to display: ${error.type} - ${error.message || 'Unknown image loading error'}`);
           setShowCropper(false);
           setImagePreview(null);
           setSelectedImage(null);
         };
         
-        img.src = e.target.result;
-      };
-      
-      reader.onerror = (error) => {
-        console.error('FileReader error details:', {
-          error: error,
-          errorType: error.type,
-          errorMessage: error.message,
-          errorTarget: error.target,
-          errorTargetReadyState: error.target?.readyState,
-          errorTargetError: error.target?.error
-        });
-        
-        setUploadStatus('❌ Error: Failed to read image file');
-        setError(`FileReader failed: ${error.type} - ${error.target?.error?.message || error.message || 'Unknown error'}`);
-        
-        // Don't show crop tool if FileReader fails
+        img.src = imageResult.dataUrl;
+      } else {
+        // All methods failed
+        console.error('All image loading methods failed:', imageResult.error);
+        setUploadStatus('❌ Error: All image loading methods failed');
+        setError(`Image loading failed: ${imageResult.error}\n\nSuggestions:\n${imageResult.suggestions.map(s => `• ${s}`).join('\n')}`);
         setShowCropper(false);
         setImagePreview(null);
         setSelectedImage(null);
-        
-        // Debug: Check if file is still valid
-        console.log('FileReader failed, checking file validity:', {
-          fileExists: !!file,
-          fileSize: file?.size,
-          fileType: file?.type,
-          fileValid: file instanceof File || file instanceof Blob,
-          fileReadable: file && file.size > 0,
-          fileConstructor: file?.constructor?.name,
-          filePrototype: Object.getPrototypeOf(file)
-        });
-        
-        // Try alternative approach for mobile
-        console.log('Attempting alternative file reading method...');
-        setUploadStatus('🔄 Trying alternative file reading method...');
-        
-        // Fallback: try using URL.createObjectURL
-        try {
-          // Check if file is still valid before trying fallback
-          if (!file || file.size === 0) {
-            throw new Error('File is no longer valid or is empty');
-          }
-          
-          console.log('Attempting URL.createObjectURL fallback...');
-          const objectUrl = URL.createObjectURL(file);
-          console.log('Successfully created object URL:', objectUrl);
-          
-          setUploadStatus(`🖼️ Using alternative method - Setting up crop tool...`);
-          setSelectedImage(file);
-          setImagePreview(objectUrl);
-          setShowCropper(true);
-          
-          // Wait for image to load before setting crop area
-          const img = new Image();
-          img.onload = () => {
-            console.log('Image loaded successfully with object URL:', { 
-              naturalWidth: img.naturalWidth, 
-              naturalHeight: img.naturalHeight,
-              displayWidth: img.width,
-              displayHeight: img.height
-            });
-            
-            // Set initial crop area to center of image
-            const centerX = (img.width - 200) / 2;
-            const centerY = (img.height - 200) / 2;
-            setCropArea({
-              x: Math.max(0, centerX),
-              y: Math.max(0, centerY),
-              width: Math.min(200, img.width),
-              height: Math.min(200, img.height)
-            });
-            
-            setUploadStatus(`✅ Ready to crop! Image: ${img.width}x${img.height}px`);
-          };
-          
-          img.onerror = (fallbackError) => {
-            console.error('Fallback image loading failed - detailed error:', {
-              error: fallbackError,
-              errorType: fallbackError.type,
-              errorMessage: fallbackError.message,
-              imageSrc: img.src,
-              imageWidth: img.width,
-              imageHeight: img.height,
-              imageComplete: img.complete,
-              imageNaturalWidth: img.naturalWidth,
-              imageNaturalHeight: img.naturalHeight
-            });
-            
-            setUploadStatus('❌ Error: Both file reading methods failed');
-            setError(`Image loading failed after URL.createObjectURL. File: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB, Type: ${file.type}). Image error: ${fallbackError.type} - ${fallbackError.message || 'Unknown image loading error'}`);
-            
-            // Don't show crop tool if fallback also fails
-            setShowCropper(false);
-            setImagePreview(null);
-            setSelectedImage(null);
-          };
-          
-          img.src = objectUrl;
-          
-        } catch (fallbackError) {
-          console.error('URL.createObjectURL fallback method failed - detailed error:', {
-            error: fallbackError,
-            errorType: fallbackError.type,
-            errorMessage: fallbackError.message,
-            errorStack: fallbackError.stack,
-            fileInfo: {
-              name: file?.name,
-              size: file?.size,
-              type: file?.type,
-              constructor: file?.constructor?.name,
-              isFile: file instanceof File,
-              isBlob: file instanceof Blob
-            }
-          });
-          
-          setUploadStatus('❌ Error: All file reading methods failed');
-          setError(`URL.createObjectURL failed. File: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB, Type: ${file.type}). Error: ${fallbackError.message || fallbackError.type || 'Unknown error'}. Stack: ${fallbackError.stack || 'No stack trace'}`);
-          
-          // Don't show crop tool if fallback also fails
-          setShowCropper(false);
-          setImagePreview(null);
-          setSelectedImage(null);
-        }
-      };
-      
-      // Add timeout to FileReader
-      const readerTimeout = setTimeout(() => {
-        console.log('FileReader timeout occurred - detailed timeout info:', {
-          timeoutDuration: '10000ms',
-          fileInfo: {
-            name: file?.name,
-            size: file?.size,
-            type: file?.type,
-            lastModified: file?.lastModified
-          },
-          readerState: {
-            readyState: reader?.readyState,
-            error: reader?.error
-          }
-        });
-        
-        setUploadStatus('⏰ FileReader timed out, trying alternative method...');
-        reader.abort();
-        
-        // Don't show crop tool during timeout fallback
-        setShowCropper(false);
-        setImagePreview(null);
-        setSelectedImage(null);
-        
-        // Try fallback method
-        try {
-          console.log('Attempting URL.createObjectURL after timeout...');
-          const objectUrl = URL.createObjectURL(file);
-          console.log('Successfully created object URL after timeout:', objectUrl);
-          
-          setUploadStatus(`🖼️ Using fallback method - Setting up crop tool...`);
-          setSelectedImage(file);
-          setImagePreview(objectUrl);
-          setShowCropper(true);
-          
-          // Wait for image to load before setting crop area
-          const img = new Image();
-          img.onload = () => {
-            console.log('Image loaded successfully with fallback method after timeout:', { 
-              naturalWidth: img.naturalWidth, 
-              naturalHeight: img.naturalHeight,
-              displayWidth: img.width,
-              displayHeight: img.height
-            });
-            
-            // Set initial crop area to center of image
-            const centerX = (img.width - 200) / 2;
-            const centerY = (img.height - 200) / 2;
-            setCropArea({
-              x: Math.max(0, centerX),
-              y: Math.max(0, centerY),
-              width: Math.min(200, img.width),
-              height: Math.min(200, img.height)
-            });
-            
-            setUploadStatus(`✅ Ready to crop! Image: ${img.width}x${img.height}px`);
-          };
-          
-          img.onerror = (fallbackError) => {
-            console.error('Fallback image loading failed after timeout - detailed error:', {
-              error: fallbackError,
-              errorType: fallbackError.type,
-              errorMessage: fallbackError.message,
-              imageSrc: img.src,
-              imageWidth: img.width,
-              imageHeight: img.height,
-              imageComplete: img.complete,
-              imageNaturalWidth: img.naturalWidth,
-              imageNaturalHeight: img.naturalHeight,
-              timeoutContext: 'FileReader timed out, then fallback failed'
-            });
-            
-            setUploadStatus('❌ Error: All methods failed after timeout');
-            setError(`Image loading failed after timeout fallback. File: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB, Type: ${file.type}). Image error: ${fallbackError.type} - ${fallbackError.message || 'Unknown image loading error'}`);
-            // Don't show crop tool if fallback also fails
-            setShowCropper(false);
-            setImagePreview(null);
-            setSelectedImage(null);
-          };
-          
-          img.src = objectUrl;
-          
-        } catch (fallbackError) {
-          console.error('URL.createObjectURL fallback method failed after timeout - detailed error:', {
-            error: fallbackError,
-            errorType: fallbackError.type,
-            errorMessage: fallbackError.message,
-            errorStack: fallbackError.stack,
-            timeoutContext: 'FileReader timed out, then URL.createObjectURL failed',
-            fileInfo: {
-              name: file?.name,
-              size: file?.size,
-              type: file?.type,
-              constructor: file?.constructor?.name,
-              isFile: file instanceof File,
-              isBlob: file instanceof Blob
-            }
-          });
-          
-          setUploadStatus('❌ Error: All methods failed after timeout');
-          setError(`URL.createObjectURL failed after timeout. File: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB, Type: ${file.type}). Error: ${fallbackError.message || fallbackError.type || 'Unknown error'}. Stack: ${fallbackError.stack || 'No stack trace'}`);
-          // Don't show crop tool if fallback also fails
-          setShowCropper(false);
-          setImagePreview(null);
-          setSelectedImage(null);
-        }
-      }, 10000); // 10 second timeout for FileReader
-      
-      reader.onloadend = () => {
-        clearTimeout(readerTimeout);
-      };
-      
-      reader.readAsDataURL(file);
+      }
       
     } catch (error) {
       console.error('Error in handleImageSelect:', error);
@@ -1544,6 +1545,27 @@ export default function WaterChemistry() {
                 </p>
               </div>
 
+              </div>
+
+              {/* Mobile Status Indicator */}
+              {/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) && (
+                <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="flex items-center">
+                    <span className="mr-2">📱</span>
+                    <span className="text-blue-900 font-medium">
+                      Mobile Device Detected
+                    </span>
+                  </div>
+                  <p className="text-sm text-blue-700 mt-1">
+                    Mobile-optimized image handling enabled with multiple fallback methods for better compatibility
+                  </p>
+                  <div className="mt-2 text-xs text-blue-600">
+                    <p><strong>Supported methods:</strong> FileReader → URL.createObjectURL → Canvas → Size Reduction</p>
+                    <p><strong>File size limit:</strong> 5MB (optimized for mobile performance)</p>
+                  </div>
+                </div>
+              )}
+
               {/* File Upload */}
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
                 {/* Status Display */}
@@ -1622,6 +1644,7 @@ export default function WaterChemistry() {
                   <input
                     type="file"
                     accept="image/*"
+                    capture="environment"
                     onChange={(e) => {
                       console.log('Mobile file input onChange triggered:', {
                         files: e.target.files,
@@ -1649,10 +1672,11 @@ export default function WaterChemistry() {
                   >
                     <div className="flex flex-col items-center">
                       <svg className="h-8 w-8 text-blue-500 mb-2" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                        <path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M7 16a4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                       <span className="text-blue-700 font-medium">📱 Tap to upload image</span>
                       <span className="text-blue-600 text-sm mt-1">Choose from gallery or camera</span>
+                      <span className="text-xs text-blue-500 mt-2">💡 Mobile-optimized for better compatibility</span>
                     </div>
                   </label>
                 </div>
@@ -1693,6 +1717,15 @@ export default function WaterChemistry() {
                       <p className="text-xs text-blue-800">
                         📱 <strong>Mobile users:</strong> Tap the blue upload area above to select from gallery or take a photo
                       </p>
+                      <div className="mt-2 text-xs text-blue-700">
+                        <p><strong>💡 Mobile Tips:</strong></p>
+                        <ul className="list-disc list-inside space-y-1 mt-1">
+                          <li>Use the camera option for best results</li>
+                          <li>Ensure good lighting when taking photos</li>
+                          <li>Keep images under 5MB for optimal performance</li>
+                          <li>If upload fails, try a smaller image or different photo</li>
+                        </ul>
+                      </div>
                     </div>
                   </>
                 ) : (
@@ -1911,7 +1944,6 @@ export default function WaterChemistry() {
                           </div>
 
                           
-
                           
                           {/* Crop area dimensions */}
                           <div className="absolute bottom-2 right-2 bg-black bg-opacity-75 text-white text-xs p-2 rounded">
@@ -2015,6 +2047,30 @@ export default function WaterChemistry() {
               {error && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                   <p className="text-red-800">{error}</p>
+                  
+                  {/* Mobile-specific error guidance */}
+                  {/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) && (
+                    <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <p className="text-sm font-medium text-yellow-800 mb-2">📱 Mobile Troubleshooting:</p>
+                      <ul className="text-xs text-yellow-700 space-y-1">
+                        <li>• Try taking a new photo with your camera</li>
+                        <li>• Check if the image file is corrupted</li>
+                        <li>• Ensure the image is under 5MB</li>
+                        <li>• Try uploading from your photo gallery instead</li>
+                        <li>• Close and reopen the app/browser</li>
+                        <li>• Check your internet connection</li>
+                        <li>• Try using a different browser (Chrome, Safari, Firefox)</li>
+                        <li>• Clear browser cache and cookies</li>
+                      </ul>
+                      <p className="text-xs text-yellow-600 mt-2">
+                        If the problem persists, try using a desktop computer or contact support.
+                      </p>
+                      <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
+                        <p><strong>🔧 Technical Details:</strong></p>
+                        <p>This error typically occurs when the mobile browser cannot process the image file. The app tries multiple methods to load your image, but all failed. This is often due to browser compatibility issues on mobile devices.</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
