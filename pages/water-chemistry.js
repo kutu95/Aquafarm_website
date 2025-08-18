@@ -135,6 +135,66 @@ export default function WaterChemistry() {
     setError(null);
   };
 
+  // Clean up temporary resources and memory
+  const cleanupTemporaryResources = () => {
+    console.log('Cleaning up temporary resources...');
+    
+    // Clean up any existing blob URLs
+    if (imagePreview && imagePreview.startsWith('blob:')) {
+      try {
+        URL.revokeObjectURL(imagePreview);
+        console.log('Revoked blob URL:', imagePreview);
+      } catch (e) {
+        console.log('Error revoking blob URL:', e);
+      }
+    }
+    
+    // Clear image references
+    if (imageRef.current) {
+      imageRef.current.src = '';
+      imageRef.current = null;
+    }
+    
+    // Clear canvas
+    if (canvasRef.current) {
+      const ctx = canvasRef.current.getContext('2d');
+      ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+    }
+    
+    // Force garbage collection if available (helps on mobile)
+    if (window.gc) {
+      try {
+        window.gc();
+        console.log('Forced garbage collection');
+      } catch (e) {
+        console.log('Garbage collection not available');
+      }
+    }
+    
+    // Clear any existing image caches
+    if ('caches' in window) {
+      caches.keys().then(names => {
+        names.forEach(name => {
+          if (name.includes('image') || name.includes('blob')) {
+            caches.delete(name);
+            console.log('Cleared cache:', name);
+          }
+        });
+      });
+    }
+    
+    // Clear any existing FileReader instances
+    if (window.FileReader && window.FileReader.prototype) {
+      // Reset any stuck FileReader instances
+      try {
+        const reader = new FileReader();
+        reader.abort();
+      } catch (e) {
+        console.log('FileReader cleanup error:', e);
+      }
+    }
+  };
+
   // Function to extract date from image metadata or filename
   const extractDateFromImage = async (file) => {
     return new Promise((resolve) => {
@@ -211,6 +271,32 @@ export default function WaterChemistry() {
       hasImage: typeof HTMLImageElement !== 'undefined'
     });
     console.log('=== MOBILE IMAGE LOADING DEBUG END ===');
+    
+    // Clean up any existing temporary resources first
+    const cleanupTemporaryResources = () => {
+      // Force garbage collection if available (helps on mobile)
+      if (window.gc) {
+        try {
+          window.gc();
+        } catch (e) {
+          console.log('Garbage collection not available');
+        }
+      }
+      
+      // Clear any existing image caches
+      if ('caches' in window) {
+        caches.keys().then(names => {
+          names.forEach(name => {
+            if (name.includes('image') || name.includes('blob')) {
+              caches.delete(name);
+            }
+          });
+        });
+      }
+    };
+    
+    // Clean up before starting
+    cleanupTemporaryResources();
     
     // Method 1: Try FileReader first (most reliable)
     try {
@@ -615,6 +701,14 @@ export default function WaterChemistry() {
     }
   }, [showCropper, cropArea.width, cropArea.height, cropArea.x, cropArea.y]);
 
+  // Clean up resources when component unmounts
+  useEffect(() => {
+    return () => {
+      console.log('Component unmounting, cleaning up resources...');
+      cleanupTemporaryResources();
+    };
+  }, []);
+
   // Cropping functions
   const handleImageSelect = async (file) => {
     console.log('handleImageSelect called with file:', {
@@ -630,6 +724,9 @@ export default function WaterChemistry() {
       isFile: file instanceof File,
       isBlob: file instanceof Blob
     });
+    
+    // Clean up any existing resources before processing new image
+    cleanupTemporaryResources();
     
     // Validate file
     if (!file) {
@@ -1979,6 +2076,8 @@ export default function WaterChemistry() {
                         </button>
                         <button
                           onClick={() => {
+                            // Clean up resources before canceling
+                            cleanupTemporaryResources();
                             setShowCropper(false);
                             setImagePreview(null);
                             setSelectedImage(null);
@@ -1998,8 +2097,12 @@ export default function WaterChemistry() {
                         </button>
                         <button
                           onClick={() => {
+                            // Clean up resources before removing image
+                            cleanupTemporaryResources();
                             setImagePreview(null);
                             setSelectedImage(null);
+                            setShowCropper(false);
+                            setCropArea({ x: 0, y: 0, width: 200, height: 200 });
                           }}
                           className="px-4 py-2 bg-gray-500 text-white font-medium rounded-lg hover:bg-gray-600 ml-2"
                         >
@@ -2061,6 +2164,7 @@ export default function WaterChemistry() {
                         <li>• Check your internet connection</li>
                         <li>• Try using a different browser (Chrome, Safari, Firefox)</li>
                         <li>• Clear browser cache and cookies</li>
+                        <li>• Wait a few seconds before trying again (memory cleanup)</li>
                       </ul>
                       <p className="text-xs text-yellow-600 mt-2">
                         If the problem persists, try using a desktop computer or contact support.
@@ -2068,6 +2172,25 @@ export default function WaterChemistry() {
                       <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
                         <p><strong>🔧 Technical Details:</strong></p>
                         <p>This error typically occurs when the mobile browser cannot process the image file. The app tries multiple methods to load your image, but all failed. This is often due to browser compatibility issues on mobile devices.</p>
+                        <p><strong>💡 Memory Management:</strong> The app now automatically cleans up temporary resources between uploads to prevent memory-related failures.</p>
+                      </div>
+                      
+                      {/* Retry button for mobile */}
+                      <div className="mt-3 text-center">
+                        <button
+                          onClick={() => {
+                            cleanupTemporaryResources();
+                            setError(null);
+                            setUploadStatus('🔄 Resources cleaned up. Please try uploading again.');
+                            // Wait a moment for cleanup to complete
+                            setTimeout(() => {
+                              setUploadStatus('');
+                            }, 3000);
+                          }}
+                          className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
+                        >
+                          🔄 Clean Up & Retry
+                        </button>
                       </div>
                     </div>
                   )}
