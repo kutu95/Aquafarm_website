@@ -275,16 +275,19 @@ export default function WaterChemistry() {
     });
     console.log('=== MOBILE IMAGE LOADING DEBUG END ===');
     
-    // Only do minimal cleanup - don't interfere with the loading process
-    console.log('Performing minimal cleanup before image loading');
-    
-    // Only clean up the current image preview if it exists
-    if (imagePreview && imagePreview.startsWith('blob:')) {
-      try {
-        URL.revokeObjectURL(imagePreview);
-        console.log('Revoked previous blob URL');
-      } catch (e) {
-        console.log('Error revoking previous blob URL:', e);
+    // No cleanup on first upload - let the browser handle it naturally
+    if (!imagePreview) {
+      console.log('First upload - no cleanup needed, letting browser handle naturally');
+    } else {
+      console.log('Subsequent upload - minimal cleanup for previous image');
+      // Only clean up the current image preview if it exists
+      if (imagePreview.startsWith('blob:')) {
+        try {
+          URL.revokeObjectURL(imagePreview);
+          console.log('Revoked previous blob URL');
+        } catch (e) {
+          console.log('Error revoking previous blob URL:', e);
+        }
       }
     }
     
@@ -293,21 +296,39 @@ export default function WaterChemistry() {
       console.log('Attempting FileReader method...');
       const dataUrl = await new Promise((resolve, reject) => {
         const reader = new FileReader();
+        
+        // Increase timeout for mobile devices
         const timeout = setTimeout(() => {
-          reader.abort();
-          reject(new Error('FileReader timeout'));
-        }, 8000);
+          console.log('FileReader timeout - aborting');
+          try {
+            reader.abort();
+          } catch (e) {
+            console.log('Error aborting FileReader:', e);
+          }
+          reject(new Error('FileReader timeout - file may be too large or corrupted'));
+        }, 15000); // 15 seconds for mobile
         
         reader.onload = (e) => {
           clearTimeout(timeout);
+          console.log('FileReader onload successful, data length:', e.target.result.length);
           resolve(e.target.result);
         };
         
         reader.onerror = (error) => {
           clearTimeout(timeout);
-          reject(new Error(`FileReader error: ${error.target?.error?.message || 'Unknown error'}`));
+          console.error('FileReader error details:', error);
+          const errorMessage = error.target?.error?.message || 'Unknown FileReader error';
+          reject(new Error(`FileReader error: ${errorMessage}`));
         };
         
+        reader.onprogress = (e) => {
+          if (e.lengthComputable) {
+            const progress = (e.loaded / e.total) * 100;
+            console.log(`FileReader progress: ${progress.toFixed(1)}%`);
+          }
+        };
+        
+        console.log('Starting FileReader.readAsDataURL...');
         reader.readAsDataURL(file);
       });
       
@@ -315,6 +336,7 @@ export default function WaterChemistry() {
       return { success: true, dataUrl, method: 'FileReader' };
     } catch (error) {
       console.log('FileReader method failed:', error.message);
+      console.error('FileReader error details:', error);
     }
     
     // Method 2: Try URL.createObjectURL (works on most modern browsers)
@@ -327,15 +349,17 @@ export default function WaterChemistry() {
       const loadPromise = new Promise((resolve, reject) => {
         const timeout = setTimeout(() => {
           reject(new Error('Image load timeout'));
-        }, 5000);
+        }, 8000); // 8 seconds for mobile
         
         testImg.onload = () => {
           clearTimeout(timeout);
+          console.log('Image loaded successfully from object URL');
           resolve(objectUrl);
         };
         
         testImg.onerror = () => {
           clearTimeout(timeout);
+          console.error('Image failed to load from object URL');
           reject(new Error('Image failed to load from object URL'));
         };
       });
@@ -345,6 +369,16 @@ export default function WaterChemistry() {
       return { success: true, dataUrl: result, method: 'URL.createObjectURL' };
     } catch (error) {
       console.log('URL.createObjectURL method failed:', error.message);
+      
+      // Fallback: Try to use the object URL directly without testing
+      try {
+        console.log('Attempting direct object URL fallback...');
+        const directObjectUrl = URL.createObjectURL(file);
+        console.log('Direct object URL fallback successful');
+        return { success: true, dataUrl: directObjectUrl, method: 'URL.createObjectURL-Direct' };
+      } catch (fallbackError) {
+        console.log('Direct object URL fallback failed:', fallbackError.message);
+      }
     }
     
     // Method 3: Try canvas-based approach (most compatible but slower)
