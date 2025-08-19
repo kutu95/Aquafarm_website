@@ -1750,7 +1750,6 @@ export default function WaterChemistry() {
                   <input
                     type="file"
                     accept="image/*"
-                    capture="environment"
                     onChange={(e) => {
                       console.log('Mobile file input onChange triggered:', {
                         files: e.target.files,
@@ -1781,7 +1780,7 @@ export default function WaterChemistry() {
                         <path d="M7 16a4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                       <span className="text-blue-700 font-medium">📱 Tap to upload image</span>
-                      <span className="text-blue-600 text-sm mt-1">Choose from gallery or camera</span>
+                      <span className="text-blue-600 text-sm mt-1">Gallery or camera - you choose!</span>
                       <span className="text-xs text-blue-500 mt-2">💡 Mobile-optimized for better compatibility</span>
                     </div>
                   </label>
