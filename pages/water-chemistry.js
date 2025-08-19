@@ -34,6 +34,8 @@ export default function WaterChemistry() {
   });
   const [saving, setSaving] = useState(false);
   const [uploadStatus, setUploadStatus] = useState('');
+  const [debugLogs, setDebugLogs] = useState([]); // NEW: Debug logs array
+  const [showDebugPanel, setShowDebugPanel] = useState(true); // NEW: Show debug panel by default
   
   // Get toxicity level color classes
   const getToxicityColorClasses = (toxicityLevel) => {
@@ -139,6 +141,19 @@ export default function WaterChemistry() {
   const isMobileDevice = () => {
     const mobilePattern = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i;
     return mobilePattern.test(navigator.userAgent);
+  };
+
+  // Debug logging function
+  const addDebugLog = (message, type = 'info') => {
+    const timestamp = new Date().toLocaleTimeString();
+    const logEntry = {
+      id: Date.now(),
+      timestamp,
+      message,
+      type
+    };
+    setDebugLogs(prev => [...prev.slice(-49), logEntry]); // Keep last 50 logs
+    console.log(`[${timestamp}] ${message}`); // Also log to console
   };
 
   // Reset file inputs for mobile compatibility
@@ -254,111 +269,87 @@ export default function WaterChemistry() {
   const loadImageForMobile = async (file) => {
     const isMobile = isMobileDevice();
     
-    console.log('=== MOBILE IMAGE LOADING DEBUG START ===');
-    console.log('Device type:', isMobile ? 'Mobile' : 'Desktop');
-    console.log('User agent:', navigator.userAgent);
-    console.log('File info:', {
-      name: file.name,
-      size: file.size,
-      type: file.type,
-      lastModified: file.lastModified,
-      constructor: file.constructor.name,
-      isFile: file instanceof File,
-      isBlob: file instanceof Blob
-    });
-    console.log('Browser capabilities:', {
-      hasFileReader: typeof FileReader !== 'undefined',
-      hasURL: typeof URL !== 'undefined',
-      hasCreateObjectURL: typeof URL !== 'undefined' && typeof URL.createObjectURL === 'function',
-      hasCanvas: typeof HTMLCanvasElement !== 'undefined',
-      hasImage: typeof HTMLImageElement !== 'undefined'
-    });
+    addDebugLog('=== MOBILE IMAGE LOADING DEBUG START ===', 'debug');
+    addDebugLog(`Device type: ${isMobile ? 'Mobile' : 'Desktop'}`, 'info');
+    addDebugLog(`User agent: ${navigator.userAgent}`, 'info');
+    addDebugLog(`File info: ${file.name} (${(file.size / 1024).toFixed(2)}KB, ${file.type})`, 'info');
+    addDebugLog(`File constructor: ${file.constructor.name}`, 'info');
+    addDebugLog(`Is File: ${file instanceof File}`, 'info');
+    addDebugLog(`Is Blob: ${file instanceof Blob}`, 'info');
+    
+    addDebugLog('Browser capabilities:', 'debug');
+    addDebugLog(`FileReader: ${typeof FileReader !== 'undefined'}`, 'info');
+    addDebugLog(`URL: ${typeof URL !== 'undefined'}`, 'info');
+    addDebugLog(`createObjectURL: ${typeof URL !== 'undefined' && typeof URL.createObjectURL === 'function'}`, 'info');
+    addDebugLog(`Canvas: ${typeof HTMLCanvasElement !== 'undefined'}`, 'info');
+    addDebugLog(`Image: ${typeof HTMLImageElement !== 'undefined'}`, 'info');
     
     // Additional file validation
-    console.log('=== ADDITIONAL FILE VALIDATION ===');
-    console.log('File methods available:', {
-      hasSlice: typeof file.slice === 'function',
-      hasArrayBuffer: typeof file.arrayBuffer === 'function',
-      hasStream: typeof file.stream === 'function',
-      hasText: typeof file.text === 'function'
-    });
-    console.log('File properties:', {
-      size: file.size,
-      type: file.type,
-      name: file.name,
-      lastModified: file.lastModified
-    });
-    console.log('=== MOBILE IMAGE LOADING DEBUG END ===');
+    addDebugLog('=== ADDITIONAL FILE VALIDATION ===', 'debug');
+    addDebugLog(`File methods: slice=${typeof file.slice === 'function'}, arrayBuffer=${typeof file.arrayBuffer === 'function'}`, 'info');
+    addDebugLog(`File properties: size=${file.size}, type=${file.type}, name=${file.name}`, 'info');
+    addDebugLog('=== MOBILE IMAGE LOADING DEBUG END ===', 'debug');
     
     // Only do minimal cleanup - don't interfere with the loading process
-    console.log('Performing minimal cleanup before image loading');
+    addDebugLog('Performing minimal cleanup before image loading', 'info');
     
     // Only clean up the current image preview if it exists
     if (imagePreview && imagePreview.startsWith('blob:')) {
       try {
         URL.revokeObjectURL(imagePreview);
-        console.log('Revoked previous blob URL');
+        addDebugLog('Revoked previous blob URL', 'info');
       } catch (e) {
-        console.log('Error revoking previous blob URL:', e);
+        addDebugLog(`Error revoking previous blob URL: ${e.message}`, 'error');
       }
     }
     
     // Method 1: Try FileReader first (most reliable)
     try {
-      console.log('=== METHOD 1: FileReader ===');
-      console.log('Attempting FileReader method...');
-      console.log('File details for FileReader:', {
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        lastModified: file.lastModified
-      });
+      addDebugLog('=== METHOD 1: FileReader ===', 'debug');
+      addDebugLog('Attempting FileReader method...', 'info');
+      addDebugLog(`File details: ${file.name} (${(file.size / 1024).toFixed(2)}KB, ${file.type})`, 'info');
       
       const dataUrl = await new Promise((resolve, reject) => {
         const reader = new FileReader();
         const timeout = setTimeout(() => {
-          console.log('FileReader timeout - aborting');
+          addDebugLog('FileReader timeout - aborting', 'error');
           try {
             reader.abort();
           } catch (e) {
-            console.log('Error aborting FileReader:', e);
+            addDebugLog(`Error aborting FileReader: ${e.message}`, 'error');
           }
           reject(new Error('FileReader timeout'));
         }, 8000);
         
         reader.onload = (e) => {
           clearTimeout(timeout);
-          console.log('FileReader onload successful!');
-          console.log('Result type:', typeof e.target.result);
-          console.log('Result length:', e.target.result.length);
+          addDebugLog('FileReader onload successful!', 'success');
+          addDebugLog(`Result type: ${typeof e.target.result}`, 'info');
+          addDebugLog(`Result length: ${e.target.result.length}`, 'info');
           resolve(e.target.result);
         };
         
         reader.onerror = (error) => {
           clearTimeout(timeout);
-          console.error('FileReader error details:', error);
-          console.error('FileReader error target:', error.target);
-          console.error('FileReader error target error:', error.target?.error);
-          const errorMessage = error.target?.error?.message || 'Unknown FileReader error';
-          reject(new Error(`FileReader error: ${errorMessage}`));
+          addDebugLog(`FileReader error: ${error.target?.error?.message || 'Unknown error'}`, 'error');
+          reject(new Error(`FileReader error: ${error.target?.error?.message || 'Unknown error'}`));
         };
         
         reader.onprogress = (e) => {
           if (e.lengthComputable) {
             const progress = (e.loaded / e.total) * 100;
-            console.log(`FileReader progress: ${progress.toFixed(1)}%`);
+            addDebugLog(`FileReader progress: ${progress.toFixed(1)}%`, 'info');
           }
         };
         
-        console.log('Starting FileReader.readAsDataURL...');
+        addDebugLog('Starting FileReader.readAsDataURL...', 'info');
         reader.readAsDataURL(file);
       });
       
-      console.log('FileReader method successful');
+      addDebugLog('FileReader method successful', 'success');
       return { success: true, dataUrl, method: 'FileReader' };
     } catch (error) {
-      console.error('FileReader method failed:', error.message);
-      console.error('FileReader error stack:', error.stack);
+      addDebugLog(`FileReader method failed: ${error.message}`, 'error');
     }
     
     // Method 2: Try URL.createObjectURL (works on most modern browsers)
@@ -2730,6 +2721,44 @@ export default function WaterChemistry() {
             </div>
           </div>
         </div>
+        
+        {/* Debug Panel */}
+        {showDebugPanel && (
+          <div className="fixed bottom-4 right-4 w-96 max-h-96 bg-black text-green-400 font-mono text-xs p-4 rounded-lg border border-green-500 overflow-y-auto z-50">
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="font-bold text-green-400">🐛 Debug Console</h3>
+              <button
+                onClick={() => setShowDebugPanel(false)}
+                className="text-green-400 hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="space-y-1">
+              {debugLogs.map((log) => (
+                <div key={log.id} className={`${
+                  log.type === 'error' ? 'text-red-400' :
+                  log.type === 'success' ? 'text-green-400' :
+                  log.type === 'debug' ? 'text-blue-400' :
+                  'text-yellow-400'
+                }`}>
+                  <span className="text-gray-400">[{log.timestamp}]</span> {log.message}
+                </div>
+              ))}
+              {debugLogs.length === 0 && (
+                <div className="text-gray-500">No debug logs yet...</div>
+              )}
+            </div>
+            <div className="mt-2 pt-2 border-t border-green-500">
+              <button
+                onClick={() => setDebugLogs([])}
+                className="text-green-400 hover:text-white text-xs"
+              >
+                Clear Logs
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </Layout>
   );
