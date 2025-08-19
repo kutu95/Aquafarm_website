@@ -865,50 +865,70 @@ export default function WaterChemistry() {
         setImagePreview(imageResult.dataUrl);
         setShowCropper(true);
         
-        // Wait for image to load before setting crop area
-        const img = new Image();
-        img.onload = () => {
-          console.log('Image loaded successfully:', { 
-            naturalWidth: img.naturalWidth, 
-            naturalHeight: img.naturalHeight,
-            displayWidth: img.width,
-            displayHeight: img.height
-          });
+        // For object URLs, we need to verify they work before proceeding
+        if (imageResult.dataUrl.startsWith('blob:')) {
+          console.log('Verifying blob URL works...');
+          const img = new Image();
           
-          // Set initial crop area to center of image
-          const centerX = (img.width - 200) / 2;
-          const centerY = (img.height - 200) / 2;
-          setCropArea({
-            x: Math.max(0, centerX),
-            y: Math.max(0, centerY),
-            width: Math.min(200, img.width),
-            height: Math.min(200, img.height)
-          });
+          img.onload = () => {
+            console.log('Blob URL verified successfully:', { 
+              naturalWidth: img.naturalWidth, 
+              naturalHeight: img.naturalHeight,
+              displayWidth: img.width,
+              displayHeight: img.height
+            });
+            
+            // Set initial crop area to center of image
+            const centerX = (img.width - 200) / 2;
+            const centerY = (img.height - 200) / 2;
+            setCropArea({
+              x: Math.max(0, centerX),
+              y: Math.max(0, centerY),
+              width: Math.min(200, img.width),
+              height: Math.min(200, img.height)
+            });
+            
+            setUploadStatus(`✅ Ready to crop! Image: ${img.width}x${img.height}px`);
+          };
           
-          setUploadStatus(`✅ Ready to crop! Image: ${img.width}x${img.height}px`);
-        };
-        
-        img.onerror = (error) => {
-          console.error('Error loading image after successful method:', {
-            error: error,
-            errorType: error.type,
-            errorMessage: error.message,
-            imageSrc: img.src,
-            imageWidth: img.width,
-            imageHeight: img.height,
-            imageComplete: img.complete,
-            imageNaturalWidth: img.naturalWidth,
-            imageNaturalHeight: img.naturalHeight,
-            methodUsed: imageResult.method
-          });
-          setUploadStatus('❌ Error: Image loaded but failed to display');
-          setError(`Image loaded using ${imageResult.method} but failed to display: ${error.type} - ${error.message || 'Unknown image loading error'}`);
-          setShowCropper(false);
-          setImagePreview(null);
-          setSelectedImage(null);
-        };
-        
-        img.src = imageResult.dataUrl;
+          img.onerror = (error) => {
+            console.error('Blob URL verification failed:', {
+              error: error,
+              errorType: error.type,
+              errorMessage: error.message,
+              imageSrc: img.src,
+              methodUsed: imageResult.method
+            });
+            setUploadStatus('❌ Error: Image loaded but failed to display');
+            setError(`Image loaded using ${imageResult.method} but failed to display: ${error.type} - ${error.message || 'Unknown image loading error'}`);
+            setShowCropper(false);
+            setImagePreview(null);
+            setSelectedImage(null);
+          };
+          
+          img.src = imageResult.dataUrl;
+        } else {
+          // For data URLs, we can proceed directly
+          console.log('Data URL loaded, proceeding directly to crop setup');
+          
+          // Create a temporary image to get dimensions
+          const img = new Image();
+          img.onload = () => {
+            // Set initial crop area to center of image
+            const centerX = (img.width - 200) / 2;
+            const centerY = (img.height - 200) / 2;
+            setCropArea({
+              x: Math.max(0, centerX),
+              y: Math.max(0, centerY),
+              width: Math.min(200, img.width),
+              height: Math.min(200, img.height)
+            });
+            
+            setUploadStatus(`✅ Ready to crop! Image: ${img.width}x${img.height}px`);
+          };
+          
+          img.src = imageResult.dataUrl;
+        }
       } else {
         // All methods failed
         console.error('All image loading methods failed:', imageResult.error);
