@@ -290,6 +290,22 @@ export default function WaterChemistry() {
     addDebugLog(`File properties: size=${file.size}, type=${file.type}, name=${file.name}`, 'info');
     addDebugLog('=== MOBILE IMAGE LOADING DEBUG END ===', 'debug');
     
+    // CRITICAL FIX: Immediately capture file data to prevent permission expiration
+    addDebugLog('CRITICAL: Capturing file data immediately to prevent permission expiration', 'debug');
+    let fileData = null;
+    let fileArrayBuffer = null;
+    
+    try {
+      // Immediately read file as ArrayBuffer to capture data
+      addDebugLog('Reading file as ArrayBuffer immediately...', 'info');
+      fileArrayBuffer = await file.arrayBuffer();
+      fileData = new Uint8Array(fileArrayBuffer);
+      addDebugLog(`File data captured successfully: ${fileData.length} bytes`, 'success');
+    } catch (captureError) {
+      addDebugLog(`Failed to capture file data: ${captureError.message}`, 'error');
+      // Continue with original methods as fallback
+    }
+    
     // Only do minimal cleanup - don't interfere with the loading process
     addDebugLog('Performing minimal cleanup before image loading', 'info');
     
@@ -303,9 +319,60 @@ export default function WaterChemistry() {
       }
     }
     
-    // Method 1: Try FileReader first (most reliable)
+    // Method 1: Try using captured file data first (NEW - prevents permission issues)
+    if (fileData && fileArrayBuffer) {
+      try {
+        addDebugLog('=== METHOD 1: Captured File Data ===', 'debug');
+        addDebugLog('Using pre-captured file data to avoid permission issues', 'info');
+        
+        // Convert ArrayBuffer to data URL using canvas
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+        
+        const dataUrl = await new Promise((resolve, reject) => {
+          const timeout = setTimeout(() => {
+            addDebugLog('Image load timeout from captured data', 'error');
+            reject(new Error('Image load timeout from captured data'));
+          }, 5000);
+          
+          img.onload = () => {
+            clearTimeout(timeout);
+            try {
+              canvas.width = img.naturalWidth;
+              canvas.height = img.naturalHeight;
+              ctx.drawImage(img, 0, 0);
+              const result = canvas.toDataURL('image/jpeg', 0.9);
+              addDebugLog('Successfully created data URL from captured file data', 'success');
+              resolve(result);
+            } catch (canvasError) {
+              addDebugLog(`Canvas error from captured data: ${canvasError.message}`, 'error');
+              reject(new Error(`Canvas error: ${canvasError.message}`));
+            }
+          };
+          
+          img.onerror = () => {
+            clearTimeout(timeout);
+            addDebugLog('Image failed to load from captured data', 'error');
+            reject(new Error('Image failed to load from captured data'));
+          };
+          
+          // Create blob from captured data and load image
+          const blob = new Blob([fileArrayBuffer], { type: file.type });
+          const blobUrl = URL.createObjectURL(blob);
+          img.src = blobUrl;
+        });
+        
+        addDebugLog('Captured file data method successful', 'success');
+        return { success: true, dataUrl, method: 'CapturedFileData' };
+      } catch (error) {
+        addDebugLog(`Captured file data method failed: ${error.message}`, 'error');
+      }
+    }
+    
+    // Method 2: Try FileReader (original method)
     try {
-      addDebugLog('=== METHOD 1: FileReader ===', 'debug');
+      addDebugLog('=== METHOD 2: FileReader ===', 'debug');
       addDebugLog('Attempting FileReader method...', 'info');
       addDebugLog(`File details: ${file.name} (${(file.size / 1024).toFixed(2)}KB, ${file.type})`, 'info');
       
@@ -352,7 +419,7 @@ export default function WaterChemistry() {
       addDebugLog(`FileReader method failed: ${error.message}`, 'error');
     }
     
-    // Method 2: Try URL.createObjectURL (works on most modern browsers)
+    // Method 3: Try URL.createObjectURL (works on most modern browsers)
     try {
       console.log('Attempting URL.createObjectURL method...');
       const objectUrl = URL.createObjectURL(file);
@@ -382,7 +449,7 @@ export default function WaterChemistry() {
       console.log('URL.createObjectURL method failed:', error.message);
     }
     
-    // Method 3: Try canvas-based approach (most compatible but slower)
+    // Method 4: Try canvas-based approach (most compatible but slower)
     try {
       console.log('Attempting canvas-based method...');
       const canvas = document.createElement('canvas');
@@ -433,7 +500,7 @@ export default function WaterChemistry() {
       console.log('Canvas-based method failed:', error.message);
     }
     
-    // Method 4: Try with reduced file size (mobile-friendly)
+    // Method 5: Try with reduced file size (mobile-friendly)
     if (isMobile && file.size > 2 * 1024 * 1024) { // If file is larger than 2MB on mobile
       try {
         console.log('Attempting size reduction method for mobile...');
