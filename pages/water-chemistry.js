@@ -370,14 +370,58 @@ export default function WaterChemistry() {
     } catch (error) {
       console.log('URL.createObjectURL method failed:', error.message);
       
-      // Fallback: Try to use the object URL directly without testing
+      // Fallback: Convert blob URL to data URL immediately for reliability
       try {
-        console.log('Attempting direct object URL fallback...');
-        const directObjectUrl = URL.createObjectURL(file);
-        console.log('Direct object URL fallback successful');
-        return { success: true, dataUrl: directObjectUrl, method: 'URL.createObjectURL-Direct' };
+        console.log('Attempting blob to data URL conversion...');
+        const blobUrl = URL.createObjectURL(file);
+        
+        // Convert blob URL to data URL using canvas for reliability
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+        
+        const conversionPromise = new Promise((resolve, reject) => {
+          const timeout = setTimeout(() => {
+            reject(new Error('Blob to data URL conversion timeout'));
+          }, 10000);
+          
+          img.onload = () => {
+            clearTimeout(timeout);
+            try {
+              // Set canvas size to image size
+              canvas.width = img.naturalWidth;
+              canvas.height = img.naturalHeight;
+              
+              // Draw image to canvas
+              ctx.drawImage(img, 0, 0);
+              
+              // Convert to data URL
+              const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+              
+              // Clean up blob URL
+              URL.revokeObjectURL(blobUrl);
+              
+              resolve(dataUrl);
+            } catch (canvasError) {
+              URL.revokeObjectURL(blobUrl);
+              reject(new Error(`Canvas conversion error: ${canvasError.message}`));
+            }
+          };
+          
+          img.onerror = () => {
+            clearTimeout(timeout);
+            URL.revokeObjectURL(blobUrl);
+            reject(new Error('Image failed to load for blob conversion'));
+          };
+          
+          img.src = blobUrl;
+        });
+        
+        const dataUrl = await conversionPromise;
+        console.log('Blob to data URL conversion successful');
+        return { success: true, dataUrl, method: 'BlobToDataURL' };
       } catch (fallbackError) {
-        console.log('Direct object URL fallback failed:', fallbackError.message);
+        console.log('Blob to data URL conversion failed:', fallbackError.message);
       }
     }
     
@@ -865,70 +909,48 @@ export default function WaterChemistry() {
         setImagePreview(imageResult.dataUrl);
         setShowCropper(true);
         
-        // For object URLs, we need to verify they work before proceeding
-        if (imageResult.dataUrl.startsWith('blob:')) {
-          console.log('Verifying blob URL works...');
-          const img = new Image();
+        // All successful methods now return data URLs, so we can proceed directly
+        console.log('Image loaded successfully, setting up crop tool...');
+        
+        // Create a temporary image to get dimensions and set up crop area
+        const img = new Image();
+        img.onload = () => {
+          console.log('Image dimensions loaded:', { 
+            naturalWidth: img.naturalWidth, 
+            naturalHeight: img.naturalHeight,
+            displayWidth: img.width,
+            displayHeight: img.height
+          });
           
-          img.onload = () => {
-            console.log('Blob URL verified successfully:', { 
-              naturalWidth: img.naturalWidth, 
-              naturalHeight: img.naturalHeight,
-              displayWidth: img.width,
-              displayHeight: img.height
-            });
-            
-            // Set initial crop area to center of image
-            const centerX = (img.width - 200) / 2;
-            const centerY = (img.height - 200) / 2;
-            setCropArea({
-              x: Math.max(0, centerX),
-              y: Math.max(0, centerY),
-              width: Math.min(200, img.width),
-              height: Math.min(200, img.height)
-            });
-            
-            setUploadStatus(`✅ Ready to crop! Image: ${img.width}x${img.height}px`);
-          };
+          // Set initial crop area to center of image
+          const centerX = (img.width - 200) / 2;
+          const centerY = (img.height - 200) / 2;
+          setCropArea({
+            x: Math.max(0, centerX),
+            y: Math.max(0, centerY),
+            width: Math.min(200, img.width),
+            height: Math.min(200, img.height)
+          });
           
-          img.onerror = (error) => {
-            console.error('Blob URL verification failed:', {
-              error: error,
-              errorType: error.type,
-              errorMessage: error.message,
-              imageSrc: img.src,
-              methodUsed: imageResult.method
-            });
-            setUploadStatus('❌ Error: Image loaded but failed to display');
-            setError(`Image loaded using ${imageResult.method} but failed to display: ${error.type} - ${error.message || 'Unknown image loading error'}`);
-            setShowCropper(false);
-            setImagePreview(null);
-            setSelectedImage(null);
-          };
-          
-          img.src = imageResult.dataUrl;
-        } else {
-          // For data URLs, we can proceed directly
-          console.log('Data URL loaded, proceeding directly to crop setup');
-          
-          // Create a temporary image to get dimensions
-          const img = new Image();
-          img.onload = () => {
-            // Set initial crop area to center of image
-            const centerX = (img.width - 200) / 2;
-            const centerY = (img.height - 200) / 2;
-            setCropArea({
-              x: Math.max(0, centerX),
-              y: Math.max(0, centerY),
-              width: Math.min(200, img.width),
-              height: Math.min(200, img.height)
-            });
-            
-            setUploadStatus(`✅ Ready to crop! Image: ${img.width}x${img.height}px`);
-          };
-          
-          img.src = imageResult.dataUrl;
-        }
+          setUploadStatus(`✅ Ready to crop! Image: ${img.width}x${img.height}px`);
+        };
+        
+        img.onerror = (error) => {
+          console.error('Error setting up crop tool:', {
+            error: error,
+            errorType: error.type,
+            errorMessage: error.message,
+            imageSrc: img.src,
+            methodUsed: imageResult.method
+          });
+          setUploadStatus('❌ Error: Failed to set up crop tool');
+          setError(`Image loaded using ${imageResult.method} but failed to set up crop tool: ${error.type} - ${error.message || 'Unknown error'}`);
+          setShowCropper(false);
+          setImagePreview(null);
+          setSelectedImage(null);
+        };
+        
+        img.src = imageResult.dataUrl;
       } else {
         // All methods failed
         console.error('All image loading methods failed:', imageResult.error);
