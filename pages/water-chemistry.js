@@ -250,466 +250,55 @@ export default function WaterChemistry() {
     });
   };
 
-  // Mobile-friendly image loading with multiple fallback methods
+  // Simple, reliable image loading - back to basics
   const loadImageForMobile = async (file) => {
-    const isMobile = isMobileDevice();
+    console.log('=== SIMPLE IMAGE LOADING ===');
+    console.log('File:', file.name, file.size, file.type);
     
-    console.log('=== MOBILE IMAGE LOADING DEBUG START ===');
-    console.log('Device type:', isMobile ? 'Mobile' : 'Desktop');
-    console.log('User agent:', navigator.userAgent);
-    console.log('File info:', {
-      name: file.name,
-      size: file.size,
-      type: file.type,
-      lastModified: file.lastModified,
-      constructor: file.constructor.name,
-      isFile: file instanceof File,
-      isBlob: file instanceof Blob
-    });
-    console.log('Browser capabilities:', {
-      hasFileReader: typeof FileReader !== 'undefined',
-      hasURL: typeof URL !== 'undefined',
-      hasCreateObjectURL: typeof URL !== 'undefined' && typeof URL.createObjectURL === 'function',
-      hasCanvas: typeof HTMLCanvasElement !== 'undefined',
-      hasImage: typeof HTMLImageElement !== 'undefined'
-    });
-    console.log('=== MOBILE IMAGE LOADING DEBUG END ===');
-    
-    // SUPER SIMPLE METHOD: Try the most basic possible approach first
+    // Just use the simple FileReader method that was working before
     try {
-      console.log('=== SUPER SIMPLE METHOD: Basic FileReader ===');
-      console.log('Attempting ultra-basic file reading...');
-      
+      console.log('Using simple FileReader method...');
       const dataUrl = await new Promise((resolve, reject) => {
         const reader = new FileReader();
         
-        // Add a reasonable timeout to prevent hanging
-        const timeout = setTimeout(() => {
-          console.log('Super simple method timeout - aborting');
-          try {
-            reader.abort();
-          } catch (e) {
-            console.log('Error aborting super simple method:', e);
-          }
-          reject(new Error('Super simple method timeout'));
-        }, 5000); // 5 seconds max
-        
         reader.onload = (e) => {
-          clearTimeout(timeout);
-          console.log('Super simple method successful!');
-          console.log('Result type:', typeof e.target.result);
-          console.log('Result length:', e.target.result.length);
+          console.log('FileReader successful');
           resolve(e.target.result);
         };
         
         reader.onerror = (error) => {
-          clearTimeout(timeout);
-          console.error('Super simple method failed:', error);
-          reject(new Error('Super simple method failed'));
+          console.log('FileReader failed:', error);
+          reject(new Error('FileReader failed'));
         };
         
-        console.log('Starting super simple FileReader.readAsDataURL...');
         reader.readAsDataURL(file);
       });
       
-      console.log('Super simple method successful');
-      return { success: true, dataUrl, method: 'SuperSimple' };
+      console.log('Image loaded successfully');
+      return { success: true, dataUrl, method: 'SimpleFileReader' };
     } catch (error) {
-      console.log('Super simple method failed:', error.message);
+      console.log('Simple FileReader failed:', error.message);
     }
     
-    // ALTERNATIVE METHOD: Try using fetch API to read file as blob
+    // If FileReader fails, try URL.createObjectURL as fallback
     try {
-      console.log('=== ALTERNATIVE METHOD: Fetch API ===');
-      console.log('Attempting fetch API method...');
-      
-      // Create a blob URL and fetch it
-      const blobUrl = URL.createObjectURL(file);
-      const response = await fetch(blobUrl);
-      const blob = await response.blob();
-      
-      // Convert blob to data URL using canvas
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      const img = new Image();
-      
-      const fetchPromise = new Promise((resolve, reject) => {
-        const timeout = setTimeout(() => {
-          reject(new Error('Fetch method timeout'));
-        }, 8000);
-        
-        img.onload = () => {
-          clearTimeout(timeout);
-          try {
-            canvas.width = img.naturalWidth;
-            canvas.height = img.naturalHeight;
-            ctx.drawImage(img, 0, 0);
-            const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
-            
-            // Clean up blob URL
-            URL.revokeObjectURL(blobUrl);
-            
-            resolve(dataUrl);
-          } catch (canvasError) {
-            URL.revokeObjectURL(blobUrl);
-            reject(new Error(`Canvas error: ${canvasError.message}`));
-          }
-        };
-        
-        img.onerror = () => {
-          clearTimeout(timeout);
-          URL.revokeObjectURL(blobUrl);
-          reject(new Error('Image failed to load for fetch method'));
-        };
-        
-        img.src = blobUrl;
-      });
-      
-      const dataUrl = await fetchPromise;
-      console.log('Fetch API method successful');
-      return { success: true, dataUrl, method: 'FetchAPI' };
-    } catch (error) {
-      console.log('Fetch API method failed:', error.message);
-    }
-    
-    // No cleanup on first upload - let the browser handle it naturally
-    if (!imagePreview) {
-      console.log('First upload - no cleanup needed, letting browser handle naturally');
-    } else {
-      console.log('Subsequent upload - minimal cleanup for previous image');
-      // Only clean up the current image preview if it exists
-      if (imagePreview.startsWith('blob:')) {
-        try {
-          URL.revokeObjectURL(imagePreview);
-          console.log('Revoked previous blob URL');
-        } catch (e) {
-          console.log('Error revoking previous blob URL:', e);
-        }
-      }
-    }
-    
-    // Method 1: Try FileReader first (most reliable)
-    try {
-      console.log('=== METHOD 1: FileReader ===');
-      console.log('File details for FileReader:', {
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        lastModified: file.lastModified
-      });
-      
-      const dataUrl = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        
-        // Increase timeout for mobile devices
-        const timeout = setTimeout(() => {
-          console.log('FileReader timeout - aborting');
-          try {
-            reader.abort();
-          } catch (e) {
-            console.log('Error aborting FileReader:', e);
-          }
-          reject(new Error('FileReader timeout - file may be too large or corrupted'));
-        }, 15000); // 15 seconds for mobile
-        
-        reader.onload = (e) => {
-          clearTimeout(timeout);
-          console.log('FileReader onload successful, data length:', e.target.result.length);
-          console.log('FileReader result type:', typeof e.target.result);
-          console.log('FileReader result starts with:', e.target.result.substring(0, 50));
-          resolve(e.target.result);
-        };
-        
-        reader.onerror = (error) => {
-          clearTimeout(timeout);
-          console.error('FileReader error details:', error);
-          console.error('FileReader error target:', error.target);
-          console.error('FileReader error target error:', error.target?.error);
-          const errorMessage = error.target?.error?.message || 'Unknown FileReader error';
-          reject(new Error(`FileReader error: ${errorMessage}`));
-        };
-        
-        reader.onprogress = (e) => {
-          if (e.lengthComputable) {
-            const progress = (e.loaded / e.total) * 100;
-            console.log(`FileReader progress: ${progress.toFixed(1)}%`);
-          }
-        };
-        
-        console.log('Starting FileReader.readAsDataURL...');
-        reader.readAsDataURL(file);
-      });
-      
-      console.log('FileReader method successful');
-      return { success: true, dataUrl, method: 'FileReader' };
-    } catch (error) {
-      console.log('FileReader method failed:', error.message);
-      console.error('FileReader error details:', error);
-      console.error('FileReader error stack:', error.stack);
-    }
-    
-    // Method 2: Try URL.createObjectURL (works on most modern browsers)
-    try {
-      console.log('Attempting URL.createObjectURL method...');
+      console.log('Trying URL.createObjectURL fallback...');
       const objectUrl = URL.createObjectURL(file);
-      
-      // Test if the object URL works by trying to load it
-      const testImg = new Image();
-      const loadPromise = new Promise((resolve, reject) => {
-        const timeout = setTimeout(() => {
-          reject(new Error('Image load timeout'));
-        }, 8000); // 8 seconds for mobile
-        
-        testImg.onload = () => {
-          clearTimeout(timeout);
-          console.log('Image loaded successfully from object URL');
-          resolve(objectUrl);
-        };
-        
-        testImg.onerror = () => {
-          clearTimeout(timeout);
-          console.error('Image failed to load from object URL');
-          reject(new Error('Image failed to load from object URL'));
-        };
-      });
-      
-      const result = await loadPromise;
-      console.log('URL.createObjectURL method successful');
-      return { success: true, dataUrl: result, method: 'URL.createObjectURL' };
+      console.log('Object URL created successfully');
+      return { success: true, dataUrl: objectUrl, method: 'ObjectURL' };
     } catch (error) {
-      console.log('URL.createObjectURL method failed:', error.message);
-      
-      // Fallback: Convert blob URL to data URL immediately for reliability
-      try {
-        console.log('Attempting blob to data URL conversion...');
-        const blobUrl = URL.createObjectURL(file);
-        
-        // Convert blob URL to data URL using canvas for reliability
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        const img = new Image();
-        
-        const conversionPromise = new Promise((resolve, reject) => {
-          const timeout = setTimeout(() => {
-            reject(new Error('Blob to data URL conversion timeout'));
-          }, 10000);
-          
-          img.onload = () => {
-            clearTimeout(timeout);
-            try {
-              // Set canvas size to image size
-              canvas.width = img.naturalWidth;
-              canvas.height = img.naturalHeight;
-              
-              // Draw image to canvas
-              ctx.drawImage(img, 0, 0);
-              
-              // Convert to data URL
-              const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
-              
-              // Clean up blob URL
-              URL.revokeObjectURL(blobUrl);
-              
-              resolve(dataUrl);
-            } catch (canvasError) {
-              URL.revokeObjectURL(blobUrl);
-              reject(new Error(`Canvas conversion error: ${canvasError.message}`));
-            }
-          };
-          
-          img.onerror = () => {
-            clearTimeout(timeout);
-            URL.revokeObjectURL(blobUrl);
-            reject(new Error('Image failed to load for blob conversion'));
-          };
-          
-          img.src = blobUrl;
-        });
-        
-        const dataUrl = await conversionPromise;
-        console.log('Blob to data URL conversion successful');
-        return { success: true, dataUrl, method: 'BlobToDataURL' };
-      } catch (fallbackError) {
-        console.log('Blob to data URL conversion failed:', fallbackError.message);
-      }
-    }
-    
-    // Method 3: Try canvas-based approach (most compatible but slower)
-    try {
-      console.log('Attempting canvas-based method...');
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      const img = new Image();
-      
-      const canvasPromise = new Promise((resolve, reject) => {
-        const timeout = setTimeout(() => {
-          reject(new Error('Canvas method timeout'));
-        }, 10000);
-        
-        img.onload = () => {
-          clearTimeout(timeout);
-          try {
-            // Set canvas size to image size
-            canvas.width = img.naturalWidth;
-            canvas.height = img.naturalHeight;
-            
-            // Draw image to canvas
-            ctx.drawImage(img, 0, 0);
-            
-            // Convert to data URL
-            const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-            resolve(dataUrl);
-          } catch (canvasError) {
-            reject(new Error(`Canvas processing error: ${canvasError.message}`));
-          }
-        };
-        
-        img.onerror = () => {
-          clearTimeout(timeout);
-          reject(new Error('Image failed to load for canvas method'));
-        };
-      });
-      
-      // For canvas method, we need to create a blob URL first
-      const blobUrl = URL.createObjectURL(file);
-      img.src = blobUrl;
-      
-      const result = await canvasPromise;
-      
-      // Clean up blob URL
-      URL.revokeObjectURL(blobUrl);
-      
-      console.log('Canvas-based method successful');
-      return { success: true, dataUrl: result, method: 'Canvas' };
-    } catch (error) {
-      console.log('Canvas-based method failed:', error.message);
-    }
-    
-    // Method 4: Try with reduced file size (mobile-friendly)
-    if (isMobile && file.size > 2 * 1024 * 1024) { // If file is larger than 2MB on mobile
-      try {
-        console.log('Attempting size reduction method for mobile...');
-        
-        // Create a smaller version using canvas
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        const img = new Image();
-        
-        const reducePromise = new Promise((resolve, reject) => {
-          const timeout = setTimeout(() => {
-            reject(new Error('Size reduction timeout'));
-          }, 15000);
-          
-          img.onload = () => {
-            clearTimeout(timeout);
-            try {
-              // Calculate new dimensions (max 800x600 for mobile)
-              const maxWidth = 800;
-              const maxHeight = 600;
-              let { width, height } = img;
-              
-              if (width > height) {
-                if (width > maxWidth) {
-                  height = (height * maxWidth) / width;
-                  width = maxWidth;
-                }
-              } else {
-                if (height > maxHeight) {
-                  width = (width * maxHeight) / height;
-                  height = maxHeight;
-                }
-              }
-              
-              canvas.width = width;
-              canvas.height = height;
-              
-              // Draw resized image
-              ctx.drawImage(img, 0, 0, width, height);
-              
-              // Convert to compressed data URL
-              const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
-              resolve(dataUrl);
-            } catch (canvasError) {
-              reject(new Error(`Size reduction error: ${canvasError.message}`));
-            }
-          };
-          
-          img.onerror = () => {
-            clearTimeout(timeout);
-            reject(new Error('Image failed to load for size reduction'));
-          };
-        });
-        
-        // Create blob URL for the image
-        const blobUrl = URL.createObjectURL(file);
-        img.src = blobUrl;
-        
-        const result = await reducePromise;
-        
-        // Clean up blob URL
-        URL.revokeObjectURL(blobUrl);
-        
-        console.log('Size reduction method successful');
-        return { success: true, dataUrl: result, method: 'SizeReduction' };
-      } catch (error) {
-        console.log('Size reduction method failed:', error.message);
-      }
-    }
-    
-    // Final fallback: Try the simplest possible method
-    try {
-      console.log('Attempting final fallback: simple FileReader with no timeout...');
-      const dataUrl = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        
-        reader.onload = (e) => {
-          console.log('Final fallback FileReader successful');
-          resolve(e.target.result);
-        };
-        
-        reader.onerror = (error) => {
-          console.error('Final fallback FileReader failed:', error);
-          reject(new Error(`Final fallback failed: ${error.target?.error?.message || 'Unknown error'}`));
-        };
-        
-        // Try reading as data URL without any timeout or complexity
-        console.log('Starting final fallback FileReader.readAsDataURL...');
-        reader.readAsDataURL(file);
-      });
-      
-      console.log('Final fallback method successful');
-      return { success: true, dataUrl, method: 'FinalFallback' };
-    } catch (fallbackError) {
-      console.log('Final fallback method failed:', fallbackError.message);
+      console.log('Object URL fallback failed:', error.message);
     }
     
     // All methods failed
-    console.error('All image loading methods failed, including final fallback');
-    console.error('File details:', {
-      name: file.name,
-      size: file.size,
-      type: file.type,
-      lastModified: file.lastModified
-    });
-    
+    console.error('All methods failed');
     return { 
       success: false, 
-      error: 'All image loading methods failed. This may be due to browser compatibility issues or corrupted image data.',
-      debugInfo: {
-        fileName: file.name,
-        fileSize: file.size,
-        fileType: file.type,
-        userAgent: navigator.userAgent,
-        isMobile: isMobile
-      },
+      error: 'All image loading methods failed',
       suggestions: [
         'Try using a different image',
         'Try taking a new photo with your camera',
-        'Check if the image file is corrupted',
-        'Try uploading from a different device or browser',
-        'Ensure the image is a valid JPEG, PNG, or GIF file',
-        'Try refreshing the page and uploading again',
-        'Check if your mobile browser supports FileReader API'
+        'Check if the image file is corrupted'
       ]
     };
   };
