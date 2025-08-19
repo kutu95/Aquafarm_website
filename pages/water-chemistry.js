@@ -185,38 +185,14 @@ export default function WaterChemistry() {
       ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
     }
     
-    // Force garbage collection if available (helps on mobile)
-    if (window.gc) {
-      try {
-        window.gc();
-        console.log('Forced garbage collection');
-      } catch (e) {
-        console.log('Garbage collection not available');
-      }
-    }
+    // Don't force garbage collection - it can interfere with subsequent operations
+    console.log('Skipping forced garbage collection to prevent interference');
     
-    // Clear any existing image caches
-    if ('caches' in window) {
-      caches.keys().then(names => {
-        names.forEach(name => {
-          if (name.includes('image') || name.includes('blob')) {
-            caches.delete(name);
-            console.log('Cleared cache:', name);
-          }
-        });
-      });
-    }
+    // Don't clear all image caches - it can interfere with subsequent image loading
+    console.log('Skipping cache clearing to prevent interference');
     
-    // Clear any existing FileReader instances
-    if (window.FileReader && window.FileReader.prototype) {
-      // Reset any stuck FileReader instances
-      try {
-        const reader = new FileReader();
-        reader.abort();
-      } catch (e) {
-        console.log('FileReader cleanup error:', e);
-      }
-    }
+    // Don't abort FileReader instances - it can interfere with subsequent file reading
+    console.log('Skipping FileReader cleanup to prevent interference');
     
     // Reset file inputs for mobile compatibility
     resetFileInputs();
@@ -299,8 +275,18 @@ export default function WaterChemistry() {
     });
     console.log('=== MOBILE IMAGE LOADING DEBUG END ===');
     
-    // Don't clean up before starting - it might interfere with the loading process
-    console.log('Skipping cleanup before image loading to prevent interference');
+    // Only do minimal cleanup - don't interfere with the loading process
+    console.log('Performing minimal cleanup before image loading');
+    
+    // Only clean up the current image preview if it exists
+    if (imagePreview && imagePreview.startsWith('blob:')) {
+      try {
+        URL.revokeObjectURL(imagePreview);
+        console.log('Revoked previous blob URL');
+      } catch (e) {
+        console.log('Error revoking previous blob URL:', e);
+      }
+    }
     
     // Method 1: Try FileReader first (most reliable)
     try {
@@ -2153,13 +2139,18 @@ export default function WaterChemistry() {
                               mobileFileInput.value = '';
                             }
                             
-                            // Clear upload status
-                            setUploadStatus('');
+                            // Clear upload status and show ready message
+                            setUploadStatus('🔄 Ready for new upload');
                             setError(null);
+                            
+                            // Wait a moment for cleanup to complete before allowing new uploads
+                            setTimeout(() => {
+                              setUploadStatus('');
+                            }, 1000);
                             
                             console.log('Image removed and file inputs reset');
                           }}
-                          className="px-4 py-2 bg-gray-500 text-white font-medium rounded-lg hover:bg-gray-600 ml-2"
+                          className="px-4 py-4 bg-gray-500 text-white font-medium rounded-lg hover:bg-gray-600 ml-2"
                         >
                           Remove Image
                         </button>
