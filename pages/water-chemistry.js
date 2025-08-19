@@ -261,23 +261,50 @@ export default function WaterChemistry() {
       const dataUrl = await new Promise((resolve, reject) => {
         const reader = new FileReader();
         
+        // Add timeout to prevent hanging
+        const timeout = setTimeout(() => {
+          console.log('FileReader timeout - aborting');
+          try {
+            reader.abort();
+          } catch (e) {
+            console.log('Error aborting FileReader:', e);
+          }
+          reject(new Error('FileReader timeout - file may be too large or corrupted'));
+        }, 10000); // 10 seconds max
+        
         reader.onload = (e) => {
-          console.log('FileReader successful');
+          clearTimeout(timeout);
+          console.log('FileReader successful!');
+          console.log('Result type:', typeof e.target.result);
+          console.log('Result length:', e.target.result.length);
           resolve(e.target.result);
         };
         
         reader.onerror = (error) => {
-          console.log('FileReader failed:', error);
-          reject(new Error('FileReader failed'));
+          clearTimeout(timeout);
+          console.error('FileReader error details:', error);
+          console.error('FileReader error target:', error.target);
+          console.error('FileReader error target error:', error.target?.error);
+          const errorMessage = error.target?.error?.message || 'Unknown FileReader error';
+          reject(new Error(`FileReader error: ${errorMessage}`));
         };
         
+        reader.onprogress = (e) => {
+          if (e.lengthComputable) {
+            const progress = (e.loaded / e.total) * 100;
+            console.log(`FileReader progress: ${progress.toFixed(1)}%`);
+          }
+        };
+        
+        console.log('Starting FileReader.readAsDataURL...');
         reader.readAsDataURL(file);
       });
       
       console.log('Image loaded successfully');
       return { success: true, dataUrl, method: 'SimpleFileReader' };
     } catch (error) {
-      console.log('Simple FileReader failed:', error.message);
+      console.error('Simple FileReader failed:', error.message);
+      console.error('FileReader error stack:', error.stack);
     }
     
     // If FileReader fails, try URL.createObjectURL as fallback
@@ -328,7 +355,60 @@ export default function WaterChemistry() {
       const dataUrl = await conversionPromise;
       return { success: true, dataUrl, method: 'ObjectURLConverted' };
     } catch (error) {
-      console.log('Object URL fallback failed:', error.message);
+      console.error('Object URL fallback failed:', error.message);
+      console.error('Object URL error stack:', error.stack);
+    }
+    
+    // Third fallback: Try direct canvas approach
+    try {
+      console.log('Trying direct canvas fallback...');
+      
+      // Create a canvas and draw the image directly
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      
+      const canvasPromise = new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error('Canvas fallback timeout'));
+        }, 8000);
+        
+        img.onload = () => {
+          clearTimeout(timeout);
+          try {
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight;
+            ctx.drawImage(img, 0, 0);
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+            console.log('Canvas fallback successful');
+            resolve(dataUrl);
+          } catch (canvasError) {
+            reject(new Error(`Canvas error: ${canvasError.message}`));
+          }
+        };
+        
+        img.onerror = () => {
+          clearTimeout(timeout);
+          reject(new Error('Image failed to load for canvas fallback'));
+        };
+        
+        // Try to load image from file using a different approach
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          img.src = e.target.result;
+        };
+        reader.onerror = () => {
+          clearTimeout(timeout);
+          reject(new Error('FileReader failed for canvas fallback'));
+        };
+        reader.readAsDataURL(file);
+      });
+      
+      const dataUrl = await canvasPromise;
+      return { success: true, dataUrl, method: 'CanvasFallback' };
+    } catch (error) {
+      console.error('Canvas fallback failed:', error.message);
+      console.error('Canvas fallback error stack:', error.stack);
     }
     
     // All methods failed
@@ -339,7 +419,9 @@ export default function WaterChemistry() {
       suggestions: [
         'Try using a different image',
         'Try taking a new photo with your camera',
-        'Check if the image file is corrupted'
+        'Check if the image file is corrupted',
+        'Try refreshing the page and uploading again',
+        'Check if your mobile browser supports FileReader API'
       ]
     };
   };
