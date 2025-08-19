@@ -137,7 +137,8 @@ export default function WaterChemistry() {
 
   // Check if device is mobile
   const isMobileDevice = () => {
-    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const mobilePattern = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i;
+    return mobilePattern.test(navigator.userAgent);
   };
 
   // Clean up temporary resources and memory
