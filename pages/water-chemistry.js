@@ -817,12 +817,55 @@ export default function WaterChemistry() {
   }, []);
 
   // Cropping functions
-  const handleImageSelect = async (file) => {
+  const handleImageSelect = async (file, capturedDataUrl = null) => {
     addDebugLog('handleImageSelect called with file:', 'info');
     addDebugLog(`File: ${file.name} (${(file.size / 1024).toFixed(2)}KB, ${file.type})`, 'info');
     
-    // CRITICAL FIX: Immediately try to convert file to data URL to prevent permission expiration
-    addDebugLog('CRITICAL: Attempting immediate file conversion to prevent permission expiration', 'debug');
+    // Check if we have captured data URL from onChange event
+    if (capturedDataUrl) {
+      addDebugLog('Using captured data URL from onChange event!', 'success');
+      setUploadStatus(`✅ Using pre-captured file data - Setting up crop tool...`);
+      
+      setSelectedImage(file);
+      setImagePreview(capturedDataUrl);
+      setShowCropper(true);
+      
+      // Extract date and set up crop area
+      const extractedDate = await extractDateFromImage(file);
+      if (extractedDate) {
+        setRecordData(prev => ({ ...prev, record_date: extractedDate }));
+        addDebugLog(`Date extracted: ${extractedDate}`, 'info');
+      }
+      
+      // Set up crop area
+      const img = new Image();
+      img.onload = () => {
+        const centerX = (img.width - 200) / 2;
+        const centerY = (img.height - 200) / 2;
+        setCropArea({
+          x: Math.max(0, centerX),
+          y: Math.max(0, centerY),
+          width: Math.min(200, img.width),
+          height: Math.min(200, img.height)
+        });
+        setUploadStatus(`✅ Ready to crop! Image: ${img.width}x${img.height}px`);
+      };
+      
+      img.onerror = (error) => {
+        addDebugLog(`Error loading image: ${error.message}`, 'error');
+        setUploadStatus('❌ Error: Image failed to display');
+        setError(`Image failed to display: ${error.message || 'Unknown error'}`);
+        setShowCropper(false);
+        setImagePreview(null);
+        setSelectedImage(null);
+      };
+      
+      img.src = capturedDataUrl;
+      return; // Exit early - we succeeded!
+    }
+    
+    // Fallback: Try immediate conversion if no captured data URL
+    addDebugLog('No captured data URL - attempting immediate file conversion', 'debug');
     setUploadStatus(`🖼️ Immediately converting file to data URL...`);
     
     try {
@@ -1912,7 +1955,7 @@ export default function WaterChemistry() {
                   ref={fileInputRef}
                   type="file"
                   accept="image/*"
-                  onChange={(e) => {
+                  onChange={async (e) => {
                     console.log('File input onChange triggered:', {
                       files: e.target.files,
                       fileCount: e.target.files?.length,
@@ -1921,10 +1964,50 @@ export default function WaterChemistry() {
                     
                     if (e.target.files && e.target.files.length > 0) {
                       const file = e.target.files[0];
-                      console.log('Calling handleImageSelect with file:', file);
-                      clearUploadStatus();
-                      setUploadStatus(`📁 Processing file: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB)`);
-                      handleImageSelect(file);
+                      console.log('File selected, attempting immediate capture...');
+                      
+                      // CRITICAL: Immediately capture file data during onChange event
+                      try {
+                        addDebugLog('CRITICAL: Capturing file data during onChange event', 'debug');
+                        const dataUrl = await new Promise((resolve, reject) => {
+                          const reader = new FileReader();
+                          const timeout = setTimeout(() => {
+                            addDebugLog('OnChange FileReader timeout', 'error');
+                            reject(new Error('OnChange FileReader timeout'));
+                          }, 2000);
+                          
+                          reader.onload = (e) => {
+                            clearTimeout(timeout);
+                            addDebugLog('OnChange FileReader successful!', 'success');
+                            resolve(e.target.result);
+                          };
+                          
+                          reader.onerror = (error) => {
+                            clearTimeout(timeout);
+                            addDebugLog(`OnChange FileReader failed: ${error.target?.error?.message || 'Unknown error'}`, 'error');
+                            reject(new Error(`OnChange FileReader failed: ${error.target?.error?.message || 'Unknown error'}`));
+                          };
+                          
+                          addDebugLog('Starting onChange FileReader.readAsDataURL...', 'info');
+                          reader.readAsDataURL(file);
+                        });
+                        
+                        // Store the captured data URL
+                        addDebugLog('File data captured successfully during onChange', 'success');
+                        setUploadStatus(`✅ File captured immediately - Processing...`);
+                        
+                        // Call handleImageSelect with the captured data
+                        handleImageSelect(file, dataUrl);
+                        
+                      } catch (captureError) {
+                        addDebugLog(`OnChange capture failed: ${captureError.message}`, 'error');
+                        setUploadStatus(`⚠️ Immediate capture failed - Trying fallback...`);
+                        
+                        // Fallback to original method
+                        clearUploadStatus();
+                        setUploadStatus(`📁 Processing file: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB)`);
+                        handleImageSelect(file);
+                      }
                     } else {
                       console.log('No files selected in onChange');
                       setUploadStatus('❌ No file selected');
@@ -1941,7 +2024,7 @@ export default function WaterChemistry() {
                   <input
                     type="file"
                     accept="image/*"
-                    onChange={(e) => {
+                    onChange={async (e) => {
                       console.log('Mobile file input onChange triggered:', {
                         files: e.target.files,
                         fileCount: e.target.files?.length,
@@ -1952,10 +2035,50 @@ export default function WaterChemistry() {
                       
                       if (e.target.files && e.target.files.length > 0) {
                         const file = e.target.files[0];
-                        console.log('Calling handleImageSelect with mobile file:', file);
-                        clearUploadStatus();
-                        setUploadStatus(`📱 Processing mobile file: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB)`);
-                        handleImageSelect(file);
+                        console.log('Mobile file selected, attempting immediate capture...');
+                        
+                        // CRITICAL: Immediately capture file data during onChange event
+                        try {
+                          addDebugLog('CRITICAL: Capturing mobile file data during onChange event', 'debug');
+                          const dataUrl = await new Promise((resolve, reject) => {
+                            const reader = new FileReader();
+                            const timeout = setTimeout(() => {
+                              addDebugLog('Mobile OnChange FileReader timeout', 'error');
+                              reject(new Error('Mobile OnChange FileReader timeout'));
+                            }, 2000);
+                            
+                            reader.onload = (e) => {
+                              clearTimeout(timeout);
+                              addDebugLog('Mobile OnChange FileReader successful!', 'success');
+                              resolve(e.target.result);
+                            };
+                            
+                            reader.onerror = (error) => {
+                              clearTimeout(timeout);
+                              addDebugLog(`Mobile OnChange FileReader failed: ${error.target?.error?.message || 'Unknown error'}`, 'error');
+                              reject(new Error(`Mobile OnChange FileReader failed: ${error.target?.error?.message || 'Unknown error'}`));
+                            };
+                            
+                            addDebugLog('Starting mobile onChange FileReader.readAsDataURL...', 'info');
+                            reader.readAsDataURL(file);
+                          });
+                          
+                          // Store the captured data URL
+                          addDebugLog('Mobile file data captured successfully during onChange', 'success');
+                          setUploadStatus(`✅ Mobile file captured immediately - Processing...`);
+                          
+                          // Call handleImageSelect with the captured data
+                          handleImageSelect(file, dataUrl);
+                          
+                        } catch (captureError) {
+                          addDebugLog(`Mobile onChange capture failed: ${captureError.message}`, 'error');
+                          setUploadStatus(`⚠️ Mobile immediate capture failed - Trying fallback...`);
+                          
+                          // Fallback to original method
+                          clearUploadStatus();
+                          setUploadStatus(`📱 Processing mobile file: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB)`);
+                          handleImageSelect(file);
+                        }
                       } else {
                         console.log('No files selected in mobile onChange');
                         setUploadStatus('❌ No file selected on mobile');
