@@ -285,7 +285,48 @@ export default function WaterChemistry() {
       console.log('Trying URL.createObjectURL fallback...');
       const objectUrl = URL.createObjectURL(file);
       console.log('Object URL created successfully');
-      return { success: true, dataUrl: objectUrl, method: 'ObjectURL' };
+      
+      // Convert blob URL to data URL for crop tool compatibility
+      console.log('Converting blob URL to data URL for crop tool...');
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      
+      const conversionPromise = new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error('Blob to data URL conversion timeout'));
+        }, 5000);
+        
+        img.onload = () => {
+          clearTimeout(timeout);
+          try {
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight;
+            ctx.drawImage(img, 0, 0);
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+            
+            // Clean up blob URL
+            URL.revokeObjectURL(objectUrl);
+            
+            console.log('Successfully converted blob URL to data URL');
+            resolve(dataUrl);
+          } catch (canvasError) {
+            URL.revokeObjectURL(objectUrl);
+            reject(new Error(`Canvas conversion error: ${canvasError.message}`));
+          }
+        };
+        
+        img.onerror = () => {
+          clearTimeout(timeout);
+          URL.revokeObjectURL(objectUrl);
+          reject(new Error('Image failed to load for blob conversion'));
+        };
+        
+        img.src = objectUrl;
+      });
+      
+      const dataUrl = await conversionPromise;
+      return { success: true, dataUrl, method: 'ObjectURLConverted' };
     } catch (error) {
       console.log('Object URL fallback failed:', error.message);
     }
