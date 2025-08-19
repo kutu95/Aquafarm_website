@@ -273,6 +273,21 @@ export default function WaterChemistry() {
       hasCanvas: typeof HTMLCanvasElement !== 'undefined',
       hasImage: typeof HTMLImageElement !== 'undefined'
     });
+    
+    // Additional file validation
+    console.log('=== ADDITIONAL FILE VALIDATION ===');
+    console.log('File methods available:', {
+      hasSlice: typeof file.slice === 'function',
+      hasArrayBuffer: typeof file.arrayBuffer === 'function',
+      hasStream: typeof file.stream === 'function',
+      hasText: typeof file.text === 'function'
+    });
+    console.log('File properties:', {
+      size: file.size,
+      type: file.type,
+      name: file.name,
+      lastModified: file.lastModified
+    });
     console.log('=== MOBILE IMAGE LOADING DEBUG END ===');
     
     // Only do minimal cleanup - don't interfere with the loading process
@@ -290,31 +305,60 @@ export default function WaterChemistry() {
     
     // Method 1: Try FileReader first (most reliable)
     try {
+      console.log('=== METHOD 1: FileReader ===');
       console.log('Attempting FileReader method...');
+      console.log('File details for FileReader:', {
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        lastModified: file.lastModified
+      });
+      
       const dataUrl = await new Promise((resolve, reject) => {
         const reader = new FileReader();
         const timeout = setTimeout(() => {
-          reader.abort();
+          console.log('FileReader timeout - aborting');
+          try {
+            reader.abort();
+          } catch (e) {
+            console.log('Error aborting FileReader:', e);
+          }
           reject(new Error('FileReader timeout'));
         }, 8000);
         
         reader.onload = (e) => {
           clearTimeout(timeout);
+          console.log('FileReader onload successful!');
+          console.log('Result type:', typeof e.target.result);
+          console.log('Result length:', e.target.result.length);
           resolve(e.target.result);
         };
         
         reader.onerror = (error) => {
           clearTimeout(timeout);
-          reject(new Error(`FileReader error: ${error.target?.error?.message || 'Unknown error'}`));
+          console.error('FileReader error details:', error);
+          console.error('FileReader error target:', error.target);
+          console.error('FileReader error target error:', error.target?.error);
+          const errorMessage = error.target?.error?.message || 'Unknown FileReader error';
+          reject(new Error(`FileReader error: ${errorMessage}`));
         };
         
+        reader.onprogress = (e) => {
+          if (e.lengthComputable) {
+            const progress = (e.loaded / e.total) * 100;
+            console.log(`FileReader progress: ${progress.toFixed(1)}%`);
+          }
+        };
+        
+        console.log('Starting FileReader.readAsDataURL...');
         reader.readAsDataURL(file);
       });
       
       console.log('FileReader method successful');
       return { success: true, dataUrl, method: 'FileReader' };
     } catch (error) {
-      console.log('FileReader method failed:', error.message);
+      console.error('FileReader method failed:', error.message);
+      console.error('FileReader error stack:', error.stack);
     }
     
     // Method 2: Try URL.createObjectURL (works on most modern browsers)
