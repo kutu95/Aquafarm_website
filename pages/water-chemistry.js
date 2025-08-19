@@ -278,31 +278,8 @@ export default function WaterChemistry() {
     });
     console.log('=== MOBILE IMAGE LOADING DEBUG END ===');
     
-    // Clean up any existing temporary resources first
-    const cleanupTemporaryResources = () => {
-      // Force garbage collection if available (helps on mobile)
-      if (window.gc) {
-        try {
-          window.gc();
-        } catch (e) {
-          console.log('Garbage collection not available');
-        }
-      }
-      
-      // Clear any existing image caches
-      if ('caches' in window) {
-        caches.keys().then(names => {
-          names.forEach(name => {
-            if (name.includes('image') || name.includes('blob')) {
-              caches.delete(name);
-            }
-          });
-        });
-      }
-    };
-    
-    // Clean up before starting
-    cleanupTemporaryResources();
+    // Don't clean up before starting - it might interfere with the loading process
+    console.log('Skipping cleanup before image loading to prevent interference');
     
     // Method 1: Try FileReader first (most reliable)
     try {
@@ -487,14 +464,29 @@ export default function WaterChemistry() {
     
     // All methods failed
     console.error('All image loading methods failed');
+    console.error('File details:', {
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      lastModified: file.lastModified
+    });
+    
     return { 
       success: false, 
       error: 'All image loading methods failed. This may be due to browser compatibility issues or corrupted image data.',
+      debugInfo: {
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type,
+        userAgent: navigator.userAgent,
+        isMobile: isMobile
+      },
       suggestions: [
         'Try using a different image',
         'Try taking a new photo with your camera',
         'Check if the image file is corrupted',
-        'Try uploading from a different device or browser'
+        'Try uploading from a different device or browser',
+        'Ensure the image is a valid JPEG, PNG, or GIF file'
       ]
     };
   };
@@ -879,8 +871,20 @@ export default function WaterChemistry() {
       } else {
         // All methods failed
         console.error('All image loading methods failed:', imageResult.error);
+        console.error('Debug info:', imageResult.debugInfo);
         setUploadStatus('❌ Error: All image loading methods failed');
-        setError(`Image loading failed: ${imageResult.error}\n\nSuggestions:\n${imageResult.suggestions.map(s => `• ${s}`).join('\n')}`);
+        
+        let errorMessage = `Image loading failed: ${imageResult.error}\n\n`;
+        if (imageResult.debugInfo) {
+          errorMessage += `📱 Debug Info:\n`;
+          errorMessage += `• File: ${imageResult.debugInfo.fileName}\n`;
+          errorMessage += `• Size: ${(imageResult.debugInfo.fileSize / 1024 / 1024).toFixed(2)}MB\n`;
+          errorMessage += `• Type: ${imageResult.debugInfo.fileType}\n`;
+          errorMessage += `• Device: ${imageResult.debugInfo.isMobile ? 'Mobile' : 'Desktop'}\n\n`;
+        }
+        errorMessage += `💡 Suggestions:\n${imageResult.suggestions.map(s => `• ${s}`).join('\n')}`;
+        
+        setError(errorMessage);
         setShowCropper(false);
         setImagePreview(null);
         setSelectedImage(null);
