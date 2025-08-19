@@ -135,6 +135,11 @@ export default function WaterChemistry() {
     setError(null);
   };
 
+  // Check if device is mobile
+  const isMobileDevice = () => {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  };
+
   // Clean up temporary resources and memory
   const cleanupTemporaryResources = () => {
     console.log('Cleaning up temporary resources...');
@@ -249,7 +254,7 @@ export default function WaterChemistry() {
 
   // Mobile-friendly image loading with multiple fallback methods
   const loadImageForMobile = async (file) => {
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const isMobile = isMobileDevice();
     
     console.log('=== MOBILE IMAGE LOADING DEBUG START ===');
     console.log('Device type:', isMobile ? 'Mobile' : 'Desktop');
@@ -725,8 +730,13 @@ export default function WaterChemistry() {
       isBlob: file instanceof Blob
     });
     
-    // Clean up any existing resources before processing new image
-    cleanupTemporaryResources();
+    // Only clean up if there are existing resources (not on first upload)
+    if (imagePreview || selectedImage) {
+      console.log('Cleaning up existing resources before new upload...');
+      cleanupTemporaryResources();
+    } else {
+      console.log('First upload - no cleanup needed');
+    }
     
     // Validate file
     if (!file) {
@@ -759,7 +769,7 @@ export default function WaterChemistry() {
     }
     
     // Mobile-specific file size limits
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const isMobile = isMobileDevice();
     const mobileSizeLimit = 5 * 1024 * 1024; // 5MB for mobile
     const desktopSizeLimit = 10 * 1024 * 1024; // 10MB for desktop
     
@@ -1645,7 +1655,7 @@ export default function WaterChemistry() {
               </div>
 
               {/* Mobile Status Indicator */}
-              {/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) && (
+              {isMobileDevice() && (
                 <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                   <div className="flex items-center">
                     <span className="mr-2">📱</span>
@@ -2152,7 +2162,7 @@ export default function WaterChemistry() {
                   <p className="text-red-800">{error}</p>
                   
                   {/* Mobile-specific error guidance */}
-                  {/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) && (
+                  {isMobileDevice() && (
                     <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                       <p className="text-sm font-medium text-yellow-800 mb-2">📱 Mobile Troubleshooting:</p>
                       <ul className="text-xs text-yellow-700 space-y-1">
