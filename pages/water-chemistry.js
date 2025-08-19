@@ -141,6 +141,24 @@ export default function WaterChemistry() {
     return mobilePattern.test(navigator.userAgent);
   };
 
+  // Reset file inputs for mobile compatibility
+  const resetFileInputs = () => {
+    console.log('Resetting file inputs...');
+    
+    // Reset desktop file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+      console.log('Desktop file input reset');
+    }
+    
+    // Reset mobile file input
+    const mobileFileInput = document.getElementById('mobile-file-input');
+    if (mobileFileInput) {
+      mobileFileInput.value = '';
+      console.log('Mobile file input reset');
+    }
+  };
+
   // Clean up temporary resources and memory
   const cleanupTemporaryResources = () => {
     console.log('Cleaning up temporary resources...');
@@ -199,6 +217,9 @@ export default function WaterChemistry() {
         console.log('FileReader cleanup error:', e);
       }
     }
+    
+    // Reset file inputs for mobile compatibility
+    resetFileInputs();
   };
 
   // Function to extract date from image metadata or filename
@@ -1758,7 +1779,9 @@ export default function WaterChemistry() {
                       console.log('Mobile file input onChange triggered:', {
                         files: e.target.files,
                         fileCount: e.target.files?.length,
-                        firstFile: e.target.files?.[0]
+                        firstFile: e.target.files?.[0],
+                        inputElement: e.target,
+                        inputValue: e.target.value
                       });
                       
                       if (e.target.files && e.target.files.length > 0) {
@@ -1771,6 +1794,9 @@ export default function WaterChemistry() {
                         console.log('No files selected in mobile onChange');
                         setUploadStatus('❌ No file selected on mobile');
                       }
+                    }}
+                    onClick={(e) => {
+                      console.log('Mobile file input clicked');
                     }}
                     className="hidden"
                     id="mobile-file-input"
@@ -2115,6 +2141,23 @@ export default function WaterChemistry() {
                             setSelectedImage(null);
                             setShowCropper(false);
                             setCropArea({ x: 0, y: 0, width: 200, height: 200 });
+                            
+                            // Reset file inputs for mobile compatibility
+                            if (fileInputRef.current) {
+                              fileInputRef.current.value = '';
+                            }
+                            
+                            // Reset mobile file input
+                            const mobileFileInput = document.getElementById('mobile-file-input');
+                            if (mobileFileInput) {
+                              mobileFileInput.value = '';
+                            }
+                            
+                            // Clear upload status
+                            setUploadStatus('');
+                            setError(null);
+                            
+                            console.log('Image removed and file inputs reset');
                           }}
                           className="px-4 py-2 bg-gray-500 text-white font-medium rounded-lg hover:bg-gray-600 ml-2"
                         >
