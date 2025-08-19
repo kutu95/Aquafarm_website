@@ -283,7 +283,19 @@ export default function WaterChemistry() {
       const dataUrl = await new Promise((resolve, reject) => {
         const reader = new FileReader();
         
+        // Add a reasonable timeout to prevent hanging
+        const timeout = setTimeout(() => {
+          console.log('Super simple method timeout - aborting');
+          try {
+            reader.abort();
+          } catch (e) {
+            console.log('Error aborting super simple method:', e);
+          }
+          reject(new Error('Super simple method timeout'));
+        }, 5000); // 5 seconds max
+        
         reader.onload = (e) => {
+          clearTimeout(timeout);
           console.log('Super simple method successful!');
           console.log('Result type:', typeof e.target.result);
           console.log('Result length:', e.target.result.length);
@@ -291,11 +303,11 @@ export default function WaterChemistry() {
         };
         
         reader.onerror = (error) => {
+          clearTimeout(timeout);
           console.error('Super simple method failed:', error);
           reject(new Error('Super simple method failed'));
         };
         
-        // No timeout, no complexity, just read the file
         console.log('Starting super simple FileReader.readAsDataURL...');
         reader.readAsDataURL(file);
       });
@@ -304,6 +316,60 @@ export default function WaterChemistry() {
       return { success: true, dataUrl, method: 'SuperSimple' };
     } catch (error) {
       console.log('Super simple method failed:', error.message);
+    }
+    
+    // ALTERNATIVE METHOD: Try using fetch API to read file as blob
+    try {
+      console.log('=== ALTERNATIVE METHOD: Fetch API ===');
+      console.log('Attempting fetch API method...');
+      
+      // Create a blob URL and fetch it
+      const blobUrl = URL.createObjectURL(file);
+      const response = await fetch(blobUrl);
+      const blob = await response.blob();
+      
+      // Convert blob to data URL using canvas
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      
+      const fetchPromise = new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error('Fetch method timeout'));
+        }, 8000);
+        
+        img.onload = () => {
+          clearTimeout(timeout);
+          try {
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight;
+            ctx.drawImage(img, 0, 0);
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+            
+            // Clean up blob URL
+            URL.revokeObjectURL(blobUrl);
+            
+            resolve(dataUrl);
+          } catch (canvasError) {
+            URL.revokeObjectURL(blobUrl);
+            reject(new Error(`Canvas error: ${canvasError.message}`));
+          }
+        };
+        
+        img.onerror = () => {
+          clearTimeout(timeout);
+          URL.revokeObjectURL(blobUrl);
+          reject(new Error('Image failed to load for fetch method'));
+        };
+        
+        img.src = blobUrl;
+      });
+      
+      const dataUrl = await fetchPromise;
+      console.log('Fetch API method successful');
+      return { success: true, dataUrl, method: 'FetchAPI' };
+    } catch (error) {
+      console.log('Fetch API method failed:', error.message);
     }
     
     // No cleanup on first upload - let the browser handle it naturally
