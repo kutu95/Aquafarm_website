@@ -818,6 +818,84 @@ export default function WaterChemistry() {
 
   // Cropping functions
   const handleImageSelect = async (file) => {
+    addDebugLog('handleImageSelect called with file:', 'info');
+    addDebugLog(`File: ${file.name} (${(file.size / 1024).toFixed(2)}KB, ${file.type})`, 'info');
+    
+    // CRITICAL FIX: Immediately try to convert file to data URL to prevent permission expiration
+    addDebugLog('CRITICAL: Attempting immediate file conversion to prevent permission expiration', 'debug');
+    setUploadStatus(`🖼️ Immediately converting file to data URL...`);
+    
+    try {
+      const immediateDataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        const timeout = setTimeout(() => {
+          addDebugLog('Immediate FileReader timeout', 'error');
+          reject(new Error('Immediate FileReader timeout'));
+        }, 3000);
+        
+        reader.onload = (e) => {
+          clearTimeout(timeout);
+          addDebugLog('Immediate FileReader successful!', 'success');
+          resolve(e.target.result);
+        };
+        
+        reader.onerror = (error) => {
+          clearTimeout(timeout);
+          addDebugLog(`Immediate FileReader failed: ${error.target?.error?.message || 'Unknown error'}`, 'error');
+          reject(new Error(`Immediate FileReader failed: ${error.target?.error?.message || 'Unknown error'}`));
+        };
+        
+        addDebugLog('Starting immediate FileReader.readAsDataURL...', 'info');
+        reader.readAsDataURL(file);
+      });
+      
+      // If we get here, immediate conversion succeeded!
+      addDebugLog('Immediate conversion successful! Setting up image...', 'success');
+      setUploadStatus(`✅ File immediately converted - Setting up crop tool...`);
+      
+      setSelectedImage(file);
+      setImagePreview(immediateDataUrl);
+      setShowCropper(true);
+      
+      // Extract date and set up crop area
+      const extractedDate = await extractDateFromImage(file);
+      if (extractedDate) {
+        setRecordData(prev => ({ ...prev, record_date: extractedDate }));
+        addDebugLog(`Date extracted: ${extractedDate}`, 'info');
+      }
+      
+      // Set up crop area
+      const img = new Image();
+      img.onload = () => {
+        const centerX = (img.width - 200) / 2;
+        const centerY = (img.height - 200) / 2;
+        setCropArea({
+          x: Math.max(0, centerX),
+          y: Math.max(0, centerY),
+          width: Math.min(200, img.width),
+          height: Math.min(200, img.height)
+        });
+        setUploadStatus(`✅ Ready to crop! Image: ${img.width}x${img.height}px`);
+      };
+      
+      img.onerror = (error) => {
+        addDebugLog(`Error loading image: ${error.message}`, 'error');
+        setUploadStatus('❌ Error: Image failed to display');
+        setError(`Image failed to display: ${error.message || 'Unknown error'}`);
+        setShowCropper(false);
+        setImagePreview(null);
+        setSelectedImage(null);
+      };
+      
+      img.src = immediateDataUrl;
+      return; // Exit early - we succeeded!
+      
+    } catch (immediateError) {
+      addDebugLog(`Immediate conversion failed: ${immediateError.message}`, 'error');
+      setUploadStatus(`⚠️ Immediate conversion failed - Continuing with fallback methods...`);
+      // Continue with the original logic below
+    }
+    
     console.log('handleImageSelect called with file:', {
       name: file.name,
       size: file.size,
