@@ -275,6 +275,37 @@ export default function WaterChemistry() {
     });
     console.log('=== MOBILE IMAGE LOADING DEBUG END ===');
     
+    // SUPER SIMPLE METHOD: Try the most basic possible approach first
+    try {
+      console.log('=== SUPER SIMPLE METHOD: Basic FileReader ===');
+      console.log('Attempting ultra-basic file reading...');
+      
+      const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        
+        reader.onload = (e) => {
+          console.log('Super simple method successful!');
+          console.log('Result type:', typeof e.target.result);
+          console.log('Result length:', e.target.result.length);
+          resolve(e.target.result);
+        };
+        
+        reader.onerror = (error) => {
+          console.error('Super simple method failed:', error);
+          reject(new Error('Super simple method failed'));
+        };
+        
+        // No timeout, no complexity, just read the file
+        console.log('Starting super simple FileReader.readAsDataURL...');
+        reader.readAsDataURL(file);
+      });
+      
+      console.log('Super simple method successful');
+      return { success: true, dataUrl, method: 'SuperSimple' };
+    } catch (error) {
+      console.log('Super simple method failed:', error.message);
+    }
+    
     // No cleanup on first upload - let the browser handle it naturally
     if (!imagePreview) {
       console.log('First upload - no cleanup needed, letting browser handle naturally');
@@ -894,6 +925,26 @@ export default function WaterChemistry() {
       console.error('File is empty (0 bytes)');
       setUploadStatus('❌ Error: File is empty (0 bytes)');
       setError('The selected file appears to be empty. Please try a different image.');
+      return;
+    }
+    
+    // Additional file validation for mobile
+    if (!file.name || file.name.length === 0) {
+      console.error('File has no name');
+      setUploadStatus('❌ Error: File has no name');
+      setError('The selected file appears to be invalid. Please try a different image.');
+      return;
+    }
+    
+    // Check if file methods are available
+    if (typeof file.slice !== 'function' && typeof file.arrayBuffer !== 'function') {
+      console.error('File methods not available:', {
+        hasSlice: typeof file.slice === 'function',
+        hasArrayBuffer: typeof file.arrayBuffer === 'function',
+        fileType: typeof file
+      });
+      setUploadStatus('❌ Error: File object is not properly supported');
+      setError('The file object is not properly supported by your browser. Please try a different browser or device.');
       return;
     }
     
