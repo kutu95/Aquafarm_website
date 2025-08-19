@@ -293,7 +293,14 @@ export default function WaterChemistry() {
     
     // Method 1: Try FileReader first (most reliable)
     try {
-      console.log('Attempting FileReader method...');
+      console.log('=== METHOD 1: FileReader ===');
+      console.log('File details for FileReader:', {
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        lastModified: file.lastModified
+      });
+      
       const dataUrl = await new Promise((resolve, reject) => {
         const reader = new FileReader();
         
@@ -311,12 +318,16 @@ export default function WaterChemistry() {
         reader.onload = (e) => {
           clearTimeout(timeout);
           console.log('FileReader onload successful, data length:', e.target.result.length);
+          console.log('FileReader result type:', typeof e.target.result);
+          console.log('FileReader result starts with:', e.target.result.substring(0, 50));
           resolve(e.target.result);
         };
         
         reader.onerror = (error) => {
           clearTimeout(timeout);
           console.error('FileReader error details:', error);
+          console.error('FileReader error target:', error.target);
+          console.error('FileReader error target error:', error.target?.error);
           const errorMessage = error.target?.error?.message || 'Unknown FileReader error';
           reject(new Error(`FileReader error: ${errorMessage}`));
         };
@@ -337,6 +348,7 @@ export default function WaterChemistry() {
     } catch (error) {
       console.log('FileReader method failed:', error.message);
       console.error('FileReader error details:', error);
+      console.error('FileReader error stack:', error.stack);
     }
     
     // Method 2: Try URL.createObjectURL (works on most modern browsers)
@@ -547,8 +559,35 @@ export default function WaterChemistry() {
       }
     }
     
+    // Final fallback: Try the simplest possible method
+    try {
+      console.log('Attempting final fallback: simple FileReader with no timeout...');
+      const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        
+        reader.onload = (e) => {
+          console.log('Final fallback FileReader successful');
+          resolve(e.target.result);
+        };
+        
+        reader.onerror = (error) => {
+          console.error('Final fallback FileReader failed:', error);
+          reject(new Error(`Final fallback failed: ${error.target?.error?.message || 'Unknown error'}`));
+        };
+        
+        // Try reading as data URL without any timeout or complexity
+        console.log('Starting final fallback FileReader.readAsDataURL...');
+        reader.readAsDataURL(file);
+      });
+      
+      console.log('Final fallback method successful');
+      return { success: true, dataUrl, method: 'FinalFallback' };
+    } catch (fallbackError) {
+      console.log('Final fallback method failed:', fallbackError.message);
+    }
+    
     // All methods failed
-    console.error('All image loading methods failed');
+    console.error('All image loading methods failed, including final fallback');
     console.error('File details:', {
       name: file.name,
       size: file.size,
@@ -571,7 +610,9 @@ export default function WaterChemistry() {
         'Try taking a new photo with your camera',
         'Check if the image file is corrupted',
         'Try uploading from a different device or browser',
-        'Ensure the image is a valid JPEG, PNG, or GIF file'
+        'Ensure the image is a valid JPEG, PNG, or GIF file',
+        'Try refreshing the page and uploading again',
+        'Check if your mobile browser supports FileReader API'
       ]
     };
   };
@@ -808,12 +849,22 @@ export default function WaterChemistry() {
       isBlob: file instanceof Blob
     });
     
-    // Only clean up if there are existing resources (not on first upload)
+    // For first upload, never do cleanup - let the browser handle it naturally
     if (imagePreview || selectedImage) {
-      console.log('Cleaning up existing resources before new upload...');
-      cleanupTemporaryResources();
+      console.log('Subsequent upload - minimal cleanup for previous resources...');
+      // Only do minimal cleanup, not the full cleanupTemporaryResources
+      if (imagePreview && imagePreview.startsWith('blob:')) {
+        try {
+          URL.revokeObjectURL(imagePreview);
+          console.log('Revoked previous blob URL');
+        } catch (e) {
+          console.log('Error revoking previous blob URL:', e);
+        }
+      }
+      setImagePreview(null);
+      setSelectedImage(null);
     } else {
-      console.log('First upload - no cleanup needed');
+      console.log('First upload - absolutely no cleanup, letting browser handle naturally');
     }
     
     // Validate file
