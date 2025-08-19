@@ -250,178 +250,250 @@ export default function WaterChemistry() {
     });
   };
 
-  // Simple, reliable image loading - back to basics
+  // Mobile-friendly image loading with multiple fallback methods
   const loadImageForMobile = async (file) => {
-    console.log('=== SIMPLE IMAGE LOADING ===');
-    console.log('File:', file.name, file.size, file.type);
+    const isMobile = isMobileDevice();
     
-    // Just use the simple FileReader method that was working before
+    console.log('=== MOBILE IMAGE LOADING DEBUG START ===');
+    console.log('Device type:', isMobile ? 'Mobile' : 'Desktop');
+    console.log('User agent:', navigator.userAgent);
+    console.log('File info:', {
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      lastModified: file.lastModified,
+      constructor: file.constructor.name,
+      isFile: file instanceof File,
+      isBlob: file instanceof Blob
+    });
+    console.log('Browser capabilities:', {
+      hasFileReader: typeof FileReader !== 'undefined',
+      hasURL: typeof URL !== 'undefined',
+      hasCreateObjectURL: typeof URL !== 'undefined' && typeof URL.createObjectURL === 'function',
+      hasCanvas: typeof HTMLCanvasElement !== 'undefined',
+      hasImage: typeof HTMLImageElement !== 'undefined'
+    });
+    console.log('=== MOBILE IMAGE LOADING DEBUG END ===');
+    
+    // Only do minimal cleanup - don't interfere with the loading process
+    console.log('Performing minimal cleanup before image loading');
+    
+    // Only clean up the current image preview if it exists
+    if (imagePreview && imagePreview.startsWith('blob:')) {
+      try {
+        URL.revokeObjectURL(imagePreview);
+        console.log('Revoked previous blob URL');
+      } catch (e) {
+        console.log('Error revoking previous blob URL:', e);
+      }
+    }
+    
+    // Method 1: Try FileReader first (most reliable)
     try {
-      console.log('Using simple FileReader method...');
+      console.log('Attempting FileReader method...');
       const dataUrl = await new Promise((resolve, reject) => {
         const reader = new FileReader();
-        
-        // Add timeout to prevent hanging
         const timeout = setTimeout(() => {
-          console.log('FileReader timeout - aborting');
-          try {
-            reader.abort();
-          } catch (e) {
-            console.log('Error aborting FileReader:', e);
-          }
-          reject(new Error('FileReader timeout - file may be too large or corrupted'));
-        }, 10000); // 10 seconds max
+          reader.abort();
+          reject(new Error('FileReader timeout'));
+        }, 8000);
         
         reader.onload = (e) => {
           clearTimeout(timeout);
-          console.log('FileReader successful!');
-          console.log('Result type:', typeof e.target.result);
-          console.log('Result length:', e.target.result.length);
           resolve(e.target.result);
         };
         
         reader.onerror = (error) => {
           clearTimeout(timeout);
-          console.error('FileReader error details:', error);
-          console.error('FileReader error target:', error.target);
-          console.error('FileReader error target error:', error.target?.error);
-          const errorMessage = error.target?.error?.message || 'Unknown FileReader error';
-          reject(new Error(`FileReader error: ${errorMessage}`));
+          reject(new Error(`FileReader error: ${error.target?.error?.message || 'Unknown error'}`));
         };
         
-        reader.onprogress = (e) => {
-          if (e.lengthComputable) {
-            const progress = (e.loaded / e.total) * 100;
-            console.log(`FileReader progress: ${progress.toFixed(1)}%`);
-          }
-        };
-        
-        console.log('Starting FileReader.readAsDataURL...');
         reader.readAsDataURL(file);
       });
       
-      console.log('Image loaded successfully');
-      return { success: true, dataUrl, method: 'SimpleFileReader' };
+      console.log('FileReader method successful');
+      return { success: true, dataUrl, method: 'FileReader' };
     } catch (error) {
-      console.error('Simple FileReader failed:', error.message);
-      console.error('FileReader error stack:', error.stack);
+      console.log('FileReader method failed:', error.message);
     }
     
-    // If FileReader fails, try URL.createObjectURL as fallback
+    // Method 2: Try URL.createObjectURL (works on most modern browsers)
     try {
-      console.log('Trying URL.createObjectURL fallback...');
+      console.log('Attempting URL.createObjectURL method...');
       const objectUrl = URL.createObjectURL(file);
-      console.log('Object URL created successfully');
       
-      // Convert blob URL to data URL for crop tool compatibility
-      console.log('Converting blob URL to data URL for crop tool...');
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      const img = new Image();
-      
-      const conversionPromise = new Promise((resolve, reject) => {
+      // Test if the object URL works by trying to load it
+      const testImg = new Image();
+      const loadPromise = new Promise((resolve, reject) => {
         const timeout = setTimeout(() => {
-          reject(new Error('Blob to data URL conversion timeout'));
+          reject(new Error('Image load timeout'));
         }, 5000);
         
-        img.onload = () => {
+        testImg.onload = () => {
           clearTimeout(timeout);
-          try {
-            canvas.width = img.naturalWidth;
-            canvas.height = img.naturalHeight;
-            ctx.drawImage(img, 0, 0);
-            const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
-            
-            // Clean up blob URL
-            URL.revokeObjectURL(objectUrl);
-            
-            console.log('Successfully converted blob URL to data URL');
-            resolve(dataUrl);
-          } catch (canvasError) {
-            URL.revokeObjectURL(objectUrl);
-            reject(new Error(`Canvas conversion error: ${canvasError.message}`));
-          }
+          resolve(objectUrl);
         };
         
-        img.onerror = () => {
+        testImg.onerror = () => {
           clearTimeout(timeout);
-          URL.revokeObjectURL(objectUrl);
-          reject(new Error('Image failed to load for blob conversion'));
+          reject(new Error('Image failed to load from object URL'));
         };
-        
-        img.src = objectUrl;
       });
       
-      const dataUrl = await conversionPromise;
-      return { success: true, dataUrl, method: 'ObjectURLConverted' };
+      const result = await loadPromise;
+      console.log('URL.createObjectURL method successful');
+      return { success: true, dataUrl: result, method: 'URL.createObjectURL' };
     } catch (error) {
-      console.error('Object URL fallback failed:', error.message);
-      console.error('Object URL error stack:', error.stack);
+      console.log('URL.createObjectURL method failed:', error.message);
     }
     
-    // Third fallback: Try direct canvas approach
+    // Method 3: Try canvas-based approach (most compatible but slower)
     try {
-      console.log('Trying direct canvas fallback...');
-      
-      // Create a canvas and draw the image directly
+      console.log('Attempting canvas-based method...');
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       const img = new Image();
       
       const canvasPromise = new Promise((resolve, reject) => {
         const timeout = setTimeout(() => {
-          reject(new Error('Canvas fallback timeout'));
-        }, 8000);
+          reject(new Error('Canvas method timeout'));
+        }, 10000);
         
         img.onload = () => {
           clearTimeout(timeout);
           try {
+            // Set canvas size to image size
             canvas.width = img.naturalWidth;
             canvas.height = img.naturalHeight;
+            
+            // Draw image to canvas
             ctx.drawImage(img, 0, 0);
+            
+            // Convert to data URL
             const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-            console.log('Canvas fallback successful');
             resolve(dataUrl);
           } catch (canvasError) {
-            reject(new Error(`Canvas error: ${canvasError.message}`));
+            reject(new Error(`Canvas processing error: ${canvasError.message}`));
           }
         };
         
         img.onerror = () => {
           clearTimeout(timeout);
-          reject(new Error('Image failed to load for canvas fallback'));
+          reject(new Error('Image failed to load for canvas method'));
         };
-        
-        // Try to load image from file using a different approach
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          img.src = e.target.result;
-        };
-        reader.onerror = () => {
-          clearTimeout(timeout);
-          reject(new Error('FileReader failed for canvas fallback'));
-        };
-        reader.readAsDataURL(file);
       });
       
-      const dataUrl = await canvasPromise;
-      return { success: true, dataUrl, method: 'CanvasFallback' };
+      // For canvas method, we need to create a blob URL first
+      const blobUrl = URL.createObjectURL(file);
+      img.src = blobUrl;
+      
+      const result = await canvasPromise;
+      
+      // Clean up blob URL
+      URL.revokeObjectURL(blobUrl);
+      
+      console.log('Canvas-based method successful');
+      return { success: true, dataUrl: result, method: 'Canvas' };
     } catch (error) {
-      console.error('Canvas fallback failed:', error.message);
-      console.error('Canvas fallback error stack:', error.stack);
+      console.log('Canvas-based method failed:', error.message);
+    }
+    
+    // Method 4: Try with reduced file size (mobile-friendly)
+    if (isMobile && file.size > 2 * 1024 * 1024) { // If file is larger than 2MB on mobile
+      try {
+        console.log('Attempting size reduction method for mobile...');
+        
+        // Create a smaller version using canvas
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+        
+        const reducePromise = new Promise((resolve, reject) => {
+          const timeout = setTimeout(() => {
+            reject(new Error('Size reduction timeout'));
+          }, 15000);
+          
+          img.onload = () => {
+            clearTimeout(timeout);
+            try {
+              // Calculate new dimensions (max 800x600 for mobile)
+              const maxWidth = 800;
+              const maxHeight = 600;
+              let { width, height } = img;
+              
+              if (width > height) {
+                if (width > maxWidth) {
+                  height = (height * maxWidth) / width;
+                  width = maxWidth;
+                }
+              } else {
+                if (height > maxHeight) {
+                  width = (width * maxHeight) / height;
+                  height = maxHeight;
+                }
+              }
+              
+              canvas.width = width;
+              canvas.height = height;
+              
+              // Draw resized image
+              ctx.drawImage(img, 0, 0, width, height);
+              
+              // Convert to compressed data URL
+              const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+              resolve(dataUrl);
+            } catch (canvasError) {
+              reject(new Error(`Size reduction error: ${canvasError.message}`));
+            }
+          };
+          
+          img.onerror = () => {
+            clearTimeout(timeout);
+            reject(new Error('Image failed to load for size reduction'));
+          };
+        });
+        
+        // Create blob URL for the image
+        const blobUrl = URL.createObjectURL(file);
+        img.src = blobUrl;
+        
+        const result = await reducePromise;
+        
+        // Clean up blob URL
+        URL.revokeObjectURL(blobUrl);
+        
+        console.log('Size reduction method successful');
+        return { success: true, dataUrl: result, method: 'SizeReduction' };
+      } catch (error) {
+        console.log('Size reduction method failed:', error.message);
+      }
     }
     
     // All methods failed
-    console.error('All methods failed');
+    console.error('All image loading methods failed');
+    console.error('File details:', {
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      lastModified: file.lastModified
+    });
+    
     return { 
       success: false, 
-      error: 'All image loading methods failed',
+      error: 'All image loading methods failed. This may be due to browser compatibility issues or corrupted image data.',
+      debugInfo: {
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type,
+        userAgent: navigator.userAgent,
+        isMobile: isMobile
+      },
       suggestions: [
         'Try using a different image',
         'Try taking a new photo with your camera',
         'Check if the image file is corrupted',
-        'Try refreshing the page and uploading again',
-        'Check if your mobile browser supports FileReader API'
+        'Try uploading from a different device or browser',
+        'Ensure the image is a valid JPEG, PNG, or GIF file'
       ]
     };
   };
@@ -658,22 +730,12 @@ export default function WaterChemistry() {
       isBlob: file instanceof Blob
     });
     
-    // For first upload, never do cleanup - let the browser handle it naturally
+    // Only clean up if there are existing resources (not on first upload)
     if (imagePreview || selectedImage) {
-      console.log('Subsequent upload - minimal cleanup for previous resources...');
-      // Only do minimal cleanup, not the full cleanupTemporaryResources
-      if (imagePreview && imagePreview.startsWith('blob:')) {
-        try {
-          URL.revokeObjectURL(imagePreview);
-          console.log('Revoked previous blob URL');
-        } catch (e) {
-          console.log('Error revoking previous blob URL:', e);
-        }
-      }
-      setImagePreview(null);
-      setSelectedImage(null);
+      console.log('Cleaning up existing resources before new upload...');
+      cleanupTemporaryResources();
     } else {
-      console.log('First upload - absolutely no cleanup, letting browser handle naturally');
+      console.log('First upload - no cleanup needed');
     }
     
     // Validate file
@@ -703,26 +765,6 @@ export default function WaterChemistry() {
       console.error('File is empty (0 bytes)');
       setUploadStatus('❌ Error: File is empty (0 bytes)');
       setError('The selected file appears to be empty. Please try a different image.');
-      return;
-    }
-    
-    // Additional file validation for mobile
-    if (!file.name || file.name.length === 0) {
-      console.error('File has no name');
-      setUploadStatus('❌ Error: File has no name');
-      setError('The selected file appears to be invalid. Please try a different image.');
-      return;
-    }
-    
-    // Check if file methods are available
-    if (typeof file.slice !== 'function' && typeof file.arrayBuffer !== 'function') {
-      console.error('File methods not available:', {
-        hasSlice: typeof file.slice === 'function',
-        hasArrayBuffer: typeof file.arrayBuffer === 'function',
-        fileType: typeof file
-      });
-      setUploadStatus('❌ Error: File object is not properly supported');
-      setError('The file object is not properly supported by your browser. Please try a different browser or device.');
       return;
     }
     
@@ -789,13 +831,10 @@ export default function WaterChemistry() {
         setImagePreview(imageResult.dataUrl);
         setShowCropper(true);
         
-        // All successful methods now return data URLs, so we can proceed directly
-        console.log('Image loaded successfully, setting up crop tool...');
-        
-        // Create a temporary image to get dimensions and set up crop area
+        // Wait for image to load before setting crop area
         const img = new Image();
         img.onload = () => {
-          console.log('Image dimensions loaded:', { 
+          console.log('Image loaded successfully:', { 
             naturalWidth: img.naturalWidth, 
             naturalHeight: img.naturalHeight,
             displayWidth: img.width,
@@ -816,15 +855,20 @@ export default function WaterChemistry() {
         };
         
         img.onerror = (error) => {
-          console.error('Error setting up crop tool:', {
+          console.error('Error loading image after successful method:', {
             error: error,
             errorType: error.type,
             errorMessage: error.message,
             imageSrc: img.src,
+            imageWidth: img.width,
+            imageHeight: img.height,
+            imageComplete: img.complete,
+            imageNaturalWidth: img.naturalWidth,
+            imageNaturalHeight: img.naturalHeight,
             methodUsed: imageResult.method
           });
-          setUploadStatus('❌ Error: Failed to set up crop tool');
-          setError(`Image loaded using ${imageResult.method} but failed to set up crop tool: ${error.type} - ${error.message || 'Unknown error'}`);
+          setUploadStatus('❌ Error: Image loaded but failed to display');
+          setError(`Image loaded using ${imageResult.method} but failed to display: ${error.type} - ${error.message || 'Unknown image loading error'}`);
           setShowCropper(false);
           setImagePreview(null);
           setSelectedImage(null);
