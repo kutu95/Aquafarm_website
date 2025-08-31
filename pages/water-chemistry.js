@@ -34,8 +34,7 @@ export default function WaterChemistry() {
   });
   const [saving, setSaving] = useState(false);
   const [uploadStatus, setUploadStatus] = useState('');
-  const [debugLogs, setDebugLogs] = useState([]); // NEW: Debug logs array
-  const [showDebugPanel, setShowDebugPanel] = useState(true); // NEW: Show debug panel by default
+
   
   // Get toxicity level color classes
   const getToxicityColorClasses = (toxicityLevel) => {
@@ -143,18 +142,7 @@ export default function WaterChemistry() {
     return mobilePattern.test(navigator.userAgent);
   };
 
-  // Debug logging function
-  const addDebugLog = (message, type = 'info') => {
-    const timestamp = new Date().toLocaleTimeString();
-    const logEntry = {
-      id: Date.now(),
-      timestamp,
-      message,
-      type
-    };
-    setDebugLogs(prev => [...prev.slice(-49), logEntry]); // Keep last 50 logs
-    console.log(`[${timestamp}] ${message}`); // Also log to console
-  };
+
 
   // Reset file inputs for mobile compatibility
   const resetFileInputs = () => {
@@ -269,62 +257,34 @@ export default function WaterChemistry() {
   const loadImageForMobile = async (file) => {
     const isMobile = isMobileDevice();
     
-    addDebugLog('=== MOBILE IMAGE LOADING DEBUG START ===', 'debug');
-    addDebugLog(`Device type: ${isMobile ? 'Mobile' : 'Desktop'}`, 'info');
-    addDebugLog(`User agent: ${navigator.userAgent}`, 'info');
-    addDebugLog(`File info: ${file.name} (${(file.size / 1024).toFixed(2)}KB, ${file.type})`, 'info');
-    addDebugLog(`File constructor: ${file.constructor.name}`, 'info');
-    addDebugLog(`Is File: ${file instanceof File}`, 'info');
-    addDebugLog(`Is Blob: ${file instanceof Blob}`, 'info');
-    
-    addDebugLog('Browser capabilities:', 'debug');
-    addDebugLog(`FileReader: ${typeof FileReader !== 'undefined'}`, 'info');
-    addDebugLog(`URL: ${typeof URL !== 'undefined'}`, 'info');
-    addDebugLog(`createObjectURL: ${typeof URL !== 'undefined' && typeof URL.createObjectURL === 'function'}`, 'info');
-    addDebugLog(`Canvas: ${typeof HTMLCanvasElement !== 'undefined'}`, 'info');
-    addDebugLog(`Image: ${typeof HTMLImageElement !== 'undefined'}`, 'info');
-    
-    // Additional file validation
-    addDebugLog('=== ADDITIONAL FILE VALIDATION ===', 'debug');
-    addDebugLog(`File methods: slice=${typeof file.slice === 'function'}, arrayBuffer=${typeof file.arrayBuffer === 'function'}`, 'info');
-    addDebugLog(`File properties: size=${file.size}, type=${file.type}, name=${file.name}`, 'info');
-    addDebugLog('=== MOBILE IMAGE LOADING DEBUG END ===', 'debug');
+
     
     // CRITICAL FIX: Immediately capture file data to prevent permission expiration
-    addDebugLog('CRITICAL: Capturing file data immediately to prevent permission expiration', 'debug');
     let fileData = null;
     let fileArrayBuffer = null;
     
     try {
       // Immediately read file as ArrayBuffer to capture data
-      addDebugLog('Reading file as ArrayBuffer immediately...', 'info');
       fileArrayBuffer = await file.arrayBuffer();
       fileData = new Uint8Array(fileArrayBuffer);
-      addDebugLog(`File data captured successfully: ${fileData.length} bytes`, 'success');
     } catch (captureError) {
-      addDebugLog(`Failed to capture file data: ${captureError.message}`, 'error');
       // Continue with original methods as fallback
     }
     
     // Only do minimal cleanup - don't interfere with the loading process
-    addDebugLog('Performing minimal cleanup before image loading', 'info');
     
     // Only clean up the current image preview if it exists
     if (imagePreview && imagePreview.startsWith('blob:')) {
       try {
         URL.revokeObjectURL(imagePreview);
-        addDebugLog('Revoked previous blob URL', 'info');
       } catch (e) {
-        addDebugLog(`Error revoking previous blob URL: ${e.message}`, 'error');
+        // Error revoking blob URL
       }
     }
     
     // Method 1: Try using captured file data first (NEW - prevents permission issues)
     if (fileData && fileArrayBuffer) {
       try {
-        addDebugLog('=== METHOD 1: Captured File Data ===', 'debug');
-        addDebugLog('Using pre-captured file data to avoid permission issues', 'info');
-        
         // Convert ArrayBuffer to data URL using canvas
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
@@ -332,7 +292,6 @@ export default function WaterChemistry() {
         
         const dataUrl = await new Promise((resolve, reject) => {
           const timeout = setTimeout(() => {
-            addDebugLog('Image load timeout from captured data', 'error');
             reject(new Error('Image load timeout from captured data'));
           }, 5000);
           
@@ -343,17 +302,14 @@ export default function WaterChemistry() {
               canvas.height = img.naturalHeight;
               ctx.drawImage(img, 0, 0);
               const result = canvas.toDataURL('image/jpeg', 0.9);
-              addDebugLog('Successfully created data URL from captured file data', 'success');
               resolve(result);
             } catch (canvasError) {
-              addDebugLog(`Canvas error from captured data: ${canvasError.message}`, 'error');
               reject(new Error(`Canvas error: ${canvasError.message}`));
             }
           };
           
           img.onerror = () => {
             clearTimeout(timeout);
-            addDebugLog('Image failed to load from captured data', 'error');
             reject(new Error('Image failed to load from captured data'));
           };
           
@@ -362,61 +318,46 @@ export default function WaterChemistry() {
           const blobUrl = URL.createObjectURL(blob);
           img.src = blobUrl;
         });
-        
-        addDebugLog('Captured file data method successful', 'success');
         return { success: true, dataUrl, method: 'CapturedFileData' };
       } catch (error) {
-        addDebugLog(`Captured file data method failed: ${error.message}`, 'error');
+        // Captured file data method failed
       }
     }
     
     // Method 2: Try FileReader (original method)
     try {
-      addDebugLog('=== METHOD 2: FileReader ===', 'debug');
-      addDebugLog('Attempting FileReader method...', 'info');
-      addDebugLog(`File details: ${file.name} (${(file.size / 1024).toFixed(2)}KB, ${file.type})`, 'info');
-      
       const dataUrl = await new Promise((resolve, reject) => {
         const reader = new FileReader();
         const timeout = setTimeout(() => {
-          addDebugLog('FileReader timeout - aborting', 'error');
           try {
             reader.abort();
           } catch (e) {
-            addDebugLog(`Error aborting FileReader: ${e.message}`, 'error');
+            // Error aborting FileReader
           }
           reject(new Error('FileReader timeout'));
         }, 8000);
         
         reader.onload = (e) => {
           clearTimeout(timeout);
-          addDebugLog('FileReader onload successful!', 'success');
-          addDebugLog(`Result type: ${typeof e.target.result}`, 'info');
-          addDebugLog(`Result length: ${e.target.result.length}`, 'info');
           resolve(e.target.result);
         };
         
         reader.onerror = (error) => {
           clearTimeout(timeout);
-          addDebugLog(`FileReader error: ${error.target?.error?.message || 'Unknown error'}`, 'error');
           reject(new Error(`FileReader error: ${error.target?.error?.message || 'Unknown error'}`));
         };
         
         reader.onprogress = (e) => {
           if (e.lengthComputable) {
             const progress = (e.loaded / e.total) * 100;
-            addDebugLog(`FileReader progress: ${progress.toFixed(1)}%`, 'info');
           }
         };
         
-        addDebugLog('Starting FileReader.readAsDataURL...', 'info');
         reader.readAsDataURL(file);
       });
-      
-      addDebugLog('FileReader method successful', 'success');
       return { success: true, dataUrl, method: 'FileReader' };
     } catch (error) {
-      addDebugLog(`FileReader method failed: ${error.message}`, 'error');
+      // FileReader method failed
     }
     
     // Method 3: Try URL.createObjectURL (works on most modern browsers)
@@ -818,12 +759,9 @@ export default function WaterChemistry() {
 
   // Cropping functions
   const handleImageSelect = async (file, capturedDataUrl = null) => {
-    addDebugLog('handleImageSelect called with file:', 'info');
-    addDebugLog(`File: ${file.name} (${(file.size / 1024).toFixed(2)}KB, ${file.type})`, 'info');
     
     // Check if we have captured data URL from onChange event
     if (capturedDataUrl) {
-      addDebugLog('Using captured data URL from onChange event!', 'success');
       setUploadStatus(`✅ Using pre-captured file data - Setting up crop tool...`);
       
       setSelectedImage(file);
@@ -834,7 +772,6 @@ export default function WaterChemistry() {
       const extractedDate = await extractDateFromImage(file);
       if (extractedDate) {
         setRecordData(prev => ({ ...prev, record_date: extractedDate }));
-        addDebugLog(`Date extracted: ${extractedDate}`, 'info');
       }
       
       // Set up crop area
@@ -852,7 +789,6 @@ export default function WaterChemistry() {
       };
       
       img.onerror = (error) => {
-        addDebugLog(`Error loading image: ${error.message}`, 'error');
         setUploadStatus('❌ Error: Image failed to display');
         setError(`Image failed to display: ${error.message || 'Unknown error'}`);
         setShowCropper(false);
@@ -865,35 +801,29 @@ export default function WaterChemistry() {
     }
     
     // Fallback: Try immediate conversion if no captured data URL
-    addDebugLog('No captured data URL - attempting immediate file conversion', 'debug');
     setUploadStatus(`🖼️ Immediately converting file to data URL...`);
     
     try {
       const immediateDataUrl = await new Promise((resolve, reject) => {
         const reader = new FileReader();
         const timeout = setTimeout(() => {
-          addDebugLog('Immediate FileReader timeout', 'error');
           reject(new Error('Immediate FileReader timeout'));
         }, 3000);
         
         reader.onload = (e) => {
           clearTimeout(timeout);
-          addDebugLog('Immediate FileReader successful!', 'success');
           resolve(e.target.result);
         };
         
         reader.onerror = (error) => {
           clearTimeout(timeout);
-          addDebugLog(`Immediate FileReader failed: ${error.target?.error?.message || 'Unknown error'}`, 'error');
           reject(new Error(`Immediate FileReader failed: ${error.target?.error?.message || 'Unknown error'}`));
         };
         
-        addDebugLog('Starting immediate FileReader.readAsDataURL...', 'info');
         reader.readAsDataURL(file);
       });
       
       // If we get here, immediate conversion succeeded!
-      addDebugLog('Immediate conversion successful! Setting up image...', 'success');
       setUploadStatus(`✅ File immediately converted - Setting up crop tool...`);
       
       setSelectedImage(file);
@@ -904,7 +834,6 @@ export default function WaterChemistry() {
       const extractedDate = await extractDateFromImage(file);
       if (extractedDate) {
         setRecordData(prev => ({ ...prev, record_date: extractedDate }));
-        addDebugLog(`Date extracted: ${extractedDate}`, 'info');
       }
       
       // Set up crop area
@@ -922,7 +851,6 @@ export default function WaterChemistry() {
       };
       
       img.onerror = (error) => {
-        addDebugLog(`Error loading image: ${error.message}`, 'error');
         setUploadStatus('❌ Error: Image failed to display');
         setError(`Image failed to display: ${error.message || 'Unknown error'}`);
         setShowCropper(false);
@@ -934,7 +862,6 @@ export default function WaterChemistry() {
       return; // Exit early - we succeeded!
       
     } catch (immediateError) {
-      addDebugLog(`Immediate conversion failed: ${immediateError.message}`, 'error');
       setUploadStatus(`⚠️ Immediate conversion failed - Continuing with fallback methods...`);
       // Continue with the original logic below
     }
@@ -1968,39 +1895,32 @@ export default function WaterChemistry() {
                       
                       // CRITICAL: Immediately capture file data during onChange event
                       try {
-                        addDebugLog('CRITICAL: Capturing file data during onChange event', 'debug');
                         const dataUrl = await new Promise((resolve, reject) => {
                           const reader = new FileReader();
                           const timeout = setTimeout(() => {
-                            addDebugLog('OnChange FileReader timeout', 'error');
                             reject(new Error('OnChange FileReader timeout'));
                           }, 2000);
                           
                           reader.onload = (e) => {
                             clearTimeout(timeout);
-                            addDebugLog('OnChange FileReader successful!', 'success');
                             resolve(e.target.result);
                           };
                           
                           reader.onerror = (error) => {
                             clearTimeout(timeout);
-                            addDebugLog(`OnChange FileReader failed: ${error.target?.error?.message || 'Unknown error'}`, 'error');
                             reject(new Error(`OnChange FileReader failed: ${error.target?.error?.message || 'Unknown error'}`));
                           };
                           
-                          addDebugLog('Starting onChange FileReader.readAsDataURL...', 'info');
                           reader.readAsDataURL(file);
                         });
                         
                         // Store the captured data URL
-                        addDebugLog('File data captured successfully during onChange', 'success');
                         setUploadStatus(`✅ File captured immediately - Processing...`);
                         
                         // Call handleImageSelect with the captured data
                         handleImageSelect(file, dataUrl);
                         
                       } catch (captureError) {
-                        addDebugLog(`OnChange capture failed: ${captureError.message}`, 'error');
                         setUploadStatus(`⚠️ Immediate capture failed - Trying fallback...`);
                         
                         // Fallback to original method
@@ -2039,39 +1959,32 @@ export default function WaterChemistry() {
                         
                         // CRITICAL: Immediately capture file data during onChange event
                         try {
-                          addDebugLog('CRITICAL: Capturing mobile file data during onChange event', 'debug');
                           const dataUrl = await new Promise((resolve, reject) => {
                             const reader = new FileReader();
                             const timeout = setTimeout(() => {
-                              addDebugLog('Mobile OnChange FileReader timeout', 'error');
                               reject(new Error('Mobile OnChange FileReader timeout'));
                             }, 2000);
                             
                             reader.onload = (e) => {
                               clearTimeout(timeout);
-                              addDebugLog('Mobile OnChange FileReader successful!', 'success');
                               resolve(e.target.result);
                             };
                             
                             reader.onerror = (error) => {
                               clearTimeout(timeout);
-                              addDebugLog(`Mobile OnChange FileReader failed: ${error.target?.error?.message || 'Unknown error'}`, 'error');
                               reject(new Error(`Mobile OnChange FileReader failed: ${error.target?.error?.message || 'Unknown error'}`));
                             };
                             
-                            addDebugLog('Starting mobile onChange FileReader.readAsDataURL...', 'info');
                             reader.readAsDataURL(file);
                           });
                           
                           // Store the captured data URL
-                          addDebugLog('Mobile file data captured successfully during onChange', 'success');
                           setUploadStatus(`✅ Mobile file captured immediately - Processing...`);
                           
                           // Call handleImageSelect with the captured data
                           handleImageSelect(file, dataUrl);
                           
                         } catch (captureError) {
-                          addDebugLog(`Mobile onChange capture failed: ${captureError.message}`, 'error');
                           setUploadStatus(`⚠️ Mobile immediate capture failed - Trying fallback...`);
                           
                           // Fallback to original method
@@ -2990,43 +2903,7 @@ export default function WaterChemistry() {
           </div>
         </div>
         
-        {/* Debug Panel */}
-        {showDebugPanel && (
-          <div className="fixed bottom-4 right-4 w-96 max-h-96 bg-black text-green-400 font-mono text-xs p-4 rounded-lg border border-green-500 overflow-y-auto z-50">
-            <div className="flex justify-between items-center mb-2">
-              <h3 className="font-bold text-green-400">🐛 Debug Console</h3>
-              <button
-                onClick={() => setShowDebugPanel(false)}
-                className="text-green-400 hover:text-white"
-              >
-                ✕
-              </button>
-            </div>
-            <div className="space-y-1">
-              {debugLogs.map((log) => (
-                <div key={log.id} className={`${
-                  log.type === 'error' ? 'text-red-400' :
-                  log.type === 'success' ? 'text-green-400' :
-                  log.type === 'debug' ? 'text-blue-400' :
-                  'text-yellow-400'
-                }`}>
-                  <span className="text-gray-400">[{log.timestamp}]</span> {log.message}
-                </div>
-              ))}
-              {debugLogs.length === 0 && (
-                <div className="text-gray-500">No debug logs yet...</div>
-              )}
-            </div>
-            <div className="mt-2 pt-2 border-t border-green-500">
-              <button
-                onClick={() => setDebugLogs([])}
-                className="text-green-400 hover:text-white text-xs"
-              >
-                Clear Logs
-              </button>
-            </div>
-          </div>
-        )}
+
       </div>
     </Layout>
   );
