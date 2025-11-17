@@ -81,9 +81,10 @@ export default async function handler(req, res) {
     
     let authenticatedUser = null;
     
+    // Allow public access - authentication is optional
     if (sessionError) {
-      console.error('Session error:', sessionError);
-      return res.status(401).json({ error: 'Authentication error', details: sessionError.message });
+      console.log('Session error (non-fatal for public access):', sessionError);
+      // Don't return error - allow public access
     }
     
     if (session && session.user) {
@@ -91,7 +92,7 @@ export default async function handler(req, res) {
       authenticatedUser = session.user;
       console.log('Cookie-based authentication successful for user:', authenticatedUser.id);
     } else {
-      console.log('No session found in API request');
+      console.log('No session found - allowing public access');
       console.log('Available cookies:', req.cookies);
       
       // Try alternative authentication method - check for Authorization header
@@ -106,25 +107,22 @@ export default async function handler(req, res) {
             authenticatedUser = user;
             console.log('Token-based authentication successful for user:', authenticatedUser.id);
           } else {
-            console.error('Token-based authentication failed:', tokenError);
-            return res.status(401).json({ error: 'Invalid token' });
+            console.log('Token-based authentication failed, allowing public access');
           }
         } catch (tokenAuthError) {
-          console.error('Token authentication error:', tokenAuthError);
-          return res.status(401).json({ error: 'Token authentication failed' });
+          console.log('Token authentication error, allowing public access:', tokenAuthError);
         }
       } else {
-        console.log('No Authorization header found');
-        return res.status(401).json({ error: 'Unauthorized - No valid session' });
+        console.log('No Authorization header found - allowing public access');
       }
     }
 
-    if (!authenticatedUser) {
-      console.error('No authenticated user found after all authentication methods');
-      return res.status(401).json({ error: 'Authentication failed - no valid user' });
+    // Public access is allowed - authenticatedUser can be null
+    if (authenticatedUser) {
+      console.log('API Request authenticated for user:', authenticatedUser.id);
+    } else {
+      console.log('API Request - public access (no authentication)');
     }
-
-    console.log('API Request authenticated for user:', authenticatedUser.id);
 
     // Extract request data
     const { imageData, filename } = req.body;
@@ -251,21 +249,27 @@ export default async function handler(req, res) {
       });
     }
 
-    // Store the analysis in the database for future reference
-    const { data: analysisRecord, error: dbError } = await supabase
-      .from('water_chemistry_analyses')
-      .insert({
-        user_id: authenticatedUser.id,
-        filename: filename,
-        results: analysisResults,
-        created_at: new Date().toISOString()
-      })
-      .select()
-      .single();
+    // Store the analysis in the database for future reference (only if authenticated)
+    if (authenticatedUser) {
+      const { data: analysisRecord, error: dbError } = await supabase
+        .from('water_chemistry_analyses')
+        .insert({
+          user_id: authenticatedUser.id,
+          filename: filename,
+          results: analysisResults,
+          created_at: new Date().toISOString()
+        })
+        .select()
+        .single();
 
-    if (dbError) {
-      console.error('Database error:', dbError);
-      // Don't fail the request if DB storage fails
+      if (dbError) {
+        console.error('Database error:', dbError);
+        // Don't fail the request if DB storage fails
+      } else {
+        console.log('Analysis saved to database for user:', authenticatedUser.id);
+      }
+    } else {
+      console.log('Public access - skipping database save');
     }
 
     console.log('=== FINAL RESPONSE DEBUG ===');
@@ -543,5 +547,6 @@ RESPOND WITH ONLY THIS JSON STRUCTURE - NO OTHER TEXT:
     throw new Error(`ChatGPT analysis failed: ${error.message}`);
   }
 }
+
 
 

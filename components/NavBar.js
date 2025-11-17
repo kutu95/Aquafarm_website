@@ -190,7 +190,16 @@ export default function NavBar() {
                       title: product.title,
                       href: `/${product.slug}`
                     }))
-                  }] : [])
+                  }] : []),
+                  {
+                    id: 'water-chemistry',
+                    title: 'Water Chemistry',
+                    priority: 5,
+                    type: 'submenu',
+                    items: [
+                      { title: 'Test Your Water', href: '/water-chemistry-test' }
+                    ]
+                  }
                 ].sort((a, b) => (a.priority || 0) - (b.priority || 0));
 
                 return combinedMenu.map((item) => {
@@ -539,8 +548,11 @@ export default function NavBar() {
                   priority: 5,
                   type: 'submenu',
                   items: [
-                    { title: 'New Test', href: '/water-chemistry' },
-                    { title: 'View Records', href: '/water-chemistry-records' }
+                    { title: 'Test Your Water (Public)', href: '/water-chemistry-test' },
+                    ...(user ? [
+                      { title: 'New Test', href: '/water-chemistry' },
+                      { title: 'View Records', href: '/water-chemistry-records' }
+                    ] : [])
                   ]
                 },
                 // Add Products submenu if there are product pages
