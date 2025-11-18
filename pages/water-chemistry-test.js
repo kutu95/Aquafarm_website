@@ -1643,8 +1643,7 @@ export default function WaterChemistryTest() {
           <div className="mb-8">
             <div className="text-center">
               <h1 className="text-3xl font-bold text-gray-900">Water Chemistry Test Analyzer</h1>
-              <p className="mt-2 text-gray-600">Upload an image of your water test tubes for AI-powered analysis</p>
-              <p className="mt-1 text-sm text-gray-500">Public version - Results only, no data saved</p>
+              <p className="mt-2 text-gray-600">Upload an image of your API Freshwater Master Test Kit tubes for AI analysis</p>
             </div>
           </div>
 
@@ -1662,19 +1661,6 @@ export default function WaterChemistryTest() {
                   <li>• Place test tubes on a white background for best color accuracy</li>
                   <li>• Wait the full time specified in your test kit instructions</li>
                 </ul>
-              </div>
-
-              {/* AI Service Selection - Removed, only ChatGPT available */}
-              <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-                <div className="flex items-center">
-                  <span className="mr-2">🧠</span>
-                  <span className="text-green-900 font-medium">
-                    Expert AI Analysis (ChatGPT) - Ready
-                  </span>
-                </div>
-                <p className="text-sm text-green-700 mt-1">
-                  Using advanced AI to analyze your water test kit with API Freshwater Master Test Kit knowledge
-                </p>
               </div>
 
               {/* Mobile Status Indicator */}
